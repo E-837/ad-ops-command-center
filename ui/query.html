@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Query - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>📊 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📈 Dashboard</a></li>
+      <li><a href="/campaigns" class="nav-link">📋 Campaigns</a></li>
+      <li><a href="/insights" class="nav-link">💡 Insights</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/query" class="nav-link active">💬 Query</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>💬 Natural Language Query</h2>
+      <p>Ask anything about your campaigns</p>
+    </header>
+
+    <!-- Query Input -->
+    <section class="query-section glass">
+      <div class="query-input-container">
+        <input type="text" id="query-input" placeholder="Ask a question... (e.g., 'What campaigns are behind pacing?')" />
+        <button id="submit-query" class="btn primary">Ask</button>
+      </div>
+      <div class="query-suggestions">
+        <span class="suggestion" onclick="setQuery('What is the pacing status?')">Pacing status</span>
+        <span class="suggestion" onclick="setQuery('Which campaigns need optimization?')">Optimization needed</span>
+        <span class="suggestion" onclick="setQuery('Show me the WoW performance')">WoW performance</span>
+        <span class="suggestion" onclick="setQuery('What are the display specs?')">Display specs</span>
+        <span class="suggestion" onclick="setQuery('Check brand safety')">Brand safety</span>
+      </div>
+    </section>
+
+    <!-- Response -->
+    <section class="response-section" id="response-section" style="display: none;">
+      <div class="response-header">
+        <span id="response-agent">🤖 Agent</span>
+        <span id="response-time"></span>
+      </div>
+      <div class="response-content glass" id="response-content"></div>
+    </section>
+
+    <!-- History -->
+    <section class="history-section">
+      <h3>Recent Queries</h3>
+      <div class="history-list" id="history-list">
+        <p class="empty">No queries yet</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    const queryHistory = [];
+    
+    const agentIcons = {
+      'media-planner': '📈',
+      'trader': '💹',
+      'analyst': '📊',
+      'creative-ops': '🎨',
+      'compliance': '🛡️'
+    };
+    
+    function setQuery(text) {
+      document.getElementById('query-input').value = text;
+    }
+    
+    async function submitQuery() {
+      const queryInput = document.getElementById('query-input');
+      const query = queryInput.value.trim();
+      
+      if (!query) return;
+      
+      const responseSection = document.getElementById('response-section');
+      const responseContent = document.getElementById('response-content');
+      const responseAgent = document.getElementById('response-agent');
+      const responseTime = document.getElementById('response-time');
+      
+      responseSection.style.display = 'block';
+      responseContent.innerHTML = '<p class="loading">Thinking...</p>';
+      
+      const startTime = Date.now();
+      
+      try {
+        const result = await fetch('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        }).then(r => r.json());
+        
+        const elapsed = Date.now() - startTime;
+        
+        responseAgent.innerHTML = `${agentIcons[result.agent] || '🤖'} ${result.agentName || result.agent}`;
+        responseTime.textContent = `${elapsed}ms`;
+        
+        // Format result
+        if (typeof result.result === 'string') {
+          responseContent.innerHTML = `<p>${result.result}</p>`;
+        } else {
+          responseContent.innerHTML = `<pre>${JSON.stringify(result.result, null, 2)}</pre>`;
+        }
+        
+        // Add to history
+        queryHistory.unshift({
+          query,
+          agent: result.agent,
+          time: new Date().toLocaleTimeString()
+        });
+        
+        updateHistory();
+        
+      } catch (err) {
+        responseContent.innerHTML = `<p class="error">Error: ${err.message}</p>`;
+      }
+    }
+    
+    function updateHistory() {
+      const historyList = document.getElementById('history-list');
+      
+      if (queryHistory.length === 0) {
+        historyList.innerHTML = '<p class="empty">No queries yet</p>';
+        return;
+      }
+      
+      historyList.innerHTML = queryHistory.slice(0, 10).map(h => `
+        <div class="history-item" onclick="setQuery('${h.query.replace(/'/g, "\\'")}')">
+          <span class="history-query">${h.query}</span>
+          <span class="history-meta">${agentIcons[h.agent] || '🤖'} ${h.time}</span>
+        </div>
+      `).join('');
+    }
+    
+    // Event listeners
+    document.getElementById('submit-query').addEventListener('click', submitQuery);
+    document.getElementById('query-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') submitQuery();
+    });
+  </script>
+</body>
+</html>

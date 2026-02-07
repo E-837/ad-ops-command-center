@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agents - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>📊 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📈 Dashboard</a></li>
+      <li><a href="/campaigns" class="nav-link">📋 Campaigns</a></li>
+      <li><a href="/insights" class="nav-link">💡 Insights</a></li>
+      <li><a href="/agents" class="nav-link active">🤖 Agents</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>🤖 Agents</h2>
+      <p>AI agents for ad ops automation</p>
+    </header>
+
+    <!-- Agent Cards -->
+    <section class="agents-grid" id="agents-grid">
+      <p class="loading">Loading agents...</p>
+    </section>
+
+    <!-- Agent Details -->
+    <section class="agent-details glass" id="agent-details" style="display: none;">
+      <h3 id="agent-name">Agent Details</h3>
+      <div id="agent-info"></div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    const agentIcons = {
+      'media-planner': '📈',
+      'trader': '💹',
+      'analyst': '📊',
+      'creative-ops': '🎨',
+      'compliance': '🛡️'
+    };
+    
+    const agentColors = {
+      'media-planner': '#4CAF50',
+      'trader': '#2196F3',
+      'analyst': '#9C27B0',
+      'creative-ops': '#FF9800',
+      'compliance': '#F44336'
+    };
+    
+    async function loadAgents() {
+      try {
+        const agents = await fetch('/api/agents').then(r => r.json());
+        
+        document.getElementById('agents-grid').innerHTML = agents.map(agent => `
+          <div class="agent-card glass" onclick="showAgentDetails('${agent.id}')" style="border-left: 4px solid ${agentColors[agent.id] || '#666'}">
+            <div class="agent-header">
+              <span class="agent-icon">${agentIcons[agent.id] || '🤖'}</span>
+              <div class="agent-title">
+                <h3>${agent.name}</h3>
+                <span class="agent-model">${agent.model.split('/').pop()}</span>
+              </div>
+            </div>
+            <p class="agent-description">${agent.description}</p>
+            <div class="agent-capabilities">
+              ${(agent.capabilities || []).slice(0, 3).map(c => 
+                `<span class="capability-tag">${c.replace(/_/g, ' ')}</span>`
+              ).join('')}
+            </div>
+            <div class="agent-footer">
+              <span class="agent-status idle">Idle</span>
+              <span class="agent-tools">${(agent.tools || []).length} tools</span>
+            </div>
+          </div>
+        `).join('');
+        
+      } catch (err) {
+        console.error('Error loading agents:', err);
+        document.getElementById('agents-grid').innerHTML = 
+          '<p class="error">Error loading agents</p>';
+      }
+    }
+    
+    async function showAgentDetails(agentId) {
+      try {
+        const agent = await fetch(`/api/agents/${agentId}`).then(r => r.json());
+        
+        document.getElementById('agent-details').style.display = 'block';
+        document.getElementById('agent-name').textContent = 
+          `${agentIcons[agentId] || '🤖'} ${agent.name}`;
+        
+        document.getElementById('agent-info').innerHTML = `
+          <div class="detail-section">
+            <h4>Description</h4>
+            <p>${agent.description}</p>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Model</h4>
+            <p><code>${agent.model}</code></p>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Capabilities</h4>
+            <ul>
+              ${(agent.capabilities || []).map(c => `<li>${c.replace(/_/g, ' ')}</li>`).join('')}
+            </ul>
+          </div>
+          
+          <div class="detail-section">
+            <h4>Tools</h4>
+            <ul>
+              ${(agent.tools || []).map(t => `<li><code>${t}</code></li>`).join('')}
+            </ul>
+          </div>
+        `;
+        
+      } catch (err) {
+        console.error('Error loading agent details:', err);
+      }
+    }
+    
+    loadAgents();
+  </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "ad-ops-command",
+  "version": "1.0.0",
+  "description": "Ad Ops Command Center - Digital Media Operations Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "advertising",
+    "dsp",
+    "programmatic",
+    "ad-ops",
+    "media-buying"
+  ],
+  "author": "OpenClaw",
+  "license": "MIT"
+}

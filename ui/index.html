@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>📊 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link active">📈 Dashboard</a></li>
+      <li><a href="/campaigns" class="nav-link">📋 Campaigns</a></li>
+      <li><a href="/insights" class="nav-link">💡 Insights</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>Welcome to Ad Ops Command Center</h2>
+      <p>Unified platform for managing programmatic advertising across DSPs</p>
+    </header>
+
+    <section class="quick-stats">
+      <div class="stat-card glass">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-content">
+          <h3 id="totalCampaigns">--</h3>
+          <p>Active Campaigns</p>
+        </div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+          <h3 id="totalSpend">--</h3>
+          <p>Total Spend</p>
+        </div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">📡</div>
+        <div class="stat-content">
+          <h3 id="dspCount">3</h3>
+          <p>Connected DSPs</p>
+        </div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">🤖</div>
+        <div class="stat-content">
+          <h3 id="agentCount">5</h3>
+          <p>Active Agents</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature-grid">
+      <a href="/dashboard" class="feature-card glass">
+        <div class="feature-icon">📈</div>
+        <h3>Dashboard</h3>
+        <p>Live pacing, spend vs budget, DSP breakdown</p>
+      </a>
+      <a href="/campaigns" class="feature-card glass">
+        <div class="feature-icon">📋</div>
+        <h3>Campaigns</h3>
+        <p>Unified campaign list across all DSPs</p>
+      </a>
+      <a href="/insights" class="feature-card glass">
+        <div class="feature-icon">💡</div>
+        <h3>Insights</h3>
+        <p>WoW reports, trends, anomalies</p>
+      </a>
+      <a href="/query" class="feature-card glass">
+        <div class="feature-icon">💬</div>
+        <h3>Query</h3>
+        <p>Ask anything in natural language</p>
+      </a>
+    </section>
+
+    <section class="dsp-grid">
+      <h3>Connected DSPs</h3>
+      <div class="dsp-cards">
+        <div class="dsp-card glass ttd">
+          <span class="dsp-name">The Trade Desk</span>
+          <span class="dsp-status">Connected</span>
+        </div>
+        <div class="dsp-card glass dv360">
+          <span class="dsp-name">DV360</span>
+          <span class="dsp-status">Connected</span>
+        </div>
+        <div class="dsp-card glass amazon">
+          <span class="dsp-name">Amazon DSP</span>
+          <span class="dsp-status">Connected</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    // Load quick stats
+    async function loadQuickStats() {
+      try {
+        const campaigns = await fetch('/api/campaigns').then(r => r.json());
+        const liveCampaigns = campaigns.filter(c => c.status === 'live');
+        
+        document.getElementById('totalCampaigns').textContent = liveCampaigns.length;
+        
+        const totalSpend = liveCampaigns.reduce((sum, c) => sum + (c.spent || 0), 0);
+        document.getElementById('totalSpend').textContent = '$' + totalSpend.toLocaleString();
+      } catch (err) {
+        console.error('Error loading stats:', err);
+      }
+    }
+    
+    loadQuickStats();
+  </script>
+</body>
+</html>

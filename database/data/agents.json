@@ -1,0 +1,27 @@
+{
+  "media-planner": {
+    "name": "Media Planner",
+    "status": "idle",
+    "lastActive": "2026-02-07T00:47:18.576Z"
+  },
+  "trader": {
+    "name": "Trader",
+    "status": "idle",
+    "lastActive": "2026-02-07T00:47:18.577Z"
+  },
+  "analyst": {
+    "name": "Analyst",
+    "status": "idle",
+    "lastActive": "2026-02-07T00:47:18.577Z"
+  },
+  "creative-ops": {
+    "name": "Creative Ops",
+    "status": "idle",
+    "lastActive": "2026-02-07T00:47:18.577Z"
+  },
+  "compliance": {
+    "name": "Compliance",
+    "status": "idle",
+    "lastActive": "2026-02-07T00:47:18.577Z"
+  }
+}

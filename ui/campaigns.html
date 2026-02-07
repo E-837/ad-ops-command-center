@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campaigns - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>📊 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📈 Dashboard</a></li>
+      <li><a href="/campaigns" class="nav-link active">📋 Campaigns</a></li>
+      <li><a href="/insights" class="nav-link">💡 Insights</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>📋 Campaigns</h2>
+      <p>Unified campaign list across all DSPs</p>
+    </header>
+
+    <!-- Filters -->
+    <section class="filters glass">
+      <div class="filter-group">
+        <label>Status</label>
+        <select id="filter-status">
+          <option value="">All</option>
+          <option value="live">Live</option>
+          <option value="paused">Paused</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>DSP</label>
+        <select id="filter-dsp">
+          <option value="">All</option>
+          <option value="ttd">TTD</option>
+          <option value="dv360">DV360</option>
+          <option value="amazon-dsp">Amazon</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>LOB</label>
+        <select id="filter-lob">
+          <option value="">All</option>
+          <option value="mobile">Mobile</option>
+          <option value="wearables">Wearables</option>
+          <option value="home">Home</option>
+          <option value="education">Education</option>
+          <option value="business">Business</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Channel</label>
+        <select id="filter-channel">
+          <option value="">All</option>
+          <option value="display">Display</option>
+          <option value="olv">OLV</option>
+          <option value="ctv">CTV</option>
+          <option value="audio">Audio</option>
+          <option value="demand-gen">Demand Gen</option>
+        </select>
+      </div>
+      <button id="apply-filters" class="btn primary">Apply</button>
+    </section>
+
+    <!-- Campaign Stats -->
+    <section class="campaign-stats">
+      <div class="stat-mini glass">
+        <span id="total-campaigns">--</span>
+        <label>Total</label>
+      </div>
+      <div class="stat-mini glass">
+        <span id="total-budget">--</span>
+        <label>Budget</label>
+      </div>
+      <div class="stat-mini glass">
+        <span id="total-spent">--</span>
+        <label>Spent</label>
+      </div>
+      <div class="stat-mini glass">
+        <span id="avg-pacing">--</span>
+        <label>Avg Pacing</label>
+      </div>
+    </section>
+
+    <!-- Campaign List -->
+    <section class="campaign-list" id="campaign-list">
+      <p class="loading">Loading campaigns...</p>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    let allCampaigns = [];
+    
+    async function loadCampaigns() {
+      try {
+        const campaigns = await fetch('/api/campaigns').then(r => r.json());
+        allCampaigns = campaigns;
+        renderCampaigns(campaigns);
+      } catch (err) {
+        console.error('Error loading campaigns:', err);
+        document.getElementById('campaign-list').innerHTML = 
+          '<p class="error">Error loading campaigns</p>';
+      }
+    }
+    
+    function renderCampaigns(campaigns) {
+      // Update stats
+      document.getElementById('total-campaigns').textContent = campaigns.length;
+      
+      const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
+      const totalSpent = campaigns.reduce((sum, c) => sum + (c.spent || 0), 0);
+      const avgPacing = totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(0) : 0;
+      
+      document.getElementById('total-budget').textContent = '$' + (totalBudget/1000).toFixed(0) + 'K';
+      document.getElementById('total-spent').textContent = '$' + (totalSpent/1000).toFixed(0) + 'K';
+      document.getElementById('avg-pacing').textContent = avgPacing + '%';
+      
+      // Render list
+      if (campaigns.length === 0) {
+        document.getElementById('campaign-list').innerHTML = 
+          '<p class="empty">No campaigns found</p>';
+        return;
+      }
+      
+      document.getElementById('campaign-list').innerHTML = campaigns.map(c => {
+        const pacing = c.budget > 0 ? ((c.spent || 0) / c.budget * 100).toFixed(0) : 0;
+        const pacingClass = pacing < 50 ? 'behind' : pacing > 100 ? 'ahead' : 'on-pace';
+        
+        return `
+          <div class="campaign-row glass">
+            <div class="campaign-main">
+              <h4>${c.name}</h4>
+              <div class="campaign-tags">
+                <span class="tag dsp">${(c.dsp || 'unknown').toUpperCase()}</span>
+                <span class="tag channel">${c.channel || 'Display'}</span>
+                <span class="tag lob">${c.lob || 'General'}</span>
+                <span class="tag funnel">${c.funnel || 'Awareness'}</span>
+              </div>
+            </div>
+            <div class="campaign-metrics">
+              <div class="metric">
+                <span class="value">$${((c.spent || 0)/1000).toFixed(1)}K</span>
+                <span class="label">Spent</span>
+              </div>
+              <div class="metric">
+                <span class="value">$${((c.budget || 0)/1000).toFixed(0)}K</span>
+                <span class="label">Budget</span>
+              </div>
+              <div class="metric pacing ${pacingClass}">
+                <span class="value">${pacing}%</span>
+                <span class="label">Pacing</span>
+              </div>
+            </div>
+            <div class="campaign-status">
+              <span class="status-badge ${c.status}">${c.status}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function applyFilters() {
+      const status = document.getElementById('filter-status').value;
+      const dsp = document.getElementById('filter-dsp').value;
+      const lob = document.getElementById('filter-lob').value;
+      const channel = document.getElementById('filter-channel').value;
+      
+      let filtered = allCampaigns;
+      
+      if (status) filtered = filtered.filter(c => c.status === status);
+      if (dsp) filtered = filtered.filter(c => c.dsp === dsp);
+      if (lob) filtered = filtered.filter(c => c.lob === lob);
+      if (channel) filtered = filtered.filter(c => c.channel === channel);
+      
+      renderCampaigns(filtered);
+    }
+    
+    document.getElementById('apply-filters').addEventListener('click', applyFilters);
+    
+    loadCampaigns();
+  </script>
+</body>
+</html>
