@@ -173,6 +173,82 @@ const CREATIVE_STATUS = {
   EXPIRED: 'expired'
 };
 
+// Standard IAB Ad Sizes (Display)
+const AD_SIZES = {
+  // Desktop
+  MEDIUM_RECTANGLE: { width: 300, height: 250, name: 'Medium Rectangle', type: 'desktop', iab: true },
+  LEADERBOARD: { width: 728, height: 90, name: 'Leaderboard', type: 'desktop', iab: true },
+  WIDE_SKYSCRAPER: { width: 160, height: 600, name: 'Wide Skyscraper', type: 'desktop', iab: true },
+  HALF_PAGE: { width: 300, height: 600, name: 'Half Page', type: 'desktop', iab: true },
+  BILLBOARD: { width: 970, height: 250, name: 'Billboard', type: 'desktop', iab: true },
+  SUPER_LEADERBOARD: { width: 970, height: 90, name: 'Super Leaderboard', type: 'desktop', iab: true },
+  LARGE_RECTANGLE: { width: 336, height: 280, name: 'Large Rectangle', type: 'desktop', iab: true },
+  
+  // Mobile
+  MOBILE_LEADERBOARD: { width: 320, height: 50, name: 'Mobile Leaderboard', type: 'mobile', iab: true },
+  MOBILE_BANNER: { width: 300, height: 50, name: 'Mobile Banner', type: 'mobile', iab: true },
+  MOBILE_INTERSTITIAL: { width: 320, height: 480, name: 'Mobile Interstitial', type: 'mobile', iab: true },
+  MOBILE_INTERSTITIAL_HD: { width: 480, height: 320, name: 'Mobile Interstitial HD', type: 'mobile', iab: true },
+  
+  // Tablet
+  TABLET_LEADERBOARD: { width: 768, height: 90, name: 'Tablet Leaderboard', type: 'tablet', iab: true },
+  TABLET_FULL_BANNER: { width: 468, height: 60, name: 'Tablet Full Banner', type: 'tablet', iab: true }
+};
+
+// Video Ad Formats
+const VIDEO_FORMATS = {
+  // CTV/OTT
+  CTV_15S: { width: 1920, height: 1080, duration: 15, name: 'CTV 15 Second', channel: 'ctv', vastVersion: '4.0' },
+  CTV_30S: { width: 1920, height: 1080, duration: 30, name: 'CTV 30 Second', channel: 'ctv', vastVersion: '4.0' },
+  CTV_60S: { width: 1920, height: 1080, duration: 60, name: 'CTV 60 Second', channel: 'ctv', vastVersion: '4.0' },
+  
+  // Online Video
+  PREROLL_6S: { width: 1920, height: 1080, duration: 6, name: 'Pre-roll 6 Second (Bumper)', channel: 'olv', vastVersion: '3.0' },
+  PREROLL_15S: { width: 1920, height: 1080, duration: 15, name: 'Pre-roll 15 Second', channel: 'olv', vastVersion: '3.0' },
+  PREROLL_30S: { width: 1920, height: 1080, duration: 30, name: 'Pre-roll 30 Second', channel: 'olv', vastVersion: '3.0' },
+  MIDROLL: { width: 1920, height: 1080, duration: 30, name: 'Mid-roll', channel: 'olv', vastVersion: '3.0' },
+  OUTSTREAM: { width: 1280, height: 720, duration: 30, name: 'Outstream', channel: 'olv', vastVersion: '3.0' },
+  
+  // Vertical Video
+  YOUTUBE_SHORTS: { width: 1080, height: 1920, duration: 60, name: 'YouTube Shorts', channel: 'olv', aspect: '9:16' },
+  VERTICAL_VIDEO: { width: 1080, height: 1920, duration: 15, name: 'Vertical Video', channel: 'social', aspect: '9:16' }
+};
+
+// Native Ad Formats
+const NATIVE_FORMATS = {
+  NATIVE_IMAGE_LANDSCAPE: { width: 1200, height: 627, aspectRatio: '1.91:1', name: 'Native Image (Landscape)' },
+  NATIVE_IMAGE_SQUARE: { width: 1200, height: 1200, aspectRatio: '1:1', name: 'Native Image (Square)' },
+  NATIVE_LOGO: { width: 300, height: 300, aspectRatio: '1:1', name: 'Native Logo' },
+  NATIVE_VIDEO: { width: 1280, height: 720, duration: 30, name: 'Native Video' }
+};
+
+// Audio Ad Formats
+const AUDIO_FORMATS = {
+  AUDIO_15S: { duration: 15, bitrate: '192kbps', format: 'mp3', name: 'Audio 15 Second' },
+  AUDIO_30S: { duration: 30, bitrate: '192kbps', format: 'mp3', name: 'Audio 30 Second' },
+  AUDIO_60S: { duration: 60, bitrate: '192kbps', format: 'mp3', name: 'Audio 60 Second' },
+  COMPANION_BANNER: { width: 300, height: 250, name: 'Audio Companion Banner' }
+};
+
+// Creative File Requirements by DSP
+const DSP_CREATIVE_REQUIREMENTS = {
+  TTD: {
+    display: { formats: ['jpg', 'png', 'gif', 'html5'], maxSize: '150KB', ssl: true },
+    video: { formats: ['mp4', 'webm'], maxSize: '200MB', vast: ['2.0', '3.0', '4.0'] },
+    native: { formats: ['jpg', 'png'], maxSize: '1MB' }
+  },
+  DV360: {
+    display: { formats: ['jpg', 'png', 'gif', 'html5'], maxSize: '150KB', gwd: true },
+    video: { formats: ['mp4', 'webm'], maxSize: '1GB', vast: ['3.0', '4.0'] },
+    native: { formats: ['jpg', 'png'], maxSize: '1MB' }
+  },
+  AMAZON_DSP: {
+    display: { formats: ['jpg', 'png', 'gif', 'html5'], maxSize: '200KB' },
+    video: { formats: ['mp4'], maxSize: '500MB', vast: ['2.0', '3.0'] },
+    native: { formats: ['jpg', 'png'], maxSize: '1MB' }
+  }
+};
+
 /**
  * Get all LOBs
  */
@@ -281,8 +357,120 @@ function getFullTaxonomy() {
       campaign: CAMPAIGN_STATUS,
       flight: FLIGHT_STATUS,
       creative: CREATIVE_STATUS
+    },
+    creative: {
+      adSizes: AD_SIZES,
+      videoFormats: VIDEO_FORMATS,
+      nativeFormats: NATIVE_FORMATS,
+      audioFormats: AUDIO_FORMATS,
+      dspRequirements: DSP_CREATIVE_REQUIREMENTS
     }
   };
+}
+
+/**
+ * Get all ad sizes
+ */
+function getAdSizes(type) {
+  if (type) {
+    return Object.values(AD_SIZES).filter(s => s.type === type);
+  }
+  return Object.values(AD_SIZES);
+}
+
+/**
+ * Get ad size by dimensions
+ */
+function getAdSizeByDimensions(width, height) {
+  return Object.values(AD_SIZES).find(s => s.width === width && s.height === height);
+}
+
+/**
+ * Get video formats by channel
+ */
+function getVideoFormats(channel) {
+  if (channel) {
+    return Object.values(VIDEO_FORMATS).filter(f => f.channel === channel);
+  }
+  return Object.values(VIDEO_FORMATS);
+}
+
+/**
+ * Get native formats
+ */
+function getNativeFormats() {
+  return Object.values(NATIVE_FORMATS);
+}
+
+/**
+ * Get audio formats
+ */
+function getAudioFormats() {
+  return Object.values(AUDIO_FORMATS);
+}
+
+/**
+ * Get DSP creative requirements
+ */
+function getDSPCreativeRequirements(dspId, channel) {
+  const dsp = DSP_CREATIVE_REQUIREMENTS[dspId.toUpperCase().replace('-', '_')];
+  if (!dsp) return null;
+  if (channel) return dsp[channel] || null;
+  return dsp;
+}
+
+/**
+ * Validate creative for DSP
+ */
+function validateCreativeForDSP(creative, dspId, channel) {
+  const requirements = getDSPCreativeRequirements(dspId, channel);
+  if (!requirements) {
+    return { valid: false, issues: [`Unknown DSP or channel: ${dspId}/${channel}`] };
+  }
+  
+  const issues = [];
+  
+  // Check format
+  if (creative.format && !requirements.formats.includes(creative.format.toLowerCase())) {
+    issues.push(`Format ${creative.format} not supported. Use: ${requirements.formats.join(', ')}`);
+  }
+  
+  // Check size (if provided as string like "150KB")
+  if (creative.fileSize && requirements.maxSize) {
+    const maxBytes = parseFileSize(requirements.maxSize);
+    const actualBytes = typeof creative.fileSize === 'string' 
+      ? parseFileSize(creative.fileSize) 
+      : creative.fileSize;
+    
+    if (actualBytes > maxBytes) {
+      issues.push(`File size exceeds limit of ${requirements.maxSize}`);
+    }
+  }
+  
+  return {
+    valid: issues.length === 0,
+    issues,
+    requirements
+  };
+}
+
+/**
+ * Parse file size string to bytes
+ */
+function parseFileSize(sizeStr) {
+  const match = String(sizeStr).match(/^(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)$/i);
+  if (!match) return parseInt(sizeStr) || 0;
+  
+  const value = parseFloat(match[1]);
+  const unit = match[2].toUpperCase();
+  
+  switch (unit) {
+    case 'B': return value;
+    case 'KB': return value * 1024;
+    case 'MB': return value * 1024 * 1024;
+    case 'GB': return value * 1024 * 1024 * 1024;
+    default: return value;
+  }
 }
 
 module.exports = {
@@ -294,6 +482,11 @@ module.exports = {
   CAMPAIGN_STATUS,
   FLIGHT_STATUS,
   CREATIVE_STATUS,
+  AD_SIZES,
+  VIDEO_FORMATS,
+  NATIVE_FORMATS,
+  AUDIO_FORMATS,
+  DSP_CREATIVE_REQUIREMENTS,
   getLOBs,
   getChannels,
   getChannelsForDSP,
@@ -303,5 +496,12 @@ module.exports = {
   isChannelAvailable,
   getNode,
   validateCombination,
-  getFullTaxonomy
+  getFullTaxonomy,
+  getAdSizes,
+  getAdSizeByDimensions,
+  getVideoFormats,
+  getNativeFormats,
+  getAudioFormats,
+  getDSPCreativeRequirements,
+  validateCreativeForDSP
 };

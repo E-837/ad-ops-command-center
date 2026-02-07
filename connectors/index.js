@@ -1,16 +1,33 @@
 /**
  * Connector Registry
- * Central hub for DSP integrations
+ * Central hub for DSP and productivity tool integrations
  */
 
 const ttd = require('./ttd');
 const dv360 = require('./dv360');
 const amazonDsp = require('./amazon-dsp');
+const asana = require('./asana');
+const notion = require('./notion');
+const figma = require('./figma');
 
-const CONNECTORS = {
+// DSP Connectors
+const DSP_CONNECTORS = {
   ttd,
   dv360,
   'amazon-dsp': amazonDsp
+};
+
+// Productivity/Creative Tool Connectors
+const PRODUCTIVITY_CONNECTORS = {
+  asana,
+  notion,
+  figma
+};
+
+// All connectors combined
+const CONNECTORS = {
+  ...DSP_CONNECTORS,
+  ...PRODUCTIVITY_CONNECTORS
 };
 
 /**
@@ -31,6 +48,26 @@ function getAllConnectors() {
 }
 
 /**
+ * Get DSP connectors only
+ */
+function getDSPConnectors() {
+  return Object.entries(DSP_CONNECTORS).map(([id, connector]) => ({
+    id,
+    ...connector.getInfo()
+  }));
+}
+
+/**
+ * Get productivity connectors only
+ */
+function getProductivityConnectors() {
+  return Object.entries(PRODUCTIVITY_CONNECTORS).map(([id, connector]) => ({
+    id,
+    ...connector.getInfo()
+  }));
+}
+
+/**
  * Get connector status
  */
 function getConnectorStatus() {
@@ -38,7 +75,8 @@ function getConnectorStatus() {
     id,
     name: connector.name,
     status: connector.status || 'ready',
-    lastSync: connector.lastSync || null
+    lastSync: connector.lastSync || null,
+    category: DSP_CONNECTORS[id] ? 'dsp' : 'productivity'
   }));
 }
 
@@ -51,7 +89,7 @@ async function fetchAllCampaigns(options = {}) {
     errors: []
   };
   
-  for (const [id, connector] of Object.entries(CONNECTORS)) {
+  for (const [id, connector] of Object.entries(DSP_CONNECTORS)) {
     try {
       const campaigns = await connector.getCampaigns(options);
       results.campaigns.push(...campaigns.map(c => ({ ...c, dsp: id })));
@@ -72,7 +110,7 @@ async function fetchAllPacing() {
     errors: []
   };
   
-  for (const [id, connector] of Object.entries(CONNECTORS)) {
+  for (const [id, connector] of Object.entries(DSP_CONNECTORS)) {
     try {
       const pacing = await connector.getPacing();
       results.pacing.push(...pacing.map(p => ({ ...p, dsp: id })));
@@ -88,7 +126,7 @@ async function fetchAllPacing() {
  * Get metrics from specific DSP
  */
 async function getMetrics(dspId, campaignId, dateRange) {
-  const connector = CONNECTORS[dspId];
+  const connector = DSP_CONNECTORS[dspId];
   if (!connector) {
     throw new Error(`Unknown DSP: ${dspId}`);
   }
@@ -96,12 +134,53 @@ async function getMetrics(dspId, campaignId, dateRange) {
   return connector.getMetrics(campaignId, dateRange);
 }
 
+/**
+ * Handle tool call for productivity connectors
+ * Routes to the appropriate connector's handleToolCall
+ */
+async function handleProductivityToolCall(connectorId, toolName, params) {
+  const connector = PRODUCTIVITY_CONNECTORS[connectorId];
+  if (!connector) {
+    throw new Error(`Unknown productivity connector: ${connectorId}`);
+  }
+  
+  if (!connector.handleToolCall) {
+    throw new Error(`Connector ${connectorId} does not support tool calls`);
+  }
+  
+  return connector.handleToolCall(toolName, params);
+}
+
+/**
+ * Get all available tools from productivity connectors
+ */
+function getProductivityTools() {
+  const tools = [];
+  
+  for (const [connectorId, connector] of Object.entries(PRODUCTIVITY_CONNECTORS)) {
+    if (connector.tools) {
+      tools.push(...connector.tools.map(t => ({
+        ...t,
+        connector: connectorId
+      })));
+    }
+  }
+  
+  return tools;
+}
+
 module.exports = {
   CONNECTORS,
+  DSP_CONNECTORS,
+  PRODUCTIVITY_CONNECTORS,
   getConnector,
   getAllConnectors,
+  getDSPConnectors,
+  getProductivityConnectors,
   getConnectorStatus,
   fetchAllCampaigns,
   fetchAllPacing,
-  getMetrics
+  getMetrics,
+  handleProductivityToolCall,
+  getProductivityTools
 };

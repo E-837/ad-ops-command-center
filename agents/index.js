@@ -8,13 +8,17 @@ const trader = require('./trader');
 const analyst = require('./analyst');
 const creativeOps = require('./creative-ops');
 const compliance = require('./compliance');
+const projectManager = require('./project-manager');
+const creativeCoordinator = require('./creative-coordinator');
 
 const AGENTS = {
   'media-planner': mediaPlanner,
   'trader': trader,
   'analyst': analyst,
   'creative-ops': creativeOps,
-  'compliance': compliance
+  'compliance': compliance,
+  'project-manager': projectManager,
+  'creative-coordinator': creativeCoordinator
 };
 
 /**
@@ -44,6 +48,15 @@ function getAgentsByCapability(capability) {
 }
 
 /**
+ * Get agents by tool
+ */
+function getAgentsByTool(toolId) {
+  return Object.entries(AGENTS)
+    .filter(([id, agent]) => agent.tools?.some(t => t.includes(toolId)))
+    .map(([id, agent]) => ({ id, ...agent.getInfo() }));
+}
+
+/**
  * Route query to appropriate agent
  */
 function routeQuery(query) {
@@ -67,10 +80,23 @@ function routeQuery(query) {
     return 'analyst';
   }
   
-  // Creative queries
-  if (q.includes('creative') || q.includes('asset') || q.includes('spec') ||
-      q.includes('rotation') || q.includes('format')) {
+  // Creative queries (legacy creative-ops)
+  if (q.includes('creative rotation') || q.includes('asset refresh') || 
+      q.includes('fatigue') || q.includes('creative mix')) {
     return 'creative-ops';
+  }
+  
+  // Creative coordination queries (Figma-focused)
+  if (q.includes('figma') || q.includes('design') || q.includes('spec') ||
+      q.includes('dimension') || q.includes('export') || q.includes('brand guideline')) {
+    return 'creative-coordinator';
+  }
+  
+  // Project management queries
+  if (q.includes('task') || q.includes('asana') || q.includes('brief') ||
+      q.includes('workflow') || q.includes('deadline') || q.includes('meeting') ||
+      q.includes('notion') || q.includes('documentation') || q.includes('sop')) {
+    return 'project-manager';
   }
   
   // Compliance queries
@@ -90,9 +116,22 @@ function getAgentStatus() {
   return Object.entries(AGENTS).map(([id, agent]) => ({
     id,
     name: agent.name,
+    role: agent.role,
     status: 'idle', // Would be dynamic in production
     lastActive: new Date().toISOString()
   }));
+}
+
+/**
+ * Get agent categories
+ */
+function getAgentCategories() {
+  return {
+    planning: ['media-planner'],
+    execution: ['trader', 'creative-ops'],
+    analysis: ['analyst', 'compliance'],
+    coordination: ['project-manager', 'creative-coordinator']
+  };
 }
 
 module.exports = {
@@ -100,6 +139,8 @@ module.exports = {
   getAgent,
   getAllAgents,
   getAgentsByCapability,
+  getAgentsByTool,
   routeQuery,
-  getAgentStatus
+  getAgentStatus,
+  getAgentCategories
 };

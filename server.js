@@ -229,11 +229,21 @@ app.get('/api/domain/stats', (req, res) => {
 
 // --- API: Health ---
 app.get('/api/health', (req, res) => {
+  // Get real connection status
+  let connections = {};
+  try {
+    const apiClient = require('./connectors/api-client');
+    connections = apiClient.getConnectionStatus();
+  } catch (e) {
+    connections = { error: e.message };
+  }
+  
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    database: db.getStats()
+    database: db.getStats(),
+    connections
   });
 });
 
@@ -262,8 +272,17 @@ app.get('/query', (req, res) => {
   res.sendFile(path.join(__dirname, 'ui', 'query.html'));
 });
 
+// Error handling
+process.on('uncaughtException', (err) => {
+  console.error('[ERROR] Uncaught exception:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('[ERROR] Unhandled rejection:', err);
+});
+
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 Ad Ops Command Center running at http://localhost:${PORT}`);
   console.log(`\n📊 Dashboard: http://localhost:${PORT}/dashboard`);
   console.log(`📋 Campaigns: http://localhost:${PORT}/campaigns`);
@@ -271,6 +290,10 @@ app.listen(PORT, () => {
   console.log(`🤖 Agents: http://localhost:${PORT}/agents`);
   console.log(`💬 Query: http://localhost:${PORT}/query`);
   console.log(`\n📡 API: http://localhost:${PORT}/api/`);
+});
+
+server.on('error', (err) => {
+  console.error('[ERROR] Server error:', err);
 });
 
 module.exports = app;
