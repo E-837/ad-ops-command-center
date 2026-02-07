@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture - Digital Advertising Command</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    /* Architecture Diagram Styles */
+    .architecture-container {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+    
+    .arch-layer {
+      position: relative;
+    }
+    
+    .layer-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .layer-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--glass-border);
+    }
+    
+    .nodes-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    
+    .arch-node {
+      padding: 20px;
+      min-width: 180px;
+      text-align: center;
+      position: relative;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    
+    .arch-node:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    .node-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+    
+    .node-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 5px;
+    }
+    
+    .node-role {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    
+    .node-model {
+      font-size: 0.7rem;
+      padding: 3px 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      display: inline-block;
+    }
+    
+    .node-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    
+    .node-status.live { background: var(--primary); }
+    .node-status.mock { background: var(--warning); }
+    .node-status.error { background: var(--danger); }
+    .node-status.idle { background: var(--text-muted); }
+    
+    /* Connector types */
+    .arch-node.dsp { border-left: 3px solid #00C853; }
+    .arch-node.productivity { border-left: 3px solid #2196F3; }
+    .arch-node.agent { border-left: 3px solid #9C27B0; }
+    .arch-node.workflow { border-left: 3px solid #FF9800; }
+    
+    /* Connection Lines (SVG) */
+    .connections-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .connection-line {
+      stroke: var(--glass-border);
+      stroke-width: 2;
+      fill: none;
+      stroke-dasharray: 5, 5;
+      opacity: 0.5;
+    }
+    
+    /* Hub visualization */
+    .central-hub {
+      padding: 30px 50px;
+      text-align: center;
+      margin: 0 auto;
+      max-width: 400px;
+    }
+    
+    .hub-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+    
+    .hub-name {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .hub-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      padding: 15px 20px;
+      margin-top: 20px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .legend-dot.live { background: var(--primary); }
+    .legend-dot.mock { background: var(--warning); }
+    .legend-dot.error { background: var(--danger); }
+    
+    .legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    
+    .legend-line.dsp { background: #00C853; }
+    .legend-line.productivity { background: #2196F3; }
+    .legend-line.agent { background: #9C27B0; }
+    
+    /* Data flow arrows */
+    .data-flow {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 0;
+      color: var(--text-muted);
+    }
+    
+    .flow-arrow {
+      font-size: 1.5rem;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    
+    /* Stats panel */
+    .arch-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .arch-stat {
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .arch-stat-value {
+      font-size: 2rem;
+      font-weight: 600;
+    }
+    
+    .arch-stat-label {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Digital Ad</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📈 Dashboard</a></li>
+      <li><a href="/campaigns" class="nav-link">📋 Campaigns</a></li>
+      <li><a href="/insights" class="nav-link">💡 Insights</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+      <li><a href="/architecture" class="nav-link active">🏗️ Architecture</a></li>
+      <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>🏗️ System Architecture</h2>
+      <p>Interactive overview of agents, connectors, and data flow</p>
+    </header>
+
+    <!-- Stats -->
+    <section class="arch-stats">
+      <div class="arch-stat glass">
+        <div class="arch-stat-value" id="agent-count">5</div>
+        <div class="arch-stat-label">AI Agents</div>
+      </div>
+      <div class="arch-stat glass">
+        <div class="arch-stat-value" id="dsp-count">3</div>
+        <div class="arch-stat-label">DSPs</div>
+      </div>
+      <div class="arch-stat glass">
+        <div class="arch-stat-value" id="connector-count">4</div>
+        <div class="arch-stat-label">Connectors</div>
+      </div>
+      <div class="arch-stat glass">
+        <div class="arch-stat-value" id="live-count">0</div>
+        <div class="arch-stat-label">Live APIs</div>
+      </div>
+    </section>
+
+    <!-- Architecture Diagram -->
+    <section class="architecture-container">
+      
+      <!-- Layer: DSPs -->
+      <div class="arch-layer">
+        <div class="layer-title">📡 DSP Layer (Data Sources)</div>
+        <div class="nodes-grid" id="dsp-nodes">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <div class="data-flow">
+        <span class="flow-arrow">⬇️</span>
+        <span style="margin: 0 15px;">Campaign Data & Metrics</span>
+        <span class="flow-arrow">⬇️</span>
+      </div>
+      
+      <!-- Layer: Command Center -->
+      <div class="arch-layer">
+        <div class="layer-title">🎯 Command Center (Orchestration)</div>
+        <div class="central-hub glass">
+          <span class="hub-icon">🧠</span>
+          <div class="hub-name">Digital Advertising Command</div>
+          <div class="hub-desc">AI-powered orchestration layer routing queries to specialized agents</div>
+        </div>
+      </div>
+      
+      <div class="data-flow">
+        <span class="flow-arrow">⬇️</span>
+        <span style="margin: 0 15px;">Intelligent Routing</span>
+        <span class="flow-arrow">⬇️</span>
+      </div>
+      
+      <!-- Layer: Agents -->
+      <div class="arch-layer">
+        <div class="layer-title">🤖 Agent Layer (AI Processing)</div>
+        <div class="nodes-grid" id="agent-nodes">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <div class="data-flow">
+        <span class="flow-arrow">⬇️</span>
+        <span style="margin: 0 15px;">Tool Calls & Integrations</span>
+        <span class="flow-arrow">⬇️</span>
+      </div>
+      
+      <!-- Layer: Productivity Tools -->
+      <div class="arch-layer">
+        <div class="layer-title">🔧 Productivity & Creative Tools</div>
+        <div class="nodes-grid" id="productivity-nodes">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Legend -->
+    <section class="legend glass">
+      <div class="legend-item">
+        <span class="legend-dot live"></span>
+        <span>Live API</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot mock"></span>
+        <span>Mock/Demo</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line dsp"></span>
+        <span>DSP</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line productivity"></span>
+        <span>Productivity</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-line agent"></span>
+        <span>Agent</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    // Agent icons and models
+    const AGENT_INFO = {
+      'media-planner': { icon: '📊', model: 'claude-sonnet' },
+      'trader': { icon: '💹', model: 'claude-haiku' },
+      'analyst': { icon: '📈', model: 'claude-sonnet' },
+      'creative-ops': { icon: '🎨', model: 'claude-haiku' },
+      'compliance': { icon: '🛡️', model: 'claude-haiku' }
+    };
+    
+    // DSP icons
+    const DSP_INFO = {
+      'ttd': { icon: '🟢', fullName: 'The Trade Desk' },
+      'dv360': { icon: '🔵', fullName: 'DV360' },
+      'amazon-dsp': { icon: '🟠', fullName: 'Amazon DSP' }
+    };
+    
+    // Productivity icons
+    const PROD_INFO = {
+      'asana': { icon: '✅' },
+      'notion': { icon: '📝' },
+      'figma': { icon: '🎨' },
+      'canva': { icon: '🖼️' }
+    };
+    
+    async function loadArchitecture() {
+      try {
+        // Load connectors
+        const connectors = await fetch('/api/connectors').then(r => r.json());
+        const connectorStatus = await fetch('/api/connectors/status').then(r => r.json());
+        
+        // Load agents
+        const agents = await fetch('/api/agents').then(r => r.json());
+        
+        // Build status map
+        const statusMap = {};
+        connectorStatus.forEach(c => {
+          statusMap[c.id] = c.status === 'connected' ? 'live' : 'mock';
+        });
+        
+        // Separate DSPs and productivity
+        const dsps = connectors.filter(c => ['ttd', 'dv360', 'amazon-dsp'].includes(c.id));
+        const productivity = connectors.filter(c => !['ttd', 'dv360', 'amazon-dsp'].includes(c.id));
+        
+        // Render DSP nodes
+        const dspContainer = document.getElementById('dsp-nodes');
+        dspContainer.innerHTML = dsps.map(dsp => {
+          const info = DSP_INFO[dsp.id] || { icon: '📡', fullName: dsp.name };
+          return `
+            <div class="arch-node glass dsp" onclick="showNodeDetails('${dsp.id}', 'dsp')">
+              <span class="node-status mock"></span>
+              <span class="node-icon">${info.icon}</span>
+              <div class="node-name">${info.fullName}</div>
+              <div class="node-role">Demand-Side Platform</div>
+              <div class="node-model">REST API</div>
+            </div>
+          `;
+        }).join('');
+        
+        // Render Agent nodes
+        const agentContainer = document.getElementById('agent-nodes');
+        agentContainer.innerHTML = agents.map(agent => {
+          const info = AGENT_INFO[agent.id] || { icon: '🤖', model: 'unknown' };
+          const status = agent.status || 'idle';
+          return `
+            <div class="arch-node glass agent" onclick="showNodeDetails('${agent.id}', 'agent')">
+              <span class="node-status ${status}"></span>
+              <span class="node-icon">${info.icon}</span>
+              <div class="node-name">${agent.name}</div>
+              <div class="node-role">${agent.role || 'AI Agent'}</div>
+              <div class="node-model">${info.model}</div>
+            </div>
+          `;
+        }).join('');
+        
+        // Render Productivity nodes
+        const prodContainer = document.getElementById('productivity-nodes');
+        prodContainer.innerHTML = productivity.map(conn => {
+          const info = PROD_INFO[conn.id] || { icon: '🔧' };
+          const isLive = conn.connected || statusMap[conn.id] === 'live';
+          return `
+            <div class="arch-node glass productivity" onclick="showNodeDetails('${conn.id}', 'productivity')">
+              <span class="node-status ${isLive ? 'live' : 'mock'}"></span>
+              <span class="node-icon">${info.icon}</span>
+              <div class="node-name">${conn.name}</div>
+              <div class="node-role">${conn.useCases ? conn.useCases[0] : 'Integration'}</div>
+              <div class="node-model">${isLive ? '🟢 LIVE' : '🟡 MOCK'}</div>
+            </div>
+          `;
+        }).join('');
+        
+        // Update stats
+        document.getElementById('agent-count').textContent = agents.length;
+        document.getElementById('dsp-count').textContent = dsps.length;
+        document.getElementById('connector-count').textContent = productivity.length;
+        
+        // Count live APIs
+        const liveCount = productivity.filter(c => c.connected).length;
+        document.getElementById('live-count').textContent = liveCount;
+        
+      } catch (err) {
+        console.error('Error loading architecture:', err);
+      }
+    }
+    
+    function showNodeDetails(id, type) {
+      // Could expand to show a modal with details
+      console.log(`Show details for ${type}: ${id}`);
+      if (type === 'agent') {
+        window.location.href = `/agents#${id}`;
+      } else {
+        window.location.href = `/connectors#${id}`;
+      }
+    }
+    
+    loadArchitecture();
+  </script>
+</body>
+</html>

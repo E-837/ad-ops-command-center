@@ -1,5 +1,5 @@
 /**
- * Ad Ops Command Center - Server
+ * Digital Advertising Command - Server
  * Express server with API routes
  */
 
@@ -240,11 +240,53 @@ app.get('/api/health', (req, res) => {
   
   res.json({
     status: 'ok',
+    name: 'Digital Advertising Command',
+    version: '2.0.0',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     database: db.getStats(),
     connections
   });
+});
+
+// --- API: Test Connector ---
+app.get('/api/connectors/test/:name', async (req, res) => {
+  const connectorName = req.params.name;
+  
+  try {
+    const connector = connectors.getConnector(connectorName);
+    
+    if (!connector) {
+      return res.json({ connected: false, error: 'Connector not found' });
+    }
+    
+    // Check if connector has testConnection method
+    if (typeof connector.testConnection === 'function') {
+      const result = await connector.testConnection();
+      return res.json(result);
+    }
+    
+    // For connectors without testConnection, check if they have connected flag
+    const info = connector.getInfo ? connector.getInfo() : {};
+    
+    if (info.connected !== undefined) {
+      return res.json({ 
+        connected: info.connected, 
+        lastSync: connector.lastSync || null,
+        name: info.name
+      });
+    }
+    
+    // Default: assume ready means connected for mock connectors
+    return res.json({ 
+      connected: false, 
+      mock: true,
+      message: 'Connector is in mock mode'
+    });
+    
+  } catch (err) {
+    res.json({ connected: false, error: err.message });
+  }
 });
 
 // --- Static UI routes ---
@@ -272,6 +314,14 @@ app.get('/query', (req, res) => {
   res.sendFile(path.join(__dirname, 'ui', 'query.html'));
 });
 
+app.get('/architecture', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'architecture.html'));
+});
+
+app.get('/connectors', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'connectors.html'));
+});
+
 // Error handling
 process.on('uncaughtException', (err) => {
   console.error('[ERROR] Uncaught exception:', err);
@@ -283,12 +333,15 @@ process.on('unhandledRejection', (err) => {
 
 // Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🚀 Ad Ops Command Center running at http://localhost:${PORT}`);
-  console.log(`\n📊 Dashboard: http://localhost:${PORT}/dashboard`);
-  console.log(`📋 Campaigns: http://localhost:${PORT}/campaigns`);
-  console.log(`💡 Insights: http://localhost:${PORT}/insights`);
-  console.log(`🤖 Agents: http://localhost:${PORT}/agents`);
-  console.log(`💬 Query: http://localhost:${PORT}/query`);
+  console.log(`\n🎯 Digital Advertising Command v2.0.0`);
+  console.log(`🚀 Server running at http://localhost:${PORT}\n`);
+  console.log(`📊 Dashboard:    http://localhost:${PORT}/dashboard`);
+  console.log(`📋 Campaigns:    http://localhost:${PORT}/campaigns`);
+  console.log(`💡 Insights:     http://localhost:${PORT}/insights`);
+  console.log(`🤖 Agents:       http://localhost:${PORT}/agents`);
+  console.log(`💬 Query:        http://localhost:${PORT}/query`);
+  console.log(`🏗️  Architecture: http://localhost:${PORT}/architecture`);
+  console.log(`🔌 Connectors:   http://localhost:${PORT}/connectors`);
   console.log(`\n📡 API: http://localhost:${PORT}/api/`);
 });
 

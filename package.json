@@ -1,7 +1,7 @@
 {
-  "name": "ad-ops-command",
-  "version": "1.0.0",
-  "description": "Ad Ops Command Center - Digital Media Operations Platform",
+  "name": "digital-advertising-command",
+  "version": "2.0.0",
+  "description": "Digital Advertising Command - AI-Powered Media Operations Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

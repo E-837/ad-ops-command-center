@@ -30,6 +30,7 @@ const env = loadEnv();
 const hasAsana = !!env.ASANA_PAT;
 const hasNotion = !!env.NOTION_TOKEN;
 const hasFigma = !!env.FIGMA_PAT;
+const hasCanva = !!(env.CANVA_ACCESS_TOKEN && env.CANVA_CLIENT_ID);
 
 /**
  * Asana API Client
@@ -259,12 +260,64 @@ const figma = {
   }
 };
 
+/**
+ * Canva API Client
+ */
+const canva = {
+  connected: hasCanva,
+  accessToken: env.CANVA_ACCESS_TOKEN,
+  refreshToken: env.CANVA_REFRESH_TOKEN,
+  clientId: env.CANVA_CLIENT_ID,
+  clientSecret: env.CANVA_CLIENT_SECRET,
+  
+  async request(endpoint, options = {}) {
+    if (!hasCanva) throw new Error('Canva not configured');
+    
+    const url = `https://api.canva.com/rest/v1${endpoint}`;
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
+    });
+    
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Canva API error: ${res.status} - ${err}`);
+    }
+    
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
+  },
+  
+  async listDesigns(params = {}) {
+    const searchParams = new URLSearchParams();
+    if (params.query) searchParams.set('query', params.query);
+    if (params.limit) searchParams.set('limit', params.limit.toString());
+    return this.request(`/designs?${searchParams.toString()}`);
+  },
+  
+  async getDesign(designId) {
+    return this.request(`/designs/${designId}`);
+  },
+  
+  async createDesign(data) {
+    return this.request('/designs', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+};
+
 // Connection status summary
 function getConnectionStatus() {
   return {
     asana: { connected: hasAsana, name: 'Asana' },
     notion: { connected: hasNotion, name: 'Notion' },
-    figma: { connected: hasFigma, name: 'Figma' }
+    figma: { connected: hasFigma, name: 'Figma' },
+    canva: { connected: hasCanva, name: 'Canva' }
   };
 }
 
@@ -272,8 +325,10 @@ module.exports = {
   asana,
   notion,
   figma,
+  canva,
   getConnectionStatus,
   hasAsana,
   hasNotion,
-  hasFigma
+  hasFigma,
+  hasCanva
 };

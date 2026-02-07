@@ -1,6 +1,6 @@
-# Ad Ops Command Center
+# Digital Advertising Command
 
-A digital media/advertising-specific operations platform for managing programmatic advertising campaigns across multiple DSPs.
+An AI-powered digital advertising operations platform for managing programmatic campaigns across multiple DSPs with intelligent agent orchestration.
 
 ## Features
 

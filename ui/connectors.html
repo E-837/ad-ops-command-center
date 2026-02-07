@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connectors - Digital Advertising Command</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    /* Connector Cards */
+    .connectors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .connector-card {
+      padding: 25px;
+      position: relative;
+      transition: all 0.3s;
+    }
+    
+    .connector-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    .connector-card.dsp { border-left: 4px solid #00C853; }
+    .connector-card.productivity { border-left: 4px solid #2196F3; }
+    
+    .connector-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    
+    .connector-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .connector-icon {
+      font-size: 2.5rem;
+    }
+    
+    .connector-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    
+    .connector-version {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    /* Status Badge */
+    .status-badge-large {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .status-badge-large.connected {
+      background: rgba(76, 175, 80, 0.2);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .status-badge-large.mock {
+      background: rgba(255, 152, 0, 0.2);
+      color: var(--warning);
+      border: 1px solid var(--warning);
+    }
+    
+    .status-badge-large.error {
+      background: rgba(244, 67, 54, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+    
+    /* Connector Details */
+    .connector-details {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+    }
+    
+    .detail-item {
+      text-align: center;
+    }
+    
+    .detail-value {
+      font-size: 1.3rem;
+      font-weight: 600;
+      display: block;
+    }
+    
+    .detail-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    /* Features list */
+    .connector-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 15px 0;
+    }
+    
+    .feature-tag {
+      padding: 4px 12px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+    
+    /* Use cases */
+    .connector-usecases {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 15px;
+    }
+    
+    /* Action buttons */
+    .connector-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .btn-test {
+      flex: 1;
+      padding: 10px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-test:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-test.testing {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .btn-test.success {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .btn-test.error {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    
+    /* Section headers */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin: 30px 0 20px;
+    }
+    
+    .section-header h3 {
+      font-size: 1.2rem;
+    }
+    
+    .section-header .count {
+      padding: 4px 12px;
+      background: var(--glass-bg);
+      border-radius: 15px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Summary stats */
+    .connector-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .conn-stat {
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .conn-stat-value {
+      font-size: 2rem;
+      font-weight: 600;
+    }
+    
+    .conn-stat-label {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+    
+    /* Last sync time */
+    .last-sync {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+    
+    /* Refresh all button */
+    .refresh-btn {
+      padding: 12px 25px;
+      background: var(--secondary);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .refresh-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Digital Ad</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📈 Dashboard</a></li>
+      <li><a href="/campaigns" class="nav-link">📋 Campaigns</a></li>
+      <li><a href="/insights" class="nav-link">💡 Insights</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
+      <li><a href="/connectors" class="nav-link active">🔌 Connectors</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h2>🔌 Connectors</h2>
+        <p>Manage integrations with DSPs and productivity tools</p>
+      </div>
+      <button class="refresh-btn" onclick="refreshAll()">
+        🔄 Refresh All
+      </button>
+    </header>
+
+    <!-- Summary Stats -->
+    <section class="connector-stats">
+      <div class="conn-stat glass">
+        <div class="conn-stat-value" id="total-connectors">0</div>
+        <div class="conn-stat-label">Total Connectors</div>
+      </div>
+      <div class="conn-stat glass">
+        <div class="conn-stat-value" id="live-apis" style="color: var(--primary);">0</div>
+        <div class="conn-stat-label">Live APIs</div>
+      </div>
+      <div class="conn-stat glass">
+        <div class="conn-stat-value" id="mock-apis" style="color: var(--warning);">0</div>
+        <div class="conn-stat-label">Mock/Demo</div>
+      </div>
+      <div class="conn-stat glass">
+        <div class="conn-stat-value" id="total-tools">0</div>
+        <div class="conn-stat-label">Available Tools</div>
+      </div>
+    </section>
+
+    <!-- DSP Connectors -->
+    <div class="section-header">
+      <h3>📡 DSP Connectors</h3>
+      <span class="count" id="dsp-count">3</span>
+    </div>
+    <section class="connectors-grid" id="dsp-connectors">
+      <p class="loading">Loading connectors...</p>
+    </section>
+
+    <!-- Productivity Connectors -->
+    <div class="section-header">
+      <h3>🔧 Productivity & Creative Tools</h3>
+      <span class="count" id="prod-count">4</span>
+    </div>
+    <section class="connectors-grid" id="prod-connectors">
+      <p class="loading">Loading connectors...</p>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    // Connector icons
+    const ICONS = {
+      'ttd': '🟢',
+      'dv360': '🔵',
+      'amazon-dsp': '🟠',
+      'asana': '✅',
+      'notion': '📝',
+      'figma': '🎨',
+      'canva': '🖼️'
+    };
+    
+    const DSP_IDS = ['ttd', 'dv360', 'amazon-dsp'];
+    
+    async function loadConnectors() {
+      try {
+        const connectors = await fetch('/api/connectors').then(r => r.json());
+        const status = await fetch('/api/connectors/status').then(r => r.json());
+        
+        // Build status map
+        const statusMap = {};
+        status.forEach(s => {
+          statusMap[s.id] = s;
+        });
+        
+        // Separate by type
+        const dsps = connectors.filter(c => DSP_IDS.includes(c.id));
+        const prods = connectors.filter(c => !DSP_IDS.includes(c.id));
+        
+        // Render DSP connectors
+        const dspContainer = document.getElementById('dsp-connectors');
+        dspContainer.innerHTML = dsps.map(c => renderConnectorCard(c, statusMap[c.id], 'dsp')).join('');
+        
+        // Render Productivity connectors
+        const prodContainer = document.getElementById('prod-connectors');
+        prodContainer.innerHTML = prods.map(c => renderConnectorCard(c, statusMap[c.id], 'productivity')).join('');
+        
+        // Update counts
+        document.getElementById('total-connectors').textContent = connectors.length;
+        document.getElementById('dsp-count').textContent = dsps.length;
+        document.getElementById('prod-count').textContent = prods.length;
+        
+        // Count live vs mock
+        let liveCount = 0;
+        let mockCount = 0;
+        let toolCount = 0;
+        
+        connectors.forEach(c => {
+          if (c.connected) liveCount++;
+          else mockCount++;
+          if (c.toolCount) toolCount += c.toolCount;
+          else if (c.tools) toolCount += c.tools.length;
+        });
+        
+        document.getElementById('live-apis').textContent = liveCount;
+        document.getElementById('mock-apis').textContent = mockCount;
+        document.getElementById('total-tools').textContent = toolCount;
+        
+      } catch (err) {
+        console.error('Error loading connectors:', err);
+        document.getElementById('dsp-connectors').innerHTML = '<p class="error">Error loading connectors</p>';
+        document.getElementById('prod-connectors').innerHTML = '<p class="error">Error loading connectors</p>';
+      }
+    }
+    
+    function renderConnectorCard(connector, status, type) {
+      const icon = ICONS[connector.id] || '🔌';
+      const isConnected = connector.connected;
+      const statusClass = isConnected ? 'connected' : 'mock';
+      const statusText = isConnected ? '✅ Connected' : '⚠️ Mock';
+      
+      const features = connector.features || [];
+      const useCases = connector.useCases || [];
+      const toolCount = connector.toolCount || (connector.tools ? connector.tools.length : 0);
+      const lastSync = status?.lastSync ? new Date(status.lastSync).toLocaleString() : 'Never';
+      
+      return `
+        <div class="connector-card glass ${type}" id="card-${connector.id}">
+          <div class="connector-header">
+            <div class="connector-info">
+              <span class="connector-icon">${icon}</span>
+              <div>
+                <div class="connector-name">${connector.name}</div>
+                <div class="connector-version">v${connector.version || '1.0.0'}</div>
+              </div>
+            </div>
+            <div class="status-badge-large ${statusClass}">${statusText}</div>
+          </div>
+          
+          <div class="connector-details">
+            <div class="detail-item">
+              <span class="detail-value">${toolCount}</span>
+              <span class="detail-label">Tools</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-value">${features.length}</span>
+              <span class="detail-label">Features</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-value">${type === 'dsp' ? 'DSP' : 'Tool'}</span>
+              <span class="detail-label">Type</span>
+            </div>
+          </div>
+          
+          ${features.length > 0 ? `
+            <div class="connector-features">
+              ${features.slice(0, 5).map(f => `<span class="feature-tag">${f}</span>`).join('')}
+              ${features.length > 5 ? `<span class="feature-tag">+${features.length - 5} more</span>` : ''}
+            </div>
+          ` : ''}
+          
+          ${useCases.length > 0 ? `
+            <div class="connector-usecases">
+              <strong>Use Cases:</strong> ${useCases.join(', ')}
+            </div>
+          ` : ''}
+          
+          <div class="last-sync">Last sync: ${lastSync}</div>
+          
+          <div class="connector-actions">
+            <button class="btn-test" id="test-${connector.id}" onclick="testConnector('${connector.id}')">
+              🔍 Test Connection
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    async function testConnector(connectorId) {
+      const btn = document.getElementById(`test-${connectorId}`);
+      btn.classList.add('testing');
+      btn.innerHTML = '⏳ Testing...';
+      
+      try {
+        const response = await fetch(`/api/connectors/test/${connectorId}`);
+        const result = await response.json();
+        
+        if (result.connected || result.success) {
+          btn.classList.remove('testing');
+          btn.classList.add('success');
+          btn.innerHTML = '✅ Connected!';
+        } else {
+          btn.classList.remove('testing');
+          btn.classList.add('error');
+          btn.innerHTML = `❌ ${result.error || 'Failed'}`;
+        }
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+          btn.classList.remove('success', 'error');
+          btn.innerHTML = '🔍 Test Connection';
+        }, 3000);
+        
+      } catch (err) {
+        btn.classList.remove('testing');
+        btn.classList.add('error');
+        btn.innerHTML = '❌ Error';
+        
+        setTimeout(() => {
+          btn.classList.remove('error');
+          btn.innerHTML = '🔍 Test Connection';
+        }, 3000);
+      }
+    }
+    
+    async function refreshAll() {
+      // Reload all connector data
+      await loadConnectors();
+      
+      // Flash success message
+      const btn = document.querySelector('.refresh-btn');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '✅ Refreshed!';
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+      }, 2000);
+    }
+    
+    // Handle URL hash for direct linking
+    function checkHash() {
+      const hash = window.location.hash.slice(1);
+      if (hash) {
+        const card = document.getElementById(`card-${hash}`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.style.boxShadow = '0 0 0 2px var(--primary)';
+          setTimeout(() => {
+            card.style.boxShadow = '';
+          }, 2000);
+        }
+      }
+    }
+    
+    loadConnectors().then(checkHash);
+  </script>
+</body>
+</html>

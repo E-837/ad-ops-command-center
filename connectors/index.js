@@ -9,6 +9,7 @@ const amazonDsp = require('./amazon-dsp');
 const asana = require('./asana');
 const notion = require('./notion');
 const figma = require('./figma');
+const canva = require('./canva');
 
 // DSP Connectors
 const DSP_CONNECTORS = {
@@ -21,7 +22,8 @@ const DSP_CONNECTORS = {
 const PRODUCTIVITY_CONNECTORS = {
   asana,
   notion,
-  figma
+  figma,
+  canva
 };
 
 // All connectors combined
