@@ -1,0 +1,42 @@
+{
+  "google-ads": {
+    "ctr": 2.0,
+    "cpc": 1.5,
+    "cpa": 75.0,
+    "roas": 2.5,
+    "conversionRate": 3.5,
+    "description": "Google Ads industry benchmarks"
+  },
+  "meta": {
+    "ctr": 1.2,
+    "cpc": 0.8,
+    "cpa": 60.0,
+    "roas": 3.0,
+    "conversionRate": 2.8,
+    "description": "Meta (Facebook/Instagram) industry benchmarks"
+  },
+  "pinterest": {
+    "ctr": 0.8,
+    "cpc": 0.6,
+    "cpa": 50.0,
+    "roas": 3.5,
+    "conversionRate": 2.2,
+    "description": "Pinterest Ads industry benchmarks"
+  },
+  "ttd": {
+    "ctr": 0.5,
+    "cpc": 2.0,
+    "cpa": 85.0,
+    "roas": 2.2,
+    "conversionRate": 1.8,
+    "description": "The Trade Desk (TTD) industry benchmarks"
+  },
+  "dv360": {
+    "ctr": 0.6,
+    "cpc": 1.8,
+    "cpa": 80.0,
+    "roas": 2.3,
+    "conversionRate": 2.0,
+    "description": "Display & Video 360 (DV360) industry benchmarks"
+  }
+}

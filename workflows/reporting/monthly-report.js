@@ -51,7 +51,7 @@ module.exports = {
       { id: 'insights', name: 'Generate Insights', agent: 'analyst' },
       { id: 'document', name: 'Create Report Document', agent: 'report-generator' },
       { id: 'distribute', name: 'Distribute Report', agent: 'report-generator' }
-    },
+    ],
 
     estimatedDuration: '10-20 min',
     isOrchestrator: false,

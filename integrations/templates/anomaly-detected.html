@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; }
+    .header { background: #2196F3; color: white; padding: 20px; text-align: center; }
+    .content { padding: 30px; }
+    .info-box { background: #e3f2fd; border-left: 4px solid #2196F3; padding: 15px; margin: 20px 0; }
+    .metric-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .metric-table th { background: #f5f5f5; padding: 10px; text-align: left; }
+    .metric-table td { padding: 10px; border-bottom: 1px solid #eee; }
+    .footer { background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔍 Performance Anomaly Detected</h1>
+    </div>
+    <div class="content">
+      <h2>{{campaignName}}</h2>
+      
+      <div class="info-box">
+        <strong>Anomaly Type:</strong> {{anomalyType}}<br>
+        <strong>Detected At:</strong> {{detectedAt}}
+      </div>
+      
+      <h3>Details</h3>
+      <p>{{description}}</p>
+      
+      <table class="metric-table">
+        <tr>
+          <th>Metric</th>
+          <th>Current</th>
+          <th>Expected</th>
+          <th>Deviation</th>
+        </tr>
+        <tr>
+          <td>{{metricName}}</td>
+          <td>{{currentValue}}</td>
+          <td>{{expectedValue}}</td>
+          <td>{{deviation}}%</td>
+        </tr>
+      </table>
+      
+      <h3>Recommended Action</h3>
+      <p>{{action}}</p>
+    </div>
+    <div class="footer">
+      Ad Ops Command Center • Automated Notification
+    </div>
+  </div>
+</body>
+</html>

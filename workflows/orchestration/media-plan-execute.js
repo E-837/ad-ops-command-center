@@ -53,7 +53,7 @@ module.exports = {
       { id: 'execute', name: 'Execute Workflows in Parallel', agent: 'orchestrator' },
       { id: 'track', name: 'Track Executions', agent: 'orchestrator' },
       { id: 'report', name: 'Generate Activation Report', agent: 'report-generator' }
-    },
+    ],
 
     estimatedDuration: '15-30 min',
     isOrchestrator: true,

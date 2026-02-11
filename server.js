@@ -17,6 +17,8 @@ const domain = require('./domain');
 const router = require('./router');
 const eventTriggers = require('./events/triggers');
 const cronJobs = require('./cron-jobs');
+const sseManager = require('./events/sse-manager');
+const eventBus = require('./events/bus');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -27,6 +29,43 @@ app.use(express.static(path.join(__dirname, 'ui')));
 
 // Initialize database
 db.initialize();
+
+// Initialize SSE integration with event bus
+eventBus.setSSEManager(sseManager);
+
+// --- API: Server-Sent Events (Real-time Updates) ---
+app.get('/api/stream', (req, res) => {
+  // Parse filters from query params
+  const filters = {};
+  
+  if (req.query.eventTypes) {
+    filters.eventTypes = req.query.eventTypes.split(',');
+  }
+  
+  if (req.query.workflowId) {
+    filters.workflowId = req.query.workflowId;
+  }
+  
+  if (req.query.executionId) {
+    filters.executionId = req.query.executionId;
+  }
+  
+  if (req.query.projectId) {
+    filters.projectId = req.query.projectId;
+  }
+  
+  // Add client to SSE manager
+  const clientId = sseManager.addClient(res, filters);
+  
+  // Log connection
+  console.log(`[SSE] New client connected: ${clientId}`);
+});
+
+// SSE Stats endpoint
+app.get('/api/stream/stats', (req, res) => {
+  const stats = sseManager.getStats();
+  res.json(stats);
+});
 
 // --- API: Campaigns ---
 app.get('/api/campaigns', async (req, res) => {
@@ -428,6 +467,403 @@ app.get('/api/domain/stats', (req, res) => {
   res.json(domain.getStats());
 });
 
+// --- API: Webhooks & Integrations ---
+const WebhooksModel = require('./database/models/webhooks');
+const webhooks = require('./integrations/webhooks');
+const notifications = require('./integrations/notifications');
+
+app.get('/api/webhooks', (req, res) => {
+  try {
+    const filter = {
+      direction: req.query.direction,
+      enabled: req.query.enabled !== undefined ? req.query.enabled === 'true' : undefined
+    };
+    const webhookList = WebhooksModel.list(filter);
+    res.json(webhookList);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/webhooks', (req, res) => {
+  try {
+    const webhook = WebhooksModel.create(req.body);
+    res.json(webhook);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/webhooks/:id', (req, res) => {
+  try {
+    const webhook = WebhooksModel.get(req.params.id);
+    if (!webhook) {
+      return res.status(404).json({ error: 'Webhook not found' });
+    }
+    res.json(webhook);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/webhooks/:id', (req, res) => {
+  try {
+    const webhook = WebhooksModel.update(req.params.id, req.body);
+    res.json(webhook);
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/webhooks/:id', (req, res) => {
+  try {
+    const result = WebhooksModel.delete(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.post('/api/webhooks/:id/test', async (req, res) => {
+  try {
+    const webhook = WebhooksModel.get(req.params.id);
+    if (!webhook) {
+      return res.status(404).json({ error: 'Webhook not found' });
+    }
+    
+    const result = await webhooks.sendToWebhook(webhook.id, 'test', {
+      message: 'Test webhook delivery',
+      timestamp: new Date().toISOString()
+    });
+    
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/webhooks/:id/deliveries', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const deliveries = WebhooksModel.getDeliveries(req.params.id, limit);
+    res.json(deliveries);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/webhooks/incoming/:id', async (req, res) => {
+  try {
+    const signature = req.headers['x-webhook-signature'];
+    const result = await webhooks.handleIncomingWebhook(req.params.id, req.body, signature);
+    
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: Analytics ---
+const analytics = require('./services/analytics');
+const benchmarks = require('./domain/benchmarks.json');
+
+app.get('/api/analytics/spend-trend', async (req, res) => {
+  try {
+    const result = await analytics.getSpendTrend(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/ctr-comparison', async (req, res) => {
+  try {
+    const result = await analytics.getCTRComparison(req.query);
+    
+    // Add benchmarks to the response
+    const dataWithBenchmarks = result.data.map(platform => ({
+      ...platform,
+      benchmark: benchmarks[platform.platform]?.ctr || null
+    }));
+    
+    res.json({
+      ...result,
+      data: dataWithBenchmarks
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/conversion-funnel', async (req, res) => {
+  try {
+    const result = await analytics.getConversionFunnel(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/roas-by-campaign', async (req, res) => {
+  try {
+    const result = await analytics.getROASByCampaign(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/budget-utilization', async (req, res) => {
+  try {
+    const result = await analytics.getBudgetUtilization(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/performance-summary', async (req, res) => {
+  try {
+    const result = await analytics.getPerformanceSummary(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/platform-comparison', async (req, res) => {
+  try {
+    const result = await analytics.getPlatformComparison(req.query);
+    
+    // Add benchmarks to platform data
+    const platformsWithBenchmarks = result.platforms.map(platform => ({
+      ...platform,
+      benchmarks: benchmarks[platform.name] || {}
+    }));
+    
+    res.json({
+      ...result,
+      platforms: platformsWithBenchmarks
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/analytics/benchmarks', (req, res) => {
+  res.json(benchmarks);
+});
+
+// --- API: Recommendations ---
+const recommendations = require('./services/recommendations');
+
+app.get('/api/recommendations/campaign/:id', async (req, res) => {
+  try {
+    const result = await recommendations.getAllRecommendations(parseInt(req.params.id));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/recommendations/budget/:id', async (req, res) => {
+  try {
+    const result = await recommendations.getBudgetRecommendation(parseInt(req.params.id));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/recommendations/bid/:id', async (req, res) => {
+  try {
+    const platform = req.query.platform || 'meta';
+    const result = await recommendations.getBidRecommendation(parseInt(req.params.id), platform);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/recommendations/targeting/:id', async (req, res) => {
+  try {
+    const result = await recommendations.getTargetingRecommendation(parseInt(req.params.id));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/recommendations/creative/:id', async (req, res) => {
+  try {
+    const result = await recommendations.getCreativeRecommendation(parseInt(req.params.id));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/recommendations/platform', async (req, res) => {
+  try {
+    const totalBudget = parseFloat(req.query.budget) || 10000;
+    const objectives = req.query.objectives ? JSON.parse(req.query.objectives) : {};
+    const result = await recommendations.getPlatformRecommendation(totalBudget, objectives);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/recommendations/priorities/:id', async (req, res) => {
+  try {
+    const result = await recommendations.getOptimizationPriorities(parseInt(req.params.id));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/recommendations/:id/apply', async (req, res) => {
+  try {
+    // This would trigger the actual application of recommendation
+    // For now, just return success
+    res.json({ 
+      success: true, 
+      message: 'Recommendation applied',
+      recommendationId: req.params.id 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: A/B Testing ---
+const abTesting = require('./services/ab-testing');
+const { abTests } = require('./database/models');
+
+app.post('/api/ab-tests', async (req, res) => {
+  try {
+    const { campaignId, testType, variants, duration } = req.body;
+    const test = await abTesting.createTest(campaignId, testType, variants, duration);
+    res.json(test);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/ab-tests/:id', async (req, res) => {
+  try {
+    const test = await abTests.getById(parseInt(req.params.id));
+    if (!test) {
+      return res.status(404).json({ error: 'Test not found' });
+    }
+    res.json(test);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/ab-tests/campaign/:campaignId', async (req, res) => {
+  try {
+    const status = req.query.status || null;
+    const tests = await abTests.getByCampaign(parseInt(req.params.campaignId), status);
+    res.json(tests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/ab-tests/:id/status', async (req, res) => {
+  try {
+    const status = await abTesting.getTestStatus(parseInt(req.params.id));
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ab-tests/:id/analyze', async (req, res) => {
+  try {
+    const result = await abTesting.analyzeTest(parseInt(req.params.id));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ab-tests/:id/complete', async (req, res) => {
+  try {
+    const autoApply = req.body.autoApply || false;
+    const result = await abTesting.declareWinner(parseInt(req.params.id), autoApply);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ab-tests/:id/cancel', async (req, res) => {
+  try {
+    const test = await abTests.cancel(parseInt(req.params.id));
+    res.json(test);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/ab-tests', async (req, res) => {
+  try {
+    const running = await abTests.getRunning();
+    res.json(running);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ab-tests/schedule/:campaignId', async (req, res) => {
+  try {
+    const tests = await abTesting.scheduleTests(parseInt(req.params.campaignId));
+    res.json({ scheduled: tests.length, tests });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: Predictions ---
+const predictions = require('./services/predictions');
+
+app.post('/api/predictions/performance', async (req, res) => {
+  try {
+    const { campaignId, proposedBudget } = req.body;
+    const result = await predictions.predictPerformance(campaignId, proposedBudget);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/predictions/budget-allocation', async (req, res) => {
+  try {
+    const { totalBudget, platforms } = req.body;
+    const result = await predictions.optimizeBudgetAllocation(totalBudget, platforms);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/predictions/trends/:campaignId', async (req, res) => {
+  try {
+    const result = await predictions.getTrendAnalysis(parseInt(req.params.campaignId));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- API: Health ---
 app.get('/api/health', (req, res) => {
   // Get real connection status
@@ -517,6 +953,14 @@ app.get('/campaigns', (req, res) => {
 
 app.get('/reports', (req, res) => {
   res.sendFile(path.join(__dirname, 'ui', 'reports.html'));
+});
+
+app.get('/analytics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'analytics.html'));
+});
+
+app.get('/integrations', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'integrations.html'));
 });
 
 // Legacy route redirect

@@ -8,8 +8,15 @@ const WORKFLOW_STARTED = 'workflow.started';
 const WORKFLOW_COMPLETED = 'workflow.completed';
 const WORKFLOW_FAILED = 'workflow.failed';
 const WORKFLOW_STAGE_STARTED = 'workflow.stage.started';
+const WORKFLOW_STAGE_PROGRESS = 'workflow.stage.progress';
 const WORKFLOW_STAGE_COMPLETED = 'workflow.stage.completed';
 const WORKFLOW_STAGE_FAILED = 'workflow.stage.failed';
+
+// Legacy aliases for backward compatibility
+const STAGE_STARTED = 'stage.started';
+const STAGE_PROGRESS = 'stage.progress';
+const STAGE_COMPLETED = 'stage.completed';
+const STAGE_FAILED = 'stage.failed';
 
 // Campaign events
 const CAMPAIGN_CREATED = 'campaign.created';
@@ -48,8 +55,15 @@ module.exports = {
   WORKFLOW_COMPLETED,
   WORKFLOW_FAILED,
   WORKFLOW_STAGE_STARTED,
+  WORKFLOW_STAGE_PROGRESS,
   WORKFLOW_STAGE_COMPLETED,
   WORKFLOW_STAGE_FAILED,
+  
+  // Legacy aliases
+  STAGE_STARTED,
+  STAGE_PROGRESS,
+  STAGE_COMPLETED,
+  STAGE_FAILED,
   
   // Campaign events
   CAMPAIGN_CREATED,

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; }
+    .header { background: #F44336; color: white; padding: 20px; text-align: center; }
+    .content { padding: 30px; }
+    .error-box { background: #ffebee; border-left: 4px solid #F44336; padding: 15px; margin: 20px 0; }
+    .footer { background: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>❌ Workflow Failed</h1>
+    </div>
+    <div class="content">
+      <h2>{{workflowName}}</h2>
+      <p>Your workflow encountered an error and failed to complete.</p>
+      
+      <div class="error-box">
+        <strong>Error:</strong><br>
+        {{error}}
+      </div>
+      
+      <p><strong>Project:</strong> {{projectName}}</p>
+      <p><strong>Failed At:</strong> {{failedAt}}</p>
+      
+      <h3>Recommended Actions</h3>
+      <ul>
+        <li>Check workflow configuration</li>
+        <li>Verify connector credentials</li>
+        <li>Review error logs</li>
+        <li>Retry workflow manually if needed</li>
+      </ul>
+    </div>
+    <div class="footer">
+      Ad Ops Command Center • Automated Notification
+    </div>
+  </div>
+</body>
+</html>

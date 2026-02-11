@@ -11,7 +11,16 @@ class EventBus extends EventEmitter {
     super();
     this.events = [];
     this.maxHistorySize = 1000;
+    this.sseManager = null; // Will be set after initialization
     this.loadHistory();
+  }
+
+  /**
+   * Set SSE manager for broadcasting events
+   * (Called after initialization to avoid circular dependency)
+   */
+  setSSEManager(manager) {
+    this.sseManager = manager;
   }
 
   /**
@@ -42,7 +51,33 @@ class EventBus extends EventEmitter {
     super.emit(type, event);
     super.emit('*', event); // Wildcard listener for all events
     
+    // Broadcast to SSE clients if manager is available
+    if (this.sseManager) {
+      this.sseManager.broadcast({
+        type,
+        data: data
+      });
+    }
+    
+    // Broadcast to webhooks (async, don't await)
+    this.broadcastToWebhooks(type, data).catch(err => {
+      console.error('Error broadcasting to webhooks:', err);
+    });
+    
     return event;
+  }
+
+  /**
+   * Broadcast event to registered webhooks
+   */
+  async broadcastToWebhooks(eventType, data) {
+    try {
+      const webhooks = require('../integrations/webhooks');
+      await webhooks.broadcastToWebhooks(eventType, data);
+    } catch (err) {
+      // Fail silently if webhook module not available
+      console.debug('Webhooks not available:', err.message);
+    }
   }
 
   /**

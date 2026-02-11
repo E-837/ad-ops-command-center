@@ -6,12 +6,24 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "test:db": "node test-database.js",
+    "test:realtime": "node test-realtime.js",
+    "demo:realtime": "node demo-realtime.js",
+    "migrate": "npx knex migrate:latest --knexfile database/knexfile.js",
+    "migrate:rollback": "npx knex migrate:rollback --knexfile database/knexfile.js",
+    "migrate:json": "node database/migrate-from-json.js",
+    "seed": "npx knex seed:run --knexfile database/knexfile.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "uuid": "^9.0.0",
-    "node-cron": "^3.0.3"
+    "knex": "^3.1.0",
+    "node-cron": "^3.0.3",
+    "sqlite3": "^5.1.7",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "eventsource": "^2.0.2"
   },
   "engines": {
     "node": ">=18.0.0"

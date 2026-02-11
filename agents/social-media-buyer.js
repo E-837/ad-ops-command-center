@@ -5,7 +5,7 @@
 
 const name = 'SocialMediaBuyer';
 const role = 'social-media-buyer';
-const description = 'Paid social specialist for Meta Ads campaign management, audience targeting, and social media strategy';
+const description = 'Paid social specialist for Meta Ads and Pinterest Ads campaign management, audience targeting, and multi-platform social media strategy';
 const model = 'claude-3-5-sonnet-20241022'; // Social strategy requires creative and analytical thinking
 
 const capabilities = [
@@ -18,10 +18,16 @@ const capabilities = [
   'social_commerce',
   'video_ads_optimization',
   'cross_platform_strategy',
-  'social_attribution'
+  'social_attribution',
+  'pinterest_visual_discovery',
+  'pinterest_shopping_campaigns',
+  'pinterest_interest_targeting',
+  'pinterest_keyword_targeting',
+  'pinterest_creative_best_practices'
 ];
 
 const tools = [
+  // Meta Ads tools
   'connectors.meta-ads',
   'meta_ads_create_campaign',
   'meta_ads_create_ad_set',
@@ -29,20 +35,38 @@ const tools = [
   'meta_ads_get_campaigns',
   'meta_ads_get_ad_sets',
   'meta_ads_get_insights',
-  'meta_ads_update_status'
+  'meta_ads_update_status',
+  
+  // Pinterest Ads tools
+  'connectors.pinterest',
+  'pinterest_get_campaigns',
+  'pinterest_create_campaign',
+  'pinterest_update_campaign',
+  'pinterest_get_ad_groups',
+  'pinterest_create_ad_group',
+  'pinterest_update_ad_group',
+  'pinterest_get_ads',
+  'pinterest_create_ad',
+  'pinterest_update_ad',
+  'pinterest_get_audiences',
+  'pinterest_create_audience',
+  'pinterest_get_insights',
+  'pinterest_get_pins',
+  'pinterest_create_pin'
 ];
 
 const systemPrompt = `You are the SocialMediaBuyer agent for Ad Ops Command Center.
 
-Your role is to manage and optimize paid social campaigns:
-- Develop comprehensive social media advertising strategies
-- Build and optimize custom audiences and lookalikes
-- Create full-funnel campaign architectures
-- Optimize creative testing and rotation strategies
-- Manage cross-platform social advertising (Facebook, Instagram, Messenger, Audience Network)
-- Implement advanced targeting including interests, behaviors, and life events
-- Optimize for social commerce and conversion tracking
-- Monitor social-specific metrics like engagement, reach, and frequency
+Your role is to manage and optimize paid social campaigns across Meta (Facebook/Instagram) and Pinterest:
+- Develop comprehensive multi-platform social media advertising strategies
+- Build and optimize custom audiences and lookalikes across platforms
+- Create full-funnel campaign architectures leveraging each platform's strengths
+- Optimize creative testing and rotation strategies for visual-first platforms
+- Manage cross-platform social advertising (Facebook, Instagram, Messenger, Audience Network, Pinterest Browse, Pinterest Search)
+- Implement advanced targeting including interests, behaviors, keywords, and life events
+- Optimize for social commerce and conversion tracking across Meta and Pinterest
+- Monitor social-specific metrics like engagement, reach, frequency, saves, and outbound clicks
+- Leverage Pinterest's visual discovery intent for upper-funnel awareness and shopping campaigns
 
 Key metrics you optimize for:
 - Cost per thousand impressions (CPM) efficiency
@@ -55,7 +79,7 @@ Key metrics you optimize for:
 - Frequency management and audience fatigue prevention
 - Video completion rates and engagement
 
-Campaign Objectives:
+Campaign Objectives (Meta Ads):
 - OUTCOME_AWARENESS: Brand awareness and reach campaigns
 - OUTCOME_TRAFFIC: Drive traffic to website or app
 - OUTCOME_ENGAGEMENT: Increase post engagement and social interactions
@@ -63,7 +87,12 @@ Campaign Objectives:
 - OUTCOME_APP_PROMOTION: App installs and engagement
 - OUTCOME_SALES: E-commerce sales and conversions
 
-Audience Strategy:
+Campaign Objectives (Pinterest Ads):
+- AWARENESS: Brand awareness and reach for visual discovery
+- CONSIDERATION: Traffic, engagement, video views for mid-funnel activation
+- CONVERSIONS: Sales, catalog conversions, and direct response
+
+Audience Strategy (Meta Ads):
 - Custom Audiences: Website visitors, customer lists, app users, engagement
 - Lookalike Audiences: Based on best customers, converters, high-value users
 - Interest Targeting: Detailed interests, behaviors, and life events
@@ -71,7 +100,15 @@ Audience Strategy:
 - Geographic Targeting: Countries, regions, cities, radius-based
 - Placement Optimization: Facebook feed, Instagram Stories, Reels, Messenger
 
-Creative Strategy:
+Audience Strategy (Pinterest Ads):
+- Custom Audiences: Website visitors (VISITOR), customer lists (CUSTOMER_LIST), pin engagers (ENGAGEMENT)
+- Actalike Audiences: Pinterest's lookalike audiences based on seed audiences
+- Interest Targeting: 450+ curated interest categories aligned with Pinterest's discovery mindset
+- Keyword Targeting: Search intent keywords for in-market users actively seeking ideas
+- Demographic Targeting: Age, gender, language, location
+- Placement Targeting: Browse (home feed) vs. Search (high-intent placement)
+
+Creative Strategy (Meta Ads):
 - Single Image Ads: High-impact visuals with compelling copy
 - Carousel Ads: Multiple products or features showcase
 - Video Ads: Engaging storytelling and product demonstrations
@@ -79,7 +116,29 @@ Creative Strategy:
 - Dynamic Ads: Automated product retargeting
 - Lead Ads: Native lead capture without leaving platform
 
-You provide strategic social media advertising guidance with focus on audience insights, creative performance, and full-funnel optimization.`;
+Creative Strategy (Pinterest Ads):
+- Standard Pins: Vertical images (2:3 ratio preferred) with inspirational, high-quality visuals
+- Video Pins: 6-15 second videos optimized for mobile, sound-off viewing
+- Carousel Pins: Multiple images to showcase product details or step-by-step guides
+- Shopping Pins: Product catalog integration for seamless e-commerce
+- Idea Pins: Multi-page story format for how-tos and tutorials
+- Creative Best Practices: Lifestyle imagery over product shots, text overlays under 20% of image, vertical format, bright/saturated colors
+
+Pinterest-Specific Optimization:
+- Pinterest users are in "planning mode" - focus on aspirational, solution-oriented creative
+- Seasonal content performs exceptionally well (plan 45-60 days ahead)
+- DIY, recipes, fashion, home decor, and wedding content are top categories
+- Test keyword targeting in addition to interest targeting for search placement
+- Leverage Pinterest's longer content lifespan (pins continue to drive traffic for months)
+
+Cross-Platform Strategy:
+- Use Meta for warm audiences and retargeting; Pinterest for cold traffic and discovery
+- Meta excels at lower-funnel conversions; Pinterest excels at awareness and consideration
+- Coordinate creative themes but adapt formats per platform (square/vertical for Meta, vertical for Pinterest)
+- Share audiences across platforms for consistent messaging and frequency capping
+- Allocate 60-70% budget to Meta for direct response, 30-40% to Pinterest for top-of-funnel
+
+You provide strategic social media advertising guidance with focus on audience insights, creative performance, cross-platform optimization, and full-funnel strategies across Meta and Pinterest.`;
 
 /**
  * Get agent info
@@ -609,6 +668,287 @@ function generateTestCombinations(variables, maxCombinations) {
   return combinations;
 }
 
+/**
+ * Generate Pinterest-specific targeting recommendations
+ */
+function suggestPinterestTargeting(product, audience, objective) {
+  const targeting = {
+    interests: [],
+    keywords: [],
+    demographics: {},
+    placement: 'ALL',
+    reasoning: {}
+  };
+
+  // Interest targeting based on product category
+  const productCategory = product.toLowerCase();
+  
+  if (productCategory.includes('fashion') || productCategory.includes('clothing') || productCategory.includes('apparel')) {
+    targeting.interests = ['Fashion', 'Womens fashion', 'Mens fashion', 'Shopping', 'Style inspiration'];
+    targeting.keywords = ['fashion trends', 'outfit ideas', 'style guide', 'wardrobe essentials'];
+    targeting.reasoning.interests = 'Fashion content is one of Pinterest\'s top-performing categories';
+  } else if (productCategory.includes('home') || productCategory.includes('decor') || productCategory.includes('furniture')) {
+    targeting.interests = ['Home decor', 'Interior design', 'DIY home projects', 'Home improvement'];
+    targeting.keywords = ['home decor ideas', 'living room design', 'bedroom inspiration', 'DIY home'];
+    targeting.reasoning.interests = 'Home decor has high engagement and save rates on Pinterest';
+  } else if (productCategory.includes('food') || productCategory.includes('recipe') || productCategory.includes('cooking')) {
+    targeting.interests = ['Cooking', 'Recipes', 'Food', 'Meal planning', 'Healthy eating'];
+    targeting.keywords = ['easy recipes', 'dinner ideas', 'meal prep', 'quick meals', 'healthy recipes'];
+    targeting.reasoning.interests = 'Recipe content performs exceptionally well with high save-to-cook intent';
+  } else if (productCategory.includes('beauty') || productCategory.includes('cosmetics') || productCategory.includes('skincare')) {
+    targeting.interests = ['Beauty', 'Makeup', 'Skincare', 'Hair care', 'Beauty tips'];
+    targeting.keywords = ['makeup tutorial', 'skincare routine', 'beauty hacks', 'natural beauty'];
+    targeting.reasoning.interests = 'Beauty content has strong tutorial and how-to engagement';
+  } else if (productCategory.includes('wedding') || productCategory.includes('bridal')) {
+    targeting.interests = ['Wedding planning', 'Wedding ideas', 'Bridal fashion', 'Wedding decor'];
+    targeting.keywords = ['wedding inspiration', 'wedding dress ideas', 'wedding planning tips'];
+    targeting.reasoning.interests = 'Wedding content has the longest planning cycle and highest engagement';
+  } else if (productCategory.includes('fitness') || productCategory.includes('health') || productCategory.includes('wellness')) {
+    targeting.interests = ['Fitness', 'Yoga', 'Workout', 'Health and wellness', 'Nutrition'];
+    targeting.keywords = ['workout routine', 'fitness motivation', 'healthy lifestyle', 'yoga poses'];
+    targeting.reasoning.interests = 'Fitness content aligns with Pinterest\'s aspirational discovery mindset';
+  }
+
+  // Demographics based on audience
+  if (audience.includes('women') || audience.includes('female')) {
+    targeting.demographics.GENDER = ['FEMALE'];
+  } else if (audience.includes('men') || audience.includes('male')) {
+    targeting.demographics.GENDER = ['MALE'];
+  } else {
+    targeting.demographics.GENDER = ['FEMALE', 'MALE'];
+  }
+
+  // Age targeting
+  if (audience.includes('young') || audience.includes('gen z') || audience.includes('18-24')) {
+    targeting.demographics.AGE_BUCKET = ['18-24', '25-34'];
+  } else if (audience.includes('millennial')) {
+    targeting.demographics.AGE_BUCKET = ['25-34', '35-44'];
+  } else if (audience.includes('mature') || audience.includes('older')) {
+    targeting.demographics.AGE_BUCKET = ['45-49', '50-54', '55-64'];
+  } else {
+    targeting.demographics.AGE_BUCKET = ['25-34', '35-44', '45-49']; // Pinterest's core demo
+  }
+
+  // Placement based on objective
+  if (objective === 'CONVERSIONS') {
+    targeting.placement = 'SEARCH';
+    targeting.reasoning.placement = 'Search placement captures high-intent users actively looking for solutions';
+  } else if (objective === 'AWARENESS') {
+    targeting.placement = 'BROWSE';
+    targeting.reasoning.placement = 'Browse feed is ideal for discovery and brand awareness';
+  } else {
+    targeting.placement = 'ALL';
+    targeting.reasoning.placement = 'Test both Browse and Search to find optimal placement mix';
+  }
+
+  return targeting;
+}
+
+/**
+ * Generate Pinterest pin copy (title + description)
+ */
+function generatePinCopy(product, objective, brand = '') {
+  const copy = {
+    titles: [],
+    descriptions: [],
+    bestPractices: []
+  };
+
+  // Title variations (max 100 chars)
+  if (objective === 'AWARENESS') {
+    copy.titles = [
+      `Discover ${product}`,
+      `${product} Inspiration & Ideas`,
+      `The Ultimate ${product} Guide`,
+      `${brand ? brand + ' ' : ''}${product} Collection`
+    ];
+  } else if (objective === 'CONSIDERATION') {
+    copy.titles = [
+      `How to Choose the Perfect ${product}`,
+      `${product} Tips & Tricks`,
+      `${product} Ideas You'll Love`,
+      `Must-See ${product} Inspiration`
+    ];
+  } else if (objective === 'CONVERSIONS') {
+    copy.titles = [
+      `Shop ${product} - ${brand || 'Limited Time'}`,
+      `${product} You Need Right Now`,
+      `Get ${product} - Fast Shipping`,
+      `${brand ? brand + ' ' : ''}${product} Sale`
+    ];
+  }
+
+  // Description variations (max 500 chars)
+  copy.descriptions = [
+    `Looking for ${product.toLowerCase()}? Find the perfect match for your needs. Save this pin for later inspiration! ${brand ? '✨ From ' + brand : ''}`,
+    `Discover amazing ${product.toLowerCase()} ideas and inspiration. Click to explore our collection and find what you love. ${brand ? 'Shop ' + brand + ' now!' : ''}`,
+    `Transform your space/style with ${product.toLowerCase()}. Get inspired by our curated collection. ${brand ? brand + ' quality guaranteed.' : 'Pin it to save for later!'}`,
+    `Everything you need to know about ${product.toLowerCase()}. Expert tips, ideas, and inspiration all in one place. ${brand ? 'From ' + brand : 'Start exploring now!'}`
+  ];
+
+  // Best practices
+  copy.bestPractices = [
+    'Keep titles under 100 characters (ideally 40-60 for mobile display)',
+    'Include relevant keywords naturally in descriptions',
+    'Use action verbs: "Discover", "Shop", "Explore", "Get", "Find"',
+    'Add emoji sparingly for visual interest (✨🏡💡)',
+    'Include a call-to-action: "Save this pin", "Shop now", "Get inspired"',
+    'Avoid spammy keywords or excessive capitalization',
+    'Make descriptions helpful and informative, not just promotional',
+    'Test seasonal variations (e.g., "Summer Fashion" vs "Fashion Trends")'
+  ];
+
+  return copy;
+}
+
+/**
+ * Optimize Pinterest bid recommendations
+ */
+function optimizePinterestBid(performance, objective, placement) {
+  const recommendation = {
+    currentMetrics: {},
+    suggestedBid: null,
+    reasoning: '',
+    benchmarks: {}
+  };
+
+  // Extract current performance
+  const cpm = performance.ECPM || 0;
+  const ctr = performance.CTR_2 || 0;
+  const conversions = performance.TOTAL_CONVERSIONS || 0;
+  const spend = performance.SPEND_IN_DOLLAR || 0;
+
+  recommendation.currentMetrics = {
+    cpm: `$${cpm.toFixed(2)}`,
+    ctr: `${ctr.toFixed(2)}%`,
+    conversions,
+    spend: `$${spend.toFixed(2)}`
+  };
+
+  // Pinterest benchmarks by objective and placement
+  const benchmarks = {
+    AWARENESS: {
+      BROWSE: { cpm: 3.50, ctr: 0.35 },
+      SEARCH: { cpm: 6.00, ctr: 0.75 },
+      ALL: { cpm: 4.50, ctr: 0.50 }
+    },
+    CONSIDERATION: {
+      BROWSE: { cpm: 5.00, ctr: 0.80 },
+      SEARCH: { cpm: 8.00, ctr: 1.50 },
+      ALL: { cpm: 6.00, ctr: 1.00 }
+    },
+    CONVERSIONS: {
+      BROWSE: { cpm: 6.50, ctr: 1.20 },
+      SEARCH: { cpm: 10.00, ctr: 2.00 },
+      ALL: { cpm: 8.00, ctr: 1.50 }
+    }
+  };
+
+  const benchmark = benchmarks[objective]?.[placement] || benchmarks.CONSIDERATION.ALL;
+  recommendation.benchmarks = {
+    targetCPM: `$${benchmark.cpm.toFixed(2)}`,
+    targetCTR: `${benchmark.ctr.toFixed(2)}%`,
+    note: `Industry benchmarks for ${objective} on ${placement}`
+  };
+
+  // Bid recommendations based on performance
+  if (cpm < benchmark.cpm * 0.7 && ctr > benchmark.ctr) {
+    // Performing well, increase bid to scale
+    recommendation.suggestedBid = cpm * 1.3;
+    recommendation.reasoning = 'Strong performance at low CPM. Increase bid to scale volume while maintaining efficiency.';
+  } else if (cpm > benchmark.cpm * 1.3 && ctr < benchmark.ctr * 0.7) {
+    // Poor performance, lower bid
+    recommendation.suggestedBid = cpm * 0.7;
+    recommendation.reasoning = 'High CPM with low engagement. Reduce bid and focus on creative/targeting improvements.';
+  } else if (cpm > benchmark.cpm * 1.2 && ctr > benchmark.ctr) {
+    // Good CTR but high CPM, slight decrease
+    recommendation.suggestedBid = benchmark.cpm;
+    recommendation.reasoning = 'Good engagement but paying premium CPM. Target benchmark CPM to improve efficiency.';
+  } else {
+    // Maintain current bid
+    recommendation.suggestedBid = cpm;
+    recommendation.reasoning = 'Performance is within acceptable range. Maintain current bid while monitoring closely.';
+  }
+
+  // Convert to micro-currency for Pinterest API
+  recommendation.suggestedBidMicro = Math.round(recommendation.suggestedBid * 10_000_000);
+  recommendation.suggestedBid = `$${recommendation.suggestedBid.toFixed(2)}`;
+
+  return recommendation;
+}
+
+/**
+ * Compare social platform performance (Meta vs Pinterest)
+ */
+function compareSocialPlatforms(metaData, pinterestData) {
+  const comparison = {
+    meta: {},
+    pinterest: {},
+    recommendations: [],
+    budgetAllocation: {}
+  };
+
+  // Aggregate Meta performance
+  const metaTotal = {
+    spend: metaData.reduce((sum, c) => sum + parseFloat(c.insights?.spend || 0), 0),
+    impressions: metaData.reduce((sum, c) => sum + parseInt(c.insights?.impressions || 0), 0),
+    clicks: metaData.reduce((sum, c) => sum + parseInt(c.insights?.clicks || 0), 0),
+    conversions: metaData.reduce((sum, c) => {
+      const purchases = c.insights?.actions?.find(a => a.action_type === 'offsite_conversion.fb_pixel_purchase');
+      return sum + parseInt(purchases?.value || 0);
+    }, 0)
+  };
+
+  comparison.meta = {
+    spend: `$${metaTotal.spend.toFixed(2)}`,
+    cpm: metaTotal.impressions > 0 ? `$${((metaTotal.spend / metaTotal.impressions) * 1000).toFixed(2)}` : '$0.00',
+    ctr: metaTotal.impressions > 0 ? `${((metaTotal.clicks / metaTotal.impressions) * 100).toFixed(2)}%` : '0%',
+    cpa: metaTotal.conversions > 0 ? `$${(metaTotal.spend / metaTotal.conversions).toFixed(2)}` : 'N/A',
+    conversions: metaTotal.conversions
+  };
+
+  // Aggregate Pinterest performance
+  const pinterestTotal = {
+    spend: pinterestData.reduce((sum, c) => sum + parseFloat(c.metrics?.SPEND_IN_DOLLAR || 0), 0),
+    impressions: pinterestData.reduce((sum, c) => sum + parseInt(c.metrics?.IMPRESSION || 0), 0),
+    clicks: pinterestData.reduce((sum, c) => sum + parseInt(c.metrics?.CLICKTHROUGH || 0), 0),
+    conversions: pinterestData.reduce((sum, c) => sum + parseInt(c.metrics?.TOTAL_CONVERSIONS || 0), 0)
+  };
+
+  comparison.pinterest = {
+    spend: `$${pinterestTotal.spend.toFixed(2)}`,
+    cpm: pinterestTotal.impressions > 0 ? `$${((pinterestTotal.spend / pinterestTotal.impressions) * 1000).toFixed(2)}` : '$0.00',
+    ctr: pinterestTotal.impressions > 0 ? `${((pinterestTotal.clicks / pinterestTotal.impressions) * 100).toFixed(2)}%` : '0%',
+    cpa: pinterestTotal.conversions > 0 ? `$${(pinterestTotal.spend / pinterestTotal.conversions).toFixed(2)}` : 'N/A',
+    conversions: pinterestTotal.conversions
+  };
+
+  // Generate recommendations
+  const metaCPA = metaTotal.conversions > 0 ? metaTotal.spend / metaTotal.conversions : Infinity;
+  const pinterestCPA = pinterestTotal.conversions > 0 ? pinterestTotal.spend / pinterestTotal.conversions : Infinity;
+
+  if (metaCPA < pinterestCPA * 0.7) {
+    comparison.recommendations.push('Meta is significantly more efficient for conversions. Increase Meta budget for bottom-funnel.');
+    comparison.budgetAllocation.meta = '70-75%';
+    comparison.budgetAllocation.pinterest = '25-30%';
+  } else if (pinterestCPA < metaCPA * 0.7) {
+    comparison.recommendations.push('Pinterest is outperforming on efficiency. Scale Pinterest for conversions.');
+    comparison.budgetAllocation.meta = '40-50%';
+    comparison.budgetAllocation.pinterest = '50-60%';
+  } else {
+    comparison.recommendations.push('Both platforms performing similarly. Maintain balanced budget split.');
+    comparison.budgetAllocation.meta = '55-60%';
+    comparison.budgetAllocation.pinterest = '40-45%';
+  }
+
+  // Platform-specific strengths
+  comparison.recommendations.push('Use Meta for retargeting warm audiences and dynamic product ads');
+  comparison.recommendations.push('Use Pinterest for cold traffic acquisition and seasonal campaigns (plan 45-60 days ahead)');
+  comparison.recommendations.push('Share creative themes but adapt formats: Meta prefers square/vertical, Pinterest requires vertical 2:3');
+
+  return comparison;
+}
+
 module.exports = {
   name,
   role,
@@ -622,5 +962,10 @@ module.exports = {
   generateAudienceStrategy,
   generateCreativeTestingMatrix,
   analyzeVideoPerformance,
-  processQuery
+  processQuery,
+  // Pinterest-specific functions
+  suggestPinterestTargeting,
+  generatePinCopy,
+  optimizePinterestBid,
+  compareSocialPlatforms
 };

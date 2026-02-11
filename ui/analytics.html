@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .analytics-card {
+      background: rgba(20, 20, 30, 0.6);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .analytics-card h3 {
+      color: #64b5f6;
+      margin: 0 0 16px 0;
+      font-size: 18px;
+    }
+    
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    
+    .comparison-table th {
+      background: rgba(100, 200, 255, 0.1);
+      color: #64b5f6;
+      padding: 10px 8px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(100, 200, 255, 0.3);
+    }
+    
+    .comparison-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(100, 200, 255, 0.1);
+      color: #e0e0e0;
+    }
+    
+    .comparison-table tr:hover {
+      background: rgba(100, 200, 255, 0.05);
+    }
+    
+    .metric-positive {
+      color: #4caf50;
+    }
+    
+    .metric-negative {
+      color: #f44336;
+    }
+    
+    .metric-neutral {
+      color: #ff9800;
+    }
+    
+    .gauge-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 150px;
+    }
+    
+    .top-performers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .performer-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(100, 200, 255, 0.05);
+      border-radius: 4px;
+      border-left: 3px solid #4caf50;
+    }
+    
+    .performer-item.warning {
+      border-left-color: #ff9800;
+    }
+    
+    .performer-item.critical {
+      border-left-color: #f44336;
+    }
+    
+    .performer-name {
+      font-weight: 600;
+      color: #e0e0e0;
+    }
+    
+    .performer-metric {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .performer-details {
+      font-size: 11px;
+      color: #999;
+      margin-top: 4px;
+    }
+    
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .alert-item {
+      padding: 12px;
+      background: rgba(244, 67, 54, 0.1);
+      border: 1px solid rgba(244, 67, 54, 0.3);
+      border-radius: 4px;
+    }
+    
+    .alert-item.warning {
+      background: rgba(255, 152, 0, 0.1);
+      border-color: rgba(255, 152, 0, 0.3);
+    }
+    
+    .alert-item.info {
+      background: rgba(33, 150, 243, 0.1);
+      border-color: rgba(33, 150, 243, 0.3);
+    }
+    
+    .alert-title {
+      font-weight: 600;
+      color: #f44336;
+      margin-bottom: 4px;
+    }
+    
+    .alert-item.warning .alert-title {
+      color: #ff9800;
+    }
+    
+    .alert-item.info .alert-title {
+      color: #2196f3;
+    }
+    
+    .alert-message {
+      font-size: 13px;
+      color: #e0e0e0;
+    }
+    
+    .summary-stat {
+      text-align: center;
+      padding: 16px;
+      background: rgba(100, 200, 255, 0.05);
+      border-radius: 4px;
+    }
+    
+    .summary-stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #64b5f6;
+      margin-bottom: 4px;
+    }
+    
+    .summary-stat-label {
+      font-size: 12px;
+      color: #999;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="/projects" class="nav-link">📁 Projects</a></li>
+      <li><a href="/workflows" class="nav-link">⚡ Workflows</a></li>
+      <li><a href="/campaigns" class="nav-link">📈 Campaigns</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+      <li><a href="/analytics" class="nav-link active">📈 Analytics</a></li>
+      <li><a href="/reports" class="nav-link">📊 Reports</a></li>
+      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>📈 Cross-Platform Analytics</h2>
+      <p>Unified performance insights across all platforms</p>
+    </header>
+
+    <!-- Performance Summary -->
+    <section class="analytics-grid" id="summary-section" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="summary-stat">
+        <div class="summary-stat-value" id="total-spend">$0</div>
+        <div class="summary-stat-label">Total Spend</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-value" id="total-revenue">$0</div>
+        <div class="summary-stat-label">Total Revenue</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-value metric-positive" id="overall-roas">0x</div>
+        <div class="summary-stat-label">Overall ROAS</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-value" id="overall-ctr">0%</div>
+        <div class="summary-stat-label">Average CTR</div>
+      </div>
+      <div class="summary-stat">
+        <div class="summary-stat-value" id="total-conversions">0</div>
+        <div class="summary-stat-label">Conversions</div>
+      </div>
+    </section>
+
+    <!-- Main Analytics Grid -->
+    <div class="analytics-grid">
+      <!-- Platform Performance Comparison -->
+      <div class="analytics-card" style="grid-column: span 2;">
+        <h3>🌐 Platform Performance Comparison</h3>
+        <div style="overflow-x: auto;">
+          <table class="comparison-table" id="platform-comparison-table">
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>Spend</th>
+                <th>Revenue</th>
+                <th>ROAS</th>
+                <th>CTR</th>
+                <th>CPC</th>
+                <th>CPA</th>
+                <th>vs Benchmark</th>
+              </tr>
+            </thead>
+            <tbody id="platform-comparison-body">
+              <tr><td colspan="8" style="text-align: center; padding: 20px;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top Performers -->
+      <div class="analytics-card">
+        <h3>🏆 Top Performers</h3>
+        <div class="top-performers-list" id="top-performers-list">
+          <p style="text-align: center; color: #999;">Loading...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Pacing & Alerts -->
+    <div class="analytics-grid">
+      <!-- Budget Pacing Gauges -->
+      <div class="analytics-card">
+        <h3>💰 Budget Pacing</h3>
+        <canvas id="budget-gauge-chart"></canvas>
+      </div>
+
+      <!-- Alerts & Warnings -->
+      <div class="analytics-card">
+        <h3>⚠️ Alerts & Recommendations</h3>
+        <div class="alerts-list" id="alerts-list">
+          <p style="text-align: center; color: #999;">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    let budgetGaugeChart = null;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAnalytics();
+      // Refresh every 30 seconds
+      setInterval(loadAnalytics, 30000);
+    });
+    
+    async function loadAnalytics() {
+      await Promise.all([
+        loadPlatformComparison(),
+        loadTopPerformers(),
+        loadBudgetPacing(),
+        loadAlerts()
+      ]);
+    }
+    
+    async function loadPlatformComparison() {
+      try {
+        const response = await fetch('/api/analytics/platform-comparison?days=30');
+        const result = await response.json();
+        
+        // Update summary stats
+        document.getElementById('total-spend').textContent = formatCurrency(result.totals.spend);
+        document.getElementById('total-revenue').textContent = formatCurrency(result.totals.revenue);
+        document.getElementById('overall-roas').textContent = result.totals.roas.toFixed(2) + 'x';
+        document.getElementById('overall-ctr').textContent = result.totals.ctr.toFixed(2) + '%';
+        document.getElementById('total-conversions').textContent = result.totals.conversions.toLocaleString();
+        
+        // Color ROAS based on value
+        const roasEl = document.getElementById('overall-roas');
+        roasEl.className = result.totals.roas >= 2.5 ? 'summary-stat-value metric-positive' : 
+                          result.totals.roas >= 1.5 ? 'summary-stat-value metric-neutral' : 
+                          'summary-stat-value metric-negative';
+        
+        // Update comparison table
+        const tbody = document.getElementById('platform-comparison-body');
+        
+        if (!result.platforms || result.platforms.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px;">No data available</td></tr>';
+          return;
+        }
+        
+        tbody.innerHTML = result.platforms.map(platform => {
+          const benchmark = platform.benchmarks || {};
+          const roasDiff = benchmark.roas ? ((platform.roas - benchmark.roas) / benchmark.roas * 100) : 0;
+          const ctrDiff = benchmark.ctr ? ((platform.ctr - benchmark.ctr) / benchmark.ctr * 100) : 0;
+          
+          const vsClass = roasDiff >= 10 ? 'metric-positive' : 
+                         roasDiff <= -10 ? 'metric-negative' : 
+                         'metric-neutral';
+          
+          return `
+            <tr>
+              <td><strong>${platform.name.toUpperCase().replace('-', ' ')}</strong></td>
+              <td>${formatCurrency(platform.spend)}</td>
+              <td>${formatCurrency(platform.revenue)}</td>
+              <td class="${platform.roas >= 2.5 ? 'metric-positive' : platform.roas >= 1.5 ? 'metric-neutral' : 'metric-negative'}">
+                ${platform.roas.toFixed(2)}x
+              </td>
+              <td>${platform.ctr.toFixed(2)}%</td>
+              <td>${formatCurrency(platform.cpc)}</td>
+              <td>${formatCurrency(platform.cpa)}</td>
+              <td class="${vsClass}">
+                ${roasDiff > 0 ? '+' : ''}${roasDiff.toFixed(1)}%
+              </td>
+            </tr>
+          `;
+        }).join('');
+        
+      } catch (err) {
+        console.error('Error loading platform comparison:', err);
+      }
+    }
+    
+    async function loadTopPerformers() {
+      try {
+        const response = await fetch('/api/analytics/roas-by-campaign?days=30&limit=5');
+        const result = await response.json();
+        
+        const list = document.getElementById('top-performers-list');
+        
+        if (!result.data || result.data.length === 0) {
+          list.innerHTML = '<p style="text-align: center; color: #999;">No campaigns found</p>';
+          return;
+        }
+        
+        list.innerHTML = result.data.map((campaign, idx) => {
+          const itemClass = campaign.roas >= 3 ? 'performer-item' : 
+                          campaign.roas >= 2 ? 'performer-item warning' : 
+                          'performer-item critical';
+          
+          return `
+            <div class="${itemClass}">
+              <div>
+                <div class="performer-name">${idx + 1}. ${campaign.campaignName}</div>
+                <div class="performer-details">
+                  ${campaign.platform.toUpperCase()} • Spend: ${formatCurrency(campaign.spend)} • Revenue: ${formatCurrency(campaign.revenue)}
+                </div>
+              </div>
+              <div class="${campaign.roas >= 3 ? 'metric-positive' : campaign.roas >= 2 ? 'metric-neutral' : 'metric-negative'} performer-metric">
+                ${campaign.roas.toFixed(2)}x
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+      } catch (err) {
+        console.error('Error loading top performers:', err);
+      }
+    }
+    
+    async function loadBudgetPacing() {
+      try {
+        const response = await fetch('/api/analytics/budget-utilization?days=30');
+        const result = await response.json();
+        
+        const ctx = document.getElementById('budget-gauge-chart').getContext('2d');
+        
+        if (budgetGaugeChart) budgetGaugeChart.destroy();
+        
+        const labels = result.data.map(d => d.platform.toUpperCase().replace('-', ' '));
+        const utilization = result.data.map(d => d.utilization);
+        
+        // Color based on utilization
+        const colors = utilization.map(u => {
+          if (u > 100) return '#f44336'; // Over budget
+          if (u >= 90) return '#ff9800'; // Nearing budget
+          if (u >= 70) return '#4caf50'; // On track
+          return '#2196f3'; // Under-paced
+        });
+        
+        budgetGaugeChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Budget Utilization %',
+              data: utilization,
+              backgroundColor: colors,
+              borderColor: colors,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const idx = context.dataIndex;
+                    const platform = result.data[idx];
+                    return [
+                      `Utilization: ${platform.utilization.toFixed(1)}%`,
+                      `Allocated: ${formatCurrency(platform.allocated)}`,
+                      `Spent: ${formatCurrency(platform.spent)}`,
+                      `Remaining: ${formatCurrency(platform.remaining)}`
+                    ];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                max: 120,
+                ticks: {
+                  color: '#e0e0e0',
+                  callback: (value) => value + '%'
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              },
+              y: {
+                ticks: { color: '#e0e0e0' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }
+            }
+          }
+        });
+        
+      } catch (err) {
+        console.error('Error loading budget pacing:', err);
+      }
+    }
+    
+    async function loadAlerts() {
+      try {
+        const [budgetResponse, roasResponse] = await Promise.all([
+          fetch('/api/analytics/budget-utilization?days=30'),
+          fetch('/api/analytics/platform-comparison?days=30')
+        ]);
+        
+        const budgetData = await budgetResponse.json();
+        const platformData = await roasResponse.json();
+        
+        const alerts = [];
+        
+        // Budget alerts
+        budgetData.data.forEach(platform => {
+          if (platform.utilization > 100) {
+            alerts.push({
+              type: 'critical',
+              title: `${platform.platform.toUpperCase()} Over Budget`,
+              message: `Budget exceeded by ${formatCurrency(Math.abs(platform.remaining))} (${platform.utilization.toFixed(1)}% utilized)`
+            });
+          } else if (platform.utilization >= 90) {
+            alerts.push({
+              type: 'warning',
+              title: `${platform.platform.toUpperCase()} Approaching Budget`,
+              message: `${platform.utilization.toFixed(1)}% of budget utilized, ${formatCurrency(platform.remaining)} remaining`
+            });
+          }
+        });
+        
+        // ROAS alerts
+        platformData.platforms.forEach(platform => {
+          const benchmark = platform.benchmarks?.roas || 2.5;
+          if (platform.roas < benchmark * 0.7) {
+            alerts.push({
+              type: 'warning',
+              title: `${platform.name.toUpperCase()} Low ROAS`,
+              message: `Current ROAS ${platform.roas.toFixed(2)}x is below benchmark ${benchmark.toFixed(2)}x`
+            });
+          }
+        });
+        
+        // If no alerts, show positive message
+        if (alerts.length === 0) {
+          alerts.push({
+            type: 'info',
+            title: 'All Systems Nominal',
+            message: 'All campaigns are performing within acceptable parameters'
+          });
+        }
+        
+        const alertsList = document.getElementById('alerts-list');
+        alertsList.innerHTML = alerts.map(alert => `
+          <div class="alert-item ${alert.type}">
+            <div class="alert-title">${alert.title}</div>
+            <div class="alert-message">${alert.message}</div>
+          </div>
+        `).join('');
+        
+      } catch (err) {
+        console.error('Error loading alerts:', err);
+      }
+    }
+    
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    }
+  </script>
+</body>
+</html>

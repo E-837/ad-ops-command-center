@@ -1,3 +1,11 @@
-﻿config/.env
+config/.env
 node_modules/
 *.log
+
+# Database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+database/data/*.json
+database/data-backup/

@@ -5,6 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reports - Ad Ops Command Center</title>
   <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="utils/export.js"></script>
+  <style>
+    .filters-section {
+      background: rgba(20, 20, 30, 0.6);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .filter-group label {
+      font-size: 12px;
+      color: #64b5f6;
+      font-weight: 500;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+      background: rgba(10, 10, 20, 0.8);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      color: #e0e0e0;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .filter-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .chart-container {
+      background: rgba(20, 20, 30, 0.6);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .chart-header h3 {
+      margin: 0;
+      color: #64b5f6;
+    }
+    
+    .export-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-export {
+      padding: 6px 12px;
+      background: rgba(100, 200, 255, 0.1);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      color: #64b5f6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    
+    .btn-export:hover {
+      background: rgba(100, 200, 255, 0.2);
+      border-color: #64b5f6;
+    }
+    
+    .chart-canvas {
+      width: 100%;
+      max-height: 400px;
+    }
+    
+    .loading-indicator {
+      text-align: center;
+      padding: 40px;
+      color: #64b5f6;
+    }
+    
+    .error-message {
+      background: rgba(244, 67, 54, 0.1);
+      border: 1px solid rgba(244, 67, 54, 0.3);
+      color: #f44336;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
   <!-- Sidebar -->
@@ -20,6 +127,7 @@
       <li><a href="/campaigns" class="nav-link">📈 Campaigns</a></li>
       <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
       <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+      <li><a href="/analytics" class="nav-link">📈 Analytics</a></li>
       <li><a href="/reports" class="nav-link active">📊 Reports</a></li>
       <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
       <li><a href="/query" class="nav-link">💬 Query</a></li>
@@ -34,99 +142,578 @@
 
   <main class="main-content">
     <header class="page-header">
-      <h2>📊 Reports & Insights</h2>
-      <p>Performance analysis and recommendations</p>
+      <h2>📊 Analytics & Reports</h2>
+      <p>Advanced performance analytics and insights</p>
     </header>
 
-    <!-- Run Analysis Workflows -->
-    <section class="workflow-actions glass">
-      <h3>Generate Reports</h3>
-      <div class="workflow-buttons">
-        <button class="btn primary" onclick="runWorkflow('wow-report')">📊 WoW Report</button>
-        <button class="btn secondary" onclick="runWorkflow('pacing-check')">⏱️ Pacing Check</button>
-        <button class="btn secondary" onclick="runWorkflow('optimization')">🎯 Optimization</button>
-        <button class="btn secondary" onclick="runWorkflow('anomaly-detection')">🔍 Anomaly Detection</button>
-        <button class="btn secondary" onclick="runWorkflow('monthly-report')">📅 Monthly Report</button>
-        <button class="btn secondary" onclick="runWorkflow('cross-channel-report')">🌐 Cross-Channel</button>
+    <!-- Filters Section -->
+    <section class="filters-section">
+      <h3>Filters</h3>
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label for="date-range">Date Range</label>
+          <select id="date-range" onchange="updateDateRange()">
+            <option value="7">Last 7 Days</option>
+            <option value="30" selected>Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        
+        <div class="filter-group" id="custom-dates" style="display: none;">
+          <label for="start-date">Start Date</label>
+          <input type="date" id="start-date">
+        </div>
+        
+        <div class="filter-group" id="custom-dates-end" style="display: none;">
+          <label for="end-date">End Date</label>
+          <input type="date" id="end-date">
+        </div>
+        
+        <div class="filter-group">
+          <label for="platform-filter">Platforms</label>
+          <select id="platform-filter" multiple>
+            <option value="google-ads">Google Ads</option>
+            <option value="meta">Meta</option>
+            <option value="pinterest">Pinterest</option>
+            <option value="ttd">The Trade Desk</option>
+            <option value="dv360">DV360</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="filter-actions">
+        <button class="btn primary" onclick="applyFilters()">🔍 Apply Filters</button>
+        <button class="btn secondary" onclick="resetFilters()">↺ Reset</button>
       </div>
     </section>
 
-    <!-- Insights List -->
-    <section class="insights-section">
-      <h3>Performance Insights</h3>
-      <div class="insights-list" id="insights-list">
-        <p class="loading">Loading insights...</p>
+    <!-- Chart 1: Spend Trend -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>💰 Spend Trend Analysis</h3>
+        <div class="export-buttons">
+          <button class="btn-export" onclick="exportChart('spend-trend', 'csv')">📥 CSV</button>
+          <button class="btn-export" onclick="exportChart('spend-trend', 'json')">📥 JSON</button>
+          <button class="btn-export" onclick="exportChart('spend-trend', 'clipboard')">📋 Copy</button>
+        </div>
       </div>
+      <canvas id="spend-trend-chart" class="chart-canvas"></canvas>
     </section>
 
-    <!-- Workflow Results -->
-    <section class="results-section glass" id="workflow-results" style="display: none;">
-      <h3 id="results-title">Workflow Results</h3>
-      <pre id="results-content"></pre>
+    <!-- Chart 2: CTR Comparison -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>🎯 CTR Comparison by Platform</h3>
+        <div class="export-buttons">
+          <button class="btn-export" onclick="exportChart('ctr-comparison', 'csv')">📥 CSV</button>
+          <button class="btn-export" onclick="exportChart('ctr-comparison', 'json')">📥 JSON</button>
+          <button class="btn-export" onclick="exportChart('ctr-comparison', 'clipboard')">📋 Copy</button>
+        </div>
+      </div>
+      <canvas id="ctr-comparison-chart" class="chart-canvas"></canvas>
+    </section>
+
+    <!-- Chart 3: Conversion Funnel -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>📊 Conversion Funnel</h3>
+        <div class="export-buttons">
+          <button class="btn-export" onclick="exportChart('conversion-funnel', 'csv')">📥 CSV</button>
+          <button class="btn-export" onclick="exportChart('conversion-funnel', 'json')">📥 JSON</button>
+          <button class="btn-export" onclick="exportChart('conversion-funnel', 'clipboard')">📋 Copy</button>
+        </div>
+      </div>
+      <canvas id="conversion-funnel-chart" class="chart-canvas"></canvas>
+    </section>
+
+    <!-- Chart 4: ROAS by Campaign -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>🚀 Top Campaigns by ROAS</h3>
+        <div class="export-buttons">
+          <button class="btn-export" onclick="exportChart('roas-campaign', 'csv')">📥 CSV</button>
+          <button class="btn-export" onclick="exportChart('roas-campaign', 'json')">📥 JSON</button>
+          <button class="btn-export" onclick="exportChart('roas-campaign', 'clipboard')">📋 Copy</button>
+        </div>
+      </div>
+      <canvas id="roas-campaign-chart" class="chart-canvas"></canvas>
     </section>
   </main>
 
   <script src="assets/app.js"></script>
   <script>
-    async function loadInsights() {
-      try {
-        const insights = await fetch('/api/insights').then(r => r.json());
-        
-        if (!insights || insights.length === 0) {
-          document.getElementById('insights-list').innerHTML = 
-            '<p class="empty">No insights available yet</p>';
-          return;
-        }
-        
-        document.getElementById('insights-list').innerHTML = insights.map(insight => {
-          const icon = insight.type === 'positive' ? '✅' :
-                       insight.type === 'concern' ? '⚠️' :
-                       insight.type === 'optimization' ? '🎯' : '💡';
-          
-          return `
-            <div class="insight-card glass ${insight.type}">
-              <div class="insight-icon">${icon}</div>
-              <div class="insight-content">
-                <h4>${insight.title}</h4>
-                <p>${insight.content}</p>
-                ${insight.action ? `<p class="action"><strong>Action:</strong> ${insight.action}</p>` : ''}
-              </div>
-            </div>
-          `;
-        }).join('');
-        
-      } catch (err) {
-        console.error('Error loading insights:', err);
-        document.getElementById('insights-list').innerHTML = 
-          '<p class="error">Error loading insights</p>';
+    // Chart instances
+    let charts = {
+      spendTrend: null,
+      ctrComparison: null,
+      conversionFunnel: null,
+      roasCampaign: null
+    };
+    
+    // Chart data cache
+    let chartData = {
+      spendTrend: null,
+      ctrComparison: null,
+      conversionFunnel: null,
+      roasCampaign: null
+    };
+    
+    // Current filters
+    let currentFilters = {
+      days: 30,
+      platforms: null,
+      startDate: null,
+      endDate: null
+    };
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAllCharts();
+    });
+    
+    function updateDateRange() {
+      const range = document.getElementById('date-range').value;
+      const customDates = document.getElementById('custom-dates');
+      const customDatesEnd = document.getElementById('custom-dates-end');
+      
+      if (range === 'custom') {
+        customDates.style.display = 'block';
+        customDatesEnd.style.display = 'block';
+      } else {
+        customDates.style.display = 'none';
+        customDatesEnd.style.display = 'none';
       }
     }
     
-    async function runWorkflow(name) {
-      const resultsSection = document.getElementById('workflow-results');
-      const resultsTitle = document.getElementById('results-title');
-      const resultsContent = document.getElementById('results-content');
+    function applyFilters() {
+      const range = document.getElementById('date-range').value;
+      const platformFilter = document.getElementById('platform-filter');
+      const selectedPlatforms = Array.from(platformFilter.selectedOptions).map(opt => opt.value);
       
-      resultsSection.style.display = 'block';
-      resultsTitle.textContent = `Running ${name}...`;
-      resultsContent.textContent = 'Please wait...';
+      if (range === 'custom') {
+        currentFilters.startDate = document.getElementById('start-date').value;
+        currentFilters.endDate = document.getElementById('end-date').value;
+        currentFilters.days = null;
+      } else {
+        currentFilters.days = parseInt(range);
+        currentFilters.startDate = null;
+        currentFilters.endDate = null;
+      }
       
+      currentFilters.platforms = selectedPlatforms.length > 0 ? selectedPlatforms.join(',') : null;
+      
+      loadAllCharts();
+    }
+    
+    function resetFilters() {
+      document.getElementById('date-range').value = '30';
+      document.getElementById('platform-filter').selectedIndex = -1;
+      currentFilters = {
+        days: 30,
+        platforms: null,
+        startDate: null,
+        endDate: null
+      };
+      updateDateRange();
+      loadAllCharts();
+    }
+    
+    function buildQueryString() {
+      const params = new URLSearchParams();
+      
+      if (currentFilters.days) params.append('days', currentFilters.days);
+      if (currentFilters.startDate) params.append('startDate', currentFilters.startDate);
+      if (currentFilters.endDate) params.append('endDate', currentFilters.endDate);
+      if (currentFilters.platforms) params.append('platforms', currentFilters.platforms);
+      
+      return params.toString();
+    }
+    
+    async function loadAllCharts() {
+      await loadSpendTrend();
+      await loadCTRComparison();
+      await loadConversionFunnel();
+      await loadROASByCampaign();
+    }
+    
+    async function loadSpendTrend() {
       try {
-        const result = await fetch(`/api/workflows/${name}/run`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        }).then(r => r.json());
+        const query = buildQueryString();
+        const response = await fetch(`/api/analytics/spend-trend?${query}`);
+        const result = await response.json();
         
-        resultsTitle.textContent = `${name} Results`;
-        resultsContent.textContent = JSON.stringify(result, null, 2);
+        chartData.spendTrend = result;
+        
+        const ctx = document.getElementById('spend-trend-chart').getContext('2d');
+        
+        // Destroy existing chart
+        if (charts.spendTrend) charts.spendTrend.destroy();
+        
+        // Extract unique platforms and dates
+        const dates = [...new Set(result.data.map(d => d.date))];
+        const platforms = [...new Set(result.data.map(d => Object.keys(d)).flat())]
+          .filter(k => k !== 'date' && k !== 'total' && k !== 'movingAverage');
+        
+        // Build datasets
+        const datasets = [];
+        
+        // Platform datasets
+        const colors = {
+          'google-ads': '#4285f4',
+          'meta': '#1877f2',
+          'pinterest': '#e60023',
+          'ttd': '#00b67a',
+          'dv360': '#fbbc04'
+        };
+        
+        platforms.forEach(platform => {
+          datasets.push({
+            label: platform.toUpperCase().replace('-', ' '),
+            data: result.data.map(d => d[platform] || 0),
+            borderColor: colors[platform] || '#64b5f6',
+            backgroundColor: 'transparent',
+            tension: 0.3
+          });
+        });
+        
+        // Total dataset
+        datasets.push({
+          label: 'Total',
+          data: result.data.map(d => d.total || 0),
+          borderColor: '#fff',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          tension: 0.3
+        });
+        
+        // Moving average
+        datasets.push({
+          label: '7-Day MA',
+          data: result.data.map(d => d.movingAverage || null),
+          borderColor: '#ff9800',
+          backgroundColor: 'transparent',
+          borderDash: [5, 5],
+          tension: 0.3,
+          pointRadius: 0
+        });
+        
+        charts.spendTrend = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: { color: '#e0e0e0' }
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#e0e0e0' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              },
+              y: {
+                ticks: {
+                  color: '#e0e0e0',
+                  callback: (value) => '$' + value.toLocaleString()
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }
+            }
+          }
+        });
         
       } catch (err) {
-        resultsTitle.textContent = 'Error';
-        resultsContent.textContent = err.message;
+        console.error('Error loading spend trend:', err);
       }
     }
     
-    loadInsights();
+    async function loadCTRComparison() {
+      try {
+        const query = buildQueryString();
+        const response = await fetch(`/api/analytics/ctr-comparison?${query}`);
+        const result = await response.json();
+        
+        chartData.ctrComparison = result;
+        
+        const ctx = document.getElementById('ctr-comparison-chart').getContext('2d');
+        
+        if (charts.ctrComparison) charts.ctrComparison.destroy();
+        
+        const labels = result.data.map(d => d.platform.toUpperCase().replace('-', ' '));
+        const ctrs = result.data.map(d => d.ctr);
+        const benchmarks = result.data.map(d => d.benchmark || 0);
+        
+        // Color bars based on benchmark comparison
+        const colors = result.data.map(d => {
+          if (!d.benchmark) return '#64b5f6';
+          return d.ctr >= d.benchmark ? '#4caf50' : '#f44336';
+        });
+        
+        charts.ctrComparison = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Actual CTR',
+                data: ctrs,
+                backgroundColor: colors,
+                borderColor: colors,
+                borderWidth: 1
+              },
+              {
+                label: 'Benchmark',
+                data: benchmarks,
+                type: 'line',
+                borderColor: '#ff9800',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                pointRadius: 5
+              }
+            ]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: { color: '#e0e0e0' }
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    return `${context.dataset.label}: ${context.parsed.x.toFixed(2)}%`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: '#e0e0e0',
+                  callback: (value) => value.toFixed(1) + '%'
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              },
+              y: {
+                ticks: { color: '#e0e0e0' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }
+            }
+          }
+        });
+        
+      } catch (err) {
+        console.error('Error loading CTR comparison:', err);
+      }
+    }
+    
+    async function loadConversionFunnel() {
+      try {
+        const query = buildQueryString();
+        const response = await fetch(`/api/analytics/conversion-funnel?${query}`);
+        const result = await response.json();
+        
+        chartData.conversionFunnel = result;
+        
+        const ctx = document.getElementById('conversion-funnel-chart').getContext('2d');
+        
+        if (charts.conversionFunnel) charts.conversionFunnel.destroy();
+        
+        const stages = result.data.map(d => d.stage);
+        const values = result.data.map(d => d.value);
+        const dropoffs = result.data.map(d => d.dropoff);
+        
+        charts.conversionFunnel = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: stages,
+            datasets: [{
+              label: 'Volume',
+              data: values,
+              backgroundColor: ['#4285f4', '#1877f2', '#4caf50', '#ff9800'],
+              borderColor: ['#4285f4', '#1877f2', '#4caf50', '#ff9800'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const idx = context.dataIndex;
+                    const dropoff = dropoffs[idx];
+                    return [
+                      `Volume: ${context.parsed.x.toLocaleString()}`,
+                      dropoff > 0 ? `Drop-off: ${dropoff.toFixed(1)}%` : ''
+                    ].filter(Boolean);
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: '#e0e0e0',
+                  callback: (value) => value.toLocaleString()
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              },
+              y: {
+                ticks: { color: '#e0e0e0' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }
+            }
+          }
+        });
+        
+      } catch (err) {
+        console.error('Error loading conversion funnel:', err);
+      }
+    }
+    
+    async function loadROASByCampaign() {
+      try {
+        const query = buildQueryString();
+        const response = await fetch(`/api/analytics/roas-by-campaign?${query}&limit=10`);
+        const result = await response.json();
+        
+        chartData.roasCampaign = result;
+        
+        const ctx = document.getElementById('roas-campaign-chart').getContext('2d');
+        
+        if (charts.roasCampaign) charts.roasCampaign.destroy();
+        
+        const labels = result.data.map(d => d.campaignName);
+        const roas = result.data.map(d => d.roas);
+        
+        // Color based on ROAS value
+        const colors = roas.map(r => {
+          if (r >= 3) return '#4caf50';
+          if (r >= 2) return '#ff9800';
+          return '#f44336';
+        });
+        
+        charts.roasCampaign = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'ROAS',
+              data: roas,
+              backgroundColor: colors,
+              borderColor: colors,
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: (context) => {
+                    const idx = context.dataIndex;
+                    const campaign = result.data[idx];
+                    return [
+                      `ROAS: ${campaign.roas.toFixed(2)}x`,
+                      `Revenue: $${campaign.revenue.toLocaleString()}`,
+                      `Spend: $${campaign.spend.toLocaleString()}`
+                    ];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#e0e0e0' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              },
+              y: {
+                ticks: {
+                  color: '#e0e0e0',
+                  callback: (value) => value.toFixed(1) + 'x'
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }
+            }
+          }
+        });
+        
+      } catch (err) {
+        console.error('Error loading ROAS by campaign:', err);
+      }
+    }
+    
+    function exportChart(chartName, format) {
+      let data = null;
+      let filename = '';
+      
+      switch(chartName) {
+        case 'spend-trend':
+          data = chartData.spendTrend?.data || [];
+          filename = 'spend-trend';
+          break;
+        case 'ctr-comparison':
+          data = chartData.ctrComparison?.data || [];
+          filename = 'ctr-comparison';
+          break;
+        case 'conversion-funnel':
+          data = chartData.conversionFunnel?.data || [];
+          filename = 'conversion-funnel';
+          break;
+        case 'roas-campaign':
+          data = chartData.roasCampaign?.data || [];
+          filename = 'roas-by-campaign';
+          break;
+      }
+      
+      if (!data || data.length === 0) {
+        alert('No data available to export');
+        return;
+      }
+      
+      if (format === 'csv') {
+        const csv = ExportUtils.exportToCSV(data, filename + '.csv');
+        ExportUtils.downloadFile(csv, filename + '.csv', 'text/csv');
+      } else if (format === 'json') {
+        const json = ExportUtils.exportToJSON(data, filename + '.json');
+        ExportUtils.downloadFile(json, filename + '.json', 'application/json');
+      } else if (format === 'clipboard') {
+        const csv = ExportUtils.exportToCSV(data);
+        ExportUtils.copyToClipboard(csv).then(success => {
+          if (success) {
+            alert('Data copied to clipboard!');
+          } else {
+            alert('Failed to copy to clipboard');
+          }
+        });
+      }
+    }
   </script>
 </body>
 </html>

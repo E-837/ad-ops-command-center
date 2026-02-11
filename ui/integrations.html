@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Integrations - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    .integrations-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 1200px) {
+      .integrations-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .integration-card {
+      background: rgba(20, 20, 30, 0.6);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    .integration-card h3 {
+      color: #64b5f6;
+      margin: 0 0 16px 0;
+    }
+    
+    .webhook-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .webhook-item {
+      background: rgba(100, 200, 255, 0.05);
+      border: 1px solid rgba(100, 200, 255, 0.2);
+      border-radius: 4px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .webhook-item.disabled {
+      opacity: 0.5;
+    }
+    
+    .webhook-info {
+      flex: 1;
+    }
+    
+    .webhook-name {
+      font-weight: 600;
+      color: #e0e0e0;
+      margin-bottom: 4px;
+    }
+    
+    .webhook-url {
+      font-size: 12px;
+      color: #999;
+      font-family: monospace;
+    }
+    
+    .webhook-events {
+      font-size: 11px;
+      color: #64b5f6;
+      margin-top: 4px;
+    }
+    
+    .webhook-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-icon {
+      padding: 6px 10px;
+      background: rgba(100, 200, 255, 0.1);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      color: #64b5f6;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .btn-icon:hover {
+      background: rgba(100, 200, 255, 0.2);
+    }
+    
+    .btn-icon.danger {
+      background: rgba(244, 67, 54, 0.1);
+      border-color: rgba(244, 67, 54, 0.3);
+      color: #f44336;
+    }
+    
+    .btn-icon.danger:hover {
+      background: rgba(244, 67, 54, 0.2);
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: #1a1a2e;
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      border-radius: 8px;
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-header h2 {
+      color: #64b5f6;
+      margin: 0;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      color: #64b5f6;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: rgba(10, 10, 20, 0.8);
+      border: 1px solid rgba(100, 200, 255, 0.3);
+      color: #e0e0e0;
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    
+    .form-group textarea {
+      min-height: 100px;
+      font-family: monospace;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 30px;
+    }
+    
+    .delivery-log {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .delivery-item {
+      padding: 10px;
+      border-bottom: 1px solid rgba(100, 200, 255, 0.1);
+      font-size: 13px;
+    }
+    
+    .delivery-item.success {
+      border-left: 3px solid #4caf50;
+    }
+    
+    .delivery-item.failure {
+      border-left: 3px solid #f44336;
+    }
+    
+    .delivery-time {
+      color: #999;
+      font-size: 11px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="/projects" class="nav-link">📁 Projects</a></li>
+      <li><a href="/workflows" class="nav-link">⚡ Workflows</a></li>
+      <li><a href="/campaigns" class="nav-link">📈 Campaigns</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+      <li><a href="/analytics" class="nav-link">📈 Analytics</a></li>
+      <li><a href="/reports" class="nav-link">📊 Reports</a></li>
+      <li><a href="/integrations" class="nav-link active">🔗 Integrations</a></li>
+      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>🔗 Integrations & Webhooks</h2>
+      <p>Connect external systems and configure notifications</p>
+    </header>
+
+    <div class="integrations-grid">
+      <!-- Webhooks Section -->
+      <div class="integration-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3>🔔 Webhooks</h3>
+          <button class="btn primary" onclick="openWebhookModal()">+ Add Webhook</button>
+        </div>
+        
+        <div class="webhook-list" id="webhooks-list">
+          <div class="empty-state">Loading webhooks...</div>
+        </div>
+      </div>
+
+      <!-- Notification Channels -->
+      <div class="integration-card">
+        <h3>📧 Notification Channels</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
+          <div style="padding: 12px; background: rgba(100, 200, 255, 0.05); border-radius: 4px;">
+            <strong>Email</strong>
+            <p style="font-size: 12px; color: #999; margin: 4px 0 0 0;">
+              Status: <span class="metric-neutral">Configured (Mock)</span>
+            </p>
+          </div>
+          <div style="padding: 12px; background: rgba(100, 200, 255, 0.05); border-radius: 4px;">
+            <strong>Slack</strong>
+            <p style="font-size: 12px; color: #999; margin: 4px 0 0 0;">
+              Status: <span class="metric-neutral">Configured (Mock)</span>
+            </p>
+          </div>
+          <div style="padding: 12px; background: rgba(100, 200, 255, 0.05); border-radius: 4px;">
+            <strong>Discord</strong>
+            <p style="font-size: 12px; color: #999; margin: 4px 0 0 0;">
+              Status: <span class="metric-neutral">Configured (Mock)</span>
+            </p>
+          </div>
+          <div style="padding: 12px; background: rgba(100, 200, 255, 0.05); border-radius: 4px;">
+            <strong>SMS</strong>
+            <p style="font-size: 12px; color: #999; margin: 4px 0 0 0;">
+              Status: <span class="metric-neutral">Configured (Mock)</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Webhook Delivery Log -->
+    <div class="integration-card">
+      <h3>📊 Recent Webhook Deliveries</h3>
+      <div class="delivery-log" id="delivery-log">
+        <div class="empty-state">No deliveries yet</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Webhook Modal -->
+  <div id="webhook-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Add Webhook</h2>
+        <button class="modal-close" onclick="closeWebhookModal()">×</button>
+      </div>
+      
+      <form id="webhook-form" onsubmit="saveWebhook(event)">
+        <input type="hidden" id="webhook-id">
+        
+        <div class="form-group">
+          <label for="webhook-name">Name *</label>
+          <input type="text" id="webhook-name" required placeholder="My Webhook">
+        </div>
+        
+        <div class="form-group">
+          <label for="webhook-url">URL *</label>
+          <input type="url" id="webhook-url" required placeholder="https://example.com/webhook">
+        </div>
+        
+        <div class="form-group">
+          <label for="webhook-secret">Secret (auto-generated if empty)</label>
+          <input type="text" id="webhook-secret" placeholder="Leave empty to auto-generate">
+        </div>
+        
+        <div class="form-group">
+          <label for="webhook-direction">Direction *</label>
+          <select id="webhook-direction" required>
+            <option value="outbound">Outbound (Send events)</option>
+            <option value="inbound">Inbound (Receive events)</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="webhook-events">Events (one per line, or * for all)</label>
+          <textarea id="webhook-events" placeholder="workflow.completed&#10;campaign.alert&#10;*"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="webhook-enabled" checked>
+            Enabled
+          </label>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn secondary" onclick="closeWebhookModal()">Cancel</button>
+          <button type="submit" class="btn primary">Save Webhook</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    let webhooks = [];
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      loadWebhooks();
+      loadDeliveryLog();
+      
+      // Refresh every 30 seconds
+      setInterval(() => {
+        loadWebhooks();
+        loadDeliveryLog();
+      }, 30000);
+    });
+    
+    async function loadWebhooks() {
+      try {
+        const response = await fetch('/api/webhooks');
+        webhooks = await response.json();
+        
+        const list = document.getElementById('webhooks-list');
+        
+        if (!webhooks || webhooks.length === 0) {
+          list.innerHTML = '<div class="empty-state">No webhooks configured</div>';
+          return;
+        }
+        
+        list.innerHTML = webhooks.map(webhook => `
+          <div class="webhook-item ${webhook.enabled ? '' : 'disabled'}">
+            <div class="webhook-info">
+              <div class="webhook-name">${webhook.name}</div>
+              <div class="webhook-url">${webhook.url}</div>
+              <div class="webhook-events">
+                ${webhook.direction.toUpperCase()} • Events: ${webhook.events.join(', ')}
+              </div>
+            </div>
+            <div class="webhook-actions">
+              <button class="btn-icon" onclick="testWebhook('${webhook.id}')" title="Test">
+                🧪
+              </button>
+              <button class="btn-icon" onclick="editWebhook('${webhook.id}')" title="Edit">
+                ✏️
+              </button>
+              <button class="btn-icon danger" onclick="deleteWebhook('${webhook.id}')" title="Delete">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+      } catch (err) {
+        console.error('Error loading webhooks:', err);
+      }
+    }
+    
+    async function loadDeliveryLog() {
+      try {
+        // Mock delivery log
+        const log = document.getElementById('delivery-log');
+        log.innerHTML = `
+          <div class="delivery-item success">
+            <div><strong>workflow.completed</strong> → https://example.com/webhook</div>
+            <div class="delivery-time">2 minutes ago • HTTP 200 OK</div>
+          </div>
+          <div class="delivery-item success">
+            <div><strong>campaign.alert</strong> → https://example.com/webhook</div>
+            <div class="delivery-time">15 minutes ago • HTTP 200 OK</div>
+          </div>
+        `;
+      } catch (err) {
+        console.error('Error loading delivery log:', err);
+      }
+    }
+    
+    function openWebhookModal(webhookId = null) {
+      const modal = document.getElementById('webhook-modal');
+      const title = document.getElementById('modal-title');
+      const form = document.getElementById('webhook-form');
+      
+      form.reset();
+      document.getElementById('webhook-id').value = '';
+      
+      if (webhookId) {
+        const webhook = webhooks.find(w => w.id === webhookId);
+        if (webhook) {
+          title.textContent = 'Edit Webhook';
+          document.getElementById('webhook-id').value = webhook.id;
+          document.getElementById('webhook-name').value = webhook.name;
+          document.getElementById('webhook-url').value = webhook.url;
+          document.getElementById('webhook-secret').value = webhook.secret;
+          document.getElementById('webhook-direction').value = webhook.direction;
+          document.getElementById('webhook-events').value = webhook.events.join('\n');
+          document.getElementById('webhook-enabled').checked = webhook.enabled;
+        }
+      } else {
+        title.textContent = 'Add Webhook';
+      }
+      
+      modal.classList.add('active');
+    }
+    
+    function closeWebhookModal() {
+      document.getElementById('webhook-modal').classList.remove('active');
+    }
+    
+    async function saveWebhook(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('webhook-id').value;
+      const data = {
+        name: document.getElementById('webhook-name').value,
+        url: document.getElementById('webhook-url').value,
+        secret: document.getElementById('webhook-secret').value || undefined,
+        direction: document.getElementById('webhook-direction').value,
+        events: document.getElementById('webhook-events').value
+          .split('\n')
+          .map(e => e.trim())
+          .filter(Boolean),
+        enabled: document.getElementById('webhook-enabled').checked
+      };
+      
+      try {
+        const url = id ? `/api/webhooks/${id}` : '/api/webhooks';
+        const method = id ? 'PATCH' : 'POST';
+        
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          closeWebhookModal();
+          loadWebhooks();
+          alert('Webhook saved successfully!');
+        } else {
+          alert('Error saving webhook');
+        }
+      } catch (err) {
+        console.error('Error saving webhook:', err);
+        alert('Error saving webhook');
+      }
+    }
+    
+    function editWebhook(id) {
+      openWebhookModal(id);
+    }
+    
+    async function deleteWebhook(id) {
+      if (!confirm('Are you sure you want to delete this webhook?')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/webhooks/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          loadWebhooks();
+          alert('Webhook deleted');
+        } else {
+          alert('Error deleting webhook');
+        }
+      } catch (err) {
+        console.error('Error deleting webhook:', err);
+        alert('Error deleting webhook');
+      }
+    }
+    
+    async function testWebhook(id) {
+      try {
+        const response = await fetch(`/api/webhooks/${id}/test`, {
+          method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Test webhook sent successfully!');
+        } else {
+          alert('Test webhook failed: ' + result.error);
+        }
+      } catch (err) {
+        console.error('Error testing webhook:', err);
+        alert('Error testing webhook');
+      }
+    }
+  </script>
+</body>
+</html>

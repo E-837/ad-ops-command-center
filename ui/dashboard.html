@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Ad Ops Command Center</title>
   <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="css/charts.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 </head>
 <body>
   <!-- Sidebar -->
@@ -86,6 +88,61 @@
       </div>
       <div id="alerts-list" class="alerts-list"></div>
     </section>
+
+    <!-- Real-time Charts Section -->
+    <section class="dashboard-charts">
+      <!-- Workflow Activity Chart -->
+      <div class="chart-container">
+        <div class="chart-title">
+          Workflow Activity
+          <div class="chart-subtitle">Workflows executed over last 7 days</div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="workflow-activity-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Success Rate Gauge -->
+      <div class="chart-container">
+        <div class="chart-title">
+          Success Rate
+          <div class="chart-subtitle">Percentage of successful workflow executions</div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="success-rate-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Platform Distribution Chart -->
+      <div class="chart-container">
+        <div class="chart-title">
+          Platform Distribution
+          <div class="chart-subtitle">Budget allocation by platform</div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="platform-distribution-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Performance Chart -->
+      <div class="chart-container">
+        <div class="chart-title">
+          Recent Performance
+          <div class="chart-subtitle">Execution duration (last 10 workflows)</div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="recent-performance-chart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Connection Status -->
+    <div style="margin: 1rem 0; text-align: center;">
+      <span id="connection-status" class="connecting-indicator">
+        <span class="connecting-spinner"></span>
+        Connecting to real-time updates...
+      </span>
+    </div>
 
     <!-- Two Column Layout -->
     <div class="dashboard-grid">
@@ -200,6 +257,8 @@
   </main>
 
   <script src="assets/app.js"></script>
+  <script src="components/charts.js"></script>
+  <script src="js/realtime.js"></script>
   <script>
     let dashboardData = {
       projects: [],
@@ -430,11 +489,231 @@
       window.location.href = '/workflows';
     }
 
+    // Initialize charts
+    let charts = {};
+    let realtime = null;
+
+    function initializeCharts() {
+      // Workflow Activity Chart (Line)
+      charts.workflowActivity = createLineChart('workflow-activity-chart', {
+        labels: [],
+        datasets: [{
+          label: 'Workflows',
+          data: [],
+          fill: true
+        }]
+      }, {
+        beginAtZero: true,
+        scales: {
+          y: {
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      });
+
+      // Success Rate Gauge
+      charts.successRate = createGaugeChart('success-rate-chart', 0, 100, {
+        label: 'Success Rate'
+      });
+
+      // Platform Distribution (Doughnut)
+      charts.platformDistribution = createDoughnutChart('platform-distribution-chart', {
+        labels: ['Google', 'Meta', 'Pinterest', 'Other'],
+        datasets: [{
+          data: [0, 0, 0, 0]
+        }]
+      });
+
+      // Recent Performance (Bar)
+      charts.recentPerformance = createBarChart('recent-performance-chart', {
+        labels: [],
+        datasets: [{
+          label: 'Duration (seconds)',
+          data: []
+        }]
+      }, {
+        beginAtZero: true
+      });
+
+      // Load initial chart data
+      loadChartData();
+    }
+
+    async function loadChartData() {
+      try {
+        // Workflow Activity - last 7 days
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 6);
+        
+        const workflowData = await fetch(`/api/executions?since=${startDate.toISOString()}`).then(r => r.json());
+        const dailyCounts = {};
+        
+        // Initialize all days with 0
+        for (let i = 0; i < 7; i++) {
+          const date = new Date(startDate);
+          date.setDate(date.getDate() + i);
+          const dateStr = date.toISOString().split('T')[0];
+          dailyCounts[dateStr] = 0;
+        }
+        
+        // Count workflows per day
+        (workflowData.executions || []).forEach(exec => {
+          const dateStr = exec.startedAt?.split('T')[0];
+          if (dateStr && dailyCounts.hasOwnProperty(dateStr)) {
+            dailyCounts[dateStr]++;
+          }
+        });
+        
+        const labels = Object.keys(dailyCounts).map(d => {
+          const date = new Date(d);
+          return date.toLocaleDateString('en-US', { weekday: 'short' });
+        });
+        
+        updateChart(charts.workflowActivity, {
+          labels,
+          datasets: [{
+            label: 'Workflows',
+            data: Object.values(dailyCounts)
+          }]
+        });
+
+        // Success Rate
+        const total = (workflowData.executions || []).length;
+        const successful = (workflowData.executions || []).filter(e => e.status === 'completed').length;
+        const successRate = total > 0 ? (successful / total) * 100 : 0;
+        
+        // Update gauge (need to recreate with new value)
+        if (charts.successRate) {
+          charts.successRate.destroy();
+        }
+        charts.successRate = createGaugeChart('success-rate-chart', successRate, 100, {
+          label: `${successful}/${total} Successful`
+        });
+
+        // Platform Distribution
+        const campaigns = await fetch('/api/campaigns').then(r => r.json());
+        const platformBudgets = {};
+        
+        (campaigns.campaigns || []).forEach(campaign => {
+          const platform = campaign.dsp || 'Other';
+          const budget = campaign.dailyBudget || 0;
+          platformBudgets[platform] = (platformBudgets[platform] || 0) + budget;
+        });
+        
+        // Map to standard platform names
+        const platformMap = {
+          'ttd': 'Google',
+          'dv360': 'Google',
+          'meta': 'Meta',
+          'pinterest': 'Pinterest'
+        };
+        
+        const platformData = { Google: 0, Meta: 0, Pinterest: 0, Other: 0 };
+        Object.entries(platformBudgets).forEach(([platform, budget]) => {
+          const mappedPlatform = platformMap[platform.toLowerCase()] || 'Other';
+          platformData[mappedPlatform] += budget;
+        });
+        
+        updateChart(charts.platformDistribution, {
+          datasets: [{
+            data: Object.values(platformData)
+          }]
+        });
+
+        // Recent Performance - last 10 executions
+        const recentExecutions = (workflowData.executions || [])
+          .filter(e => e.startedAt && e.completedAt)
+          .slice(-10)
+          .reverse();
+        
+        const perfLabels = recentExecutions.map((e, i) => `Exec ${recentExecutions.length - i}`);
+        const perfData = recentExecutions.map(e => {
+          const start = new Date(e.startedAt);
+          const end = new Date(e.completedAt);
+          return Math.round((end - start) / 1000); // seconds
+        });
+        
+        updateChart(charts.recentPerformance, {
+          labels: perfLabels,
+          datasets: [{
+            label: 'Duration (seconds)',
+            data: perfData
+          }]
+        });
+
+      } catch (error) {
+        console.error('Error loading chart data:', error);
+      }
+    }
+
+    // Debounced chart update functions
+    const debouncedChartUpdates = {
+      workflowActivity: debounce(() => loadChartData(), 1000),
+      successRate: debounce(() => loadChartData(), 1000),
+      platformDistribution: debounce(() => loadChartData(), 1000),
+      recentPerformance: debounce(() => loadChartData(), 1000)
+    };
+
+    // Initialize real-time updates
+    function initializeRealtime() {
+      realtime = new RealtimeClient();
+      
+      realtime.onConnect(() => {
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) {
+          statusEl.className = 'connected-indicator';
+          statusEl.innerHTML = '<span class="connected-dot"></span> Connected to real-time updates';
+        }
+      });
+      
+      realtime.onDisconnect(() => {
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) {
+          statusEl.className = 'connecting-indicator';
+          statusEl.innerHTML = '<span class="connecting-spinner"></span> Reconnecting...';
+        }
+      });
+      
+      // Listen for workflow events
+      realtime.on('workflow.completed', (event) => {
+        console.log('Workflow completed:', event);
+        debouncedChartUpdates.workflowActivity();
+        debouncedChartUpdates.successRate();
+        debouncedChartUpdates.recentPerformance();
+        
+        // Also refresh dashboard
+        loadDashboard();
+      });
+      
+      realtime.on('workflow.failed', (event) => {
+        console.log('Workflow failed:', event);
+        debouncedChartUpdates.successRate();
+        debouncedChartUpdates.recentPerformance();
+        loadDashboard();
+      });
+      
+      realtime.on('campaign.updated', (event) => {
+        console.log('Campaign updated:', event);
+        debouncedChartUpdates.platformDistribution();
+      });
+      
+      realtime.on('campaign.created', (event) => {
+        console.log('Campaign created:', event);
+        debouncedChartUpdates.platformDistribution();
+      });
+    }
+
     // Initialize
     loadDashboard();
+    initializeCharts();
+    initializeRealtime();
 
     // Auto-refresh every 30 seconds
     setInterval(loadDashboard, 30000);
+    setInterval(loadChartData, 60000); // Refresh charts every minute
   </script>
 
   <style>

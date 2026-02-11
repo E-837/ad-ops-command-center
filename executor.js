@@ -305,6 +305,19 @@ async function executeOrchestrator(workflow, params, meta) {
   try {
     // Check if workflow has stages with parallel execution
     for (const stage of meta.stages || []) {
+      const stageStartTime = Date.now();
+      
+      // Emit stage started event
+      eventBus.emit(eventTypes.WORKFLOW_STAGE_STARTED, {
+        source: results.orchestratorId,
+        workflowId: meta.id,
+        executionId: params.executionId || results.orchestratorId,
+        stageId: stage.id,
+        stageName: stage.name,
+        stageType: stage.type,
+        startedAt: new Date().toISOString()
+      });
+      
       if (stage.type === 'parallel-fan-out') {
         // Execute sub-workflow in parallel for each item
         const items = params[stage.foreachKey] || [];
@@ -314,36 +327,111 @@ async function executeOrchestrator(workflow, params, meta) {
           throw new Error(`Sub-workflow ${stage.subWorkflow} not found`);
         }
         
-        // Execute in parallel
+        let completed = 0;
+        const total = items.length;
+        
+        // Execute in parallel with progress updates
         const promises = items.map(async (item) => {
           try {
             const result = await subWorkflow.run({ ...params, ...item });
+            completed++;
+            
+            // Emit progress event
+            eventBus.emit(eventTypes.WORKFLOW_STAGE_PROGRESS, {
+              source: results.orchestratorId,
+              workflowId: meta.id,
+              executionId: params.executionId || results.orchestratorId,
+              stageId: stage.id,
+              stageName: stage.name,
+              progress: Math.round((completed / total) * 100),
+              completed,
+              total
+            });
+            
             return { success: true, item, result };
           } catch (error) {
+            completed++;
+            
+            // Emit progress even on error
+            eventBus.emit(eventTypes.WORKFLOW_STAGE_PROGRESS, {
+              source: results.orchestratorId,
+              workflowId: meta.id,
+              executionId: params.executionId || results.orchestratorId,
+              stageId: stage.id,
+              stageName: stage.name,
+              progress: Math.round((completed / total) * 100),
+              completed,
+              total
+            });
+            
             return { success: false, item, error: error.message };
           }
         });
         
         const subResults = await Promise.all(promises);
+        const stageStatus = subResults.every(r => r.success) ? 'completed' : 'partial';
         
         results.stages.push({
           id: stage.id,
           name: stage.name,
           type: stage.type,
-          status: subResults.every(r => r.success) ? 'completed' : 'partial',
+          status: stageStatus,
+          duration: Date.now() - stageStartTime,
           subWorkflowResults: subResults
         });
         
         results.subWorkflowResults.push(...subResults);
+        
+        // Emit stage completed event
+        eventBus.emit(eventTypes.WORKFLOW_STAGE_COMPLETED, {
+          source: results.orchestratorId,
+          workflowId: meta.id,
+          executionId: params.executionId || results.orchestratorId,
+          stageId: stage.id,
+          stageName: stage.name,
+          status: stageStatus,
+          duration: Date.now() - stageStartTime,
+          completedAt: new Date().toISOString()
+        });
       } else {
         // Regular stage - just execute the workflow normally
-        const result = await workflow.run(params);
-        results.stages.push({
-          id: stage.id,
-          name: stage.name,
-          status: 'completed',
-          result
-        });
+        try {
+          const result = await workflow.run(params);
+          
+          results.stages.push({
+            id: stage.id,
+            name: stage.name,
+            status: 'completed',
+            duration: Date.now() - stageStartTime,
+            result
+          });
+          
+          // Emit stage completed event
+          eventBus.emit(eventTypes.WORKFLOW_STAGE_COMPLETED, {
+            source: results.orchestratorId,
+            workflowId: meta.id,
+            executionId: params.executionId || results.orchestratorId,
+            stageId: stage.id,
+            stageName: stage.name,
+            status: 'completed',
+            duration: Date.now() - stageStartTime,
+            completedAt: new Date().toISOString()
+          });
+        } catch (error) {
+          // Emit stage failed event
+          eventBus.emit(eventTypes.WORKFLOW_STAGE_FAILED, {
+            source: results.orchestratorId,
+            workflowId: meta.id,
+            executionId: params.executionId || results.orchestratorId,
+            stageId: stage.id,
+            stageName: stage.name,
+            error: error.message,
+            duration: Date.now() - stageStartTime,
+            failedAt: new Date().toISOString()
+          });
+          
+          throw error;
+        }
       }
     }
     

@@ -72,7 +72,7 @@ module.exports = {
       { id: 'launch', name: 'Launch Campaigns', agent: 'orchestrator' },
       { id: 'verify', name: 'Verify Launches', agent: 'orchestrator' },
       { id: 'monitor', name: 'Initial Monitoring', agent: 'analyst' }
-    },
+    ],
 
     estimatedDuration: '10-20 min',
     isOrchestrator: true,
