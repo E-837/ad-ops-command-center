@@ -1,0 +1,56 @@
+{
+  "brand": "{BRAND_NAME}",
+  "product": "{PRODUCT_NAME}",
+  "guidelines": {
+    "tone": "{TONE — e.g., Confident, innovative, premium but accessible}",
+    "voice": "{VOICE — e.g., Second person (you/your). Active voice. Present tense.}",
+    "headline_rules": {
+      "max_chars": 30,
+      "min_headlines": 15,
+      "must_include": [
+        "brand name in at least 2 headlines",
+        "{PRICE_POINT}",
+        "CTA in at least 3"
+      ],
+      "cta_options": ["{CTA_1}", "{CTA_2}", "{CTA_3}", "{CTA_4}"],
+      "avoid": [
+        "ALL CAPS (except brand name)",
+        "Exclamation marks in more than 2 headlines",
+        "Competitor names",
+        "Superlatives without proof (best, #1)",
+        "{INDUSTRY_SPECIFIC_RESTRICTIONS}"
+      ],
+      "power_words": ["{POWER_WORD_1}", "{POWER_WORD_2}", "{POWER_WORD_3}"],
+      "pinning_strategy": {
+        "position_1": "Brand or product name headline",
+        "position_2": "Key benefit or feature",
+        "position_3": "CTA or offer"
+      }
+    },
+    "description_rules": {
+      "max_chars": 90,
+      "min_descriptions": 4,
+      "must_include": ["value proposition", "proof point or feature", "CTA with urgency"],
+      "avoid": ["Repetitive phrasing across descriptions", "Generic filler", "Passive voice"]
+    },
+    "usps": [
+      "{USP_1}",
+      "{USP_2}",
+      "{USP_3}",
+      "{USP_4}"
+    ],
+    "keywords_to_echo": ["{KEYWORD_1}", "{KEYWORD_2}", "{KEYWORD_3}"],
+    "competitor_context": "{COMPETITOR_GUIDANCE}",
+    "compliance": {
+      "disclaimers": [],
+      "restricted_claims": ["{RESTRICTED_1}", "{RESTRICTED_2}"]
+    }
+  },
+  "templates": {
+    "brand_headline": "{Product} — {USP}",
+    "feature_headline": "{Power Word} {Feature}",
+    "cta_headline": "{CTA} — {Offer}",
+    "benefit_description": "{USP}. {Feature detail}. {CTA}.",
+    "proof_description": "{Proof point}. {Differentiator}. {Action}."
+  }
+}

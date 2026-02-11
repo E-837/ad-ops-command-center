@@ -1,0 +1,89 @@
+{
+  "brand": "Locke AI Co.",
+  "product": "Locke AirPod AI",
+  "tagline": "Intelligence You Can Wear",
+
+  "visual": {
+    "style": "Premium minimalist tech — Apple-inspired clean aesthetic. White space is intentional. Every element earns its place.",
+    "mood": "Confident, aspirational, human-first technology. Not cold/sterile — warm and inviting despite being tech.",
+    "lighting": "Soft directional lighting with subtle gradient backgrounds. Product shots use rim lighting for depth. Lifestyle shots use warm natural light.",
+    "backgrounds": "Clean gradient backgrounds: deep navy (#0a1628) to soft charcoal (#1a1a2e) for dark mode, off-white (#f8f9fa) to warm gray (#e8e8f0) for light mode. Avoid pure black or pure white.",
+    "photography": "Real humans in real contexts (commute, workout, meeting, coffee shop). Diverse, professional, 25-45 age range. Never staged-looking."
+  },
+
+  "colors": {
+    "primary": "#6366f1 (Indigo — trust, intelligence, premium)",
+    "secondary": "#06b6d4 (Cyan — technology, clarity, freshness)",
+    "accent": "#22c55e (Green — go, success, eco-conscious)",
+    "dark": "#0a0a0f (Near-black for backgrounds)",
+    "light": "#f8f9fa (Off-white for text on dark)",
+    "warning": "Never use red as a primary color — it signals danger. Orange (#f59e0b) for CTAs and urgency.",
+    "gradient": "Primary to secondary (indigo → cyan) for hero elements and CTAs"
+  },
+
+  "typography": {
+    "headline": "Bold sans-serif — Inter Black or SF Pro Display Heavy. All caps for short headlines (3 words max), title case for longer.",
+    "subhead": "Inter Semi-Bold, sentence case. 60-70% of headline size.",
+    "body": "Inter Regular, 14-16px equivalent. Line height 1.6. Left-aligned, never justified.",
+    "cta": "Inter Bold, ALL CAPS, letter-spacing +1px. Short (2-4 words): 'PRE-ORDER NOW', 'LEARN MORE', 'WATCH VIDEO'.",
+    "price": "Inter Black, larger than body. Always show '$199' prominently with strikethrough on '$279'.",
+    "rules": [
+      "Never use serif fonts — they feel dated for AI/tech",
+      "Never use script/handwriting fonts",
+      "Maximum 2 font weights per creative (e.g., Bold headline + Regular body)",
+      "Text must pass 4.5:1 contrast ratio (WCAG AA)",
+      "Minimum readable size: 12px equivalent on display ads",
+      "Headline text should be no more than 8 words"
+    ]
+  },
+
+  "product_rendering": {
+    "hero_shot": "AirPod-style earbud in ear, close-up profile view. Subtle glow on the device suggesting AI processing. Clean, no clutter.",
+    "product_only": "Single earbud on dark gradient background with soft shadow. Slight angle (15-20°). Light source from upper left.",
+    "lifestyle": "Person wearing the AirPod AI in a natural setting — walking in city, at a standing desk, during a workout. Focus on the ear with background bokeh.",
+    "avoid": "Never show the product floating in empty space. Never show wires/cables. Never show screens (this is screen-free by design)."
+  },
+
+  "messaging": {
+    "headline_examples": [
+      "INTELLIGENCE YOU CAN WEAR",
+      "YOUR AI. YOUR EAR. YOUR TERMS.",
+      "AI THAT GOES WHERE YOU GO",
+      "HEAR THE FUTURE",
+      "PRIVATE BY DESIGN"
+    ],
+    "mandatory_elements": [
+      "Pre-order price: $199",
+      "CTA button or text",
+      "Stylized 'L' logo mark (do NOT spell out full brand name if logo is present)"
+    ],
+    "forbidden": [
+      "Never say 'always listening'",
+      "Never make health/medical claims",
+      "Never mention competitors by name",
+      "Never use 'replaces your phone'",
+      "Never use unsupported superlatives (best, first-ever, revolutionary)"
+    ]
+  },
+
+  "ad_specs": {
+    "300x250": {
+      "layout": "Product hero top 60%, headline + CTA bottom 40%. Logo bottom-left corner.",
+      "text_limit": "Headline (5 words max) + CTA. No body copy."
+    },
+    "728x90": {
+      "layout": "Product left 30%, headline center 40%, CTA right 30%. Logo far-right.",
+      "text_limit": "Headline (6 words max) + CTA. Horizontal flow."
+    },
+    "160x600": {
+      "layout": "Logo top, product hero middle, headline below product, CTA bottom. Vertical stack.",
+      "text_limit": "Headline (4 words max, stacked) + price + CTA."
+    },
+    "1920x1080": {
+      "layout": "Cinematic widescreen. Product/person left third, headline + CTA right third. Bottom bar with logo + legal.",
+      "text_limit": "Headline (8 words max) + subhead (1 line) + CTA + price."
+    }
+  },
+
+  "prompt_suffix": "Style: premium minimalist tech ad. Colors: deep navy/charcoal background with indigo (#6366f1) and cyan (#06b6d4) accents. Typography: bold clean sans-serif (Inter/SF Pro style), ALL CAPS headlines, high contrast white text. Product: sleek AirPod-style AI earbud with subtle glow. Include 'PRE-ORDER $199' CTA. Brand mark: stylized 'L' logo only (do NOT write out 'Locke AI Co.' — the L logo is sufficient). No clutter, no busy backgrounds, no serif fonts, no stock photo feel. 4.5:1 contrast ratio minimum."
+}

@@ -1,0 +1,65 @@
+{
+  "brand": "Locke AI Co.",
+  "product": "Locke AirPod AI",
+  "tagline": "Intelligence You Can Wear",
+  "price": "$199",
+  "year": "2026",
+  "budget": 750000,
+  "flightStart": "2026-03-15",
+  "flightEnd": "2026-05-31",
+  "launchEvent": "OpenAI Device Day — April 1, 2026",
+  "targetAudience": "22-45 tech-forward professionals & early adopters",
+  "objectives": ["awareness", "consideration", "pre-order"],
+  "kpis": { 
+    "reach": "8M impressions", 
+    "VCR": "70%", 
+    "CTR": "1.2%", 
+    "preOrders": "10,000" 
+  },
+  "channels": ["CTV", "Display", "Video", "Audio", "Social", "Search"],
+  "search": {
+    "dailyBudget": 5000,
+    "biddingStrategy": "TARGET_CPA",
+    "targetCpa": 50,
+    "competitors": ["Apple AirPods Pro", "Samsung Galaxy Buds", "Nothing Ear", "Sony WF-1000XM5"],
+    "seedKeywords": ["ai earbuds", "wearable ai", "smart earbuds", "translation earbuds"],
+    "negativeKeywords": ["free", "cheap", "used", "repair", "manual", "troubleshoot"]
+  },
+  "creativeSizes": [
+    { "name": "Medium Rectangle", "size": "300x250", "w": 300, "h": 250, "format": "static" },
+    { "name": "Leaderboard", "size": "728x90", "w": 728, "h": 90, "format": "static" },
+    { "name": "Wide Skyscraper", "size": "160x600", "w": 160, "h": 600, "format": "static" },
+    { "name": "CTV/OLV Video", "size": "1920x1080", "w": 1920, "h": 1080, "format": "video" }
+  ],
+  "mediaPlan": [
+    { "channel": "Display", "dsp": "TTD", "tactic": "Programmatic Display — Awareness & Pre-order", "budget": 200000, "kpiTarget": "3M Impressions", "size": "300x250, 728x90, 160x600" },
+    { "channel": "Video", "dsp": "TTD", "tactic": "Online Video — Pre-roll + Mid-roll", "budget": 150000, "kpiTarget": "70% VCR", "size": "1920x1080 :15/:30" },
+    { "channel": "CTV", "dsp": "DV360", "tactic": "Connected TV — Streaming (Hulu, Peacock, YouTube TV)", "budget": 200000, "kpiTarget": "95% Completion", "size": "1920x1080 :30" },
+    { "channel": "Display", "dsp": "Amazon DSP", "tactic": "Retargeting + In-market Audiences", "budget": 100000, "kpiTarget": "1.2% CTR", "size": "300x250, 728x90" },
+    { "channel": "Audio", "dsp": "TTD", "tactic": "Programmatic Audio — Spotify/Podcasts", "budget": 100000, "kpiTarget": "90% Listen-through", "size": ":30 audio spot" }
+  ],
+  "brief": {
+    "executiveSummary": "Locke AI Co. is launching the Locke AirPod AI — a wearable AI companion in an AirPod form factor — at OpenAI Device Day on April 1, 2026. This campaign drives pre-launch awareness and day-one pre-orders through a coordinated multi-channel digital media blitz across CTV, Display, Video, Audio, and Social.",
+    "whyNow": "OpenAI Device Day creates a massive cultural moment for AI hardware. Launching alongside the event captures earned media amplification, positions Locke as a first-mover in wearable AI, and rides the news cycle for maximum reach.",
+    "primaryOutcome": "10,000 pre-orders within first 30 days of campaign launch",
+    "messagePillars": [
+      "AI that goes where you go — no screen required",
+      "Privacy-first: on-device processing, your data stays yours",
+      "Seamless integration with the tools you already use",
+      "Designed for real life — meetings, commutes, workouts, everything"
+    ],
+    "valueProposition": "The first truly personal AI assistant that lives in your ear — always listening when you want, completely private when you don't.",
+    "reasonToBelieve": "On-device neural engine, 18-hour battery, works with 200+ apps, military-grade encryption, designed by ex-Apple audio engineers",
+    "audience": {
+      "primary": "Tech-forward professionals 25-45, HHI $100K+, early adopters of AI tools (ChatGPT, Copilot, etc.)",
+      "secondary": "Productivity enthusiasts, podcast listeners, remote workers",
+      "targeting": "1P email lists, AI tool user lookalikes, tech publication readers, CTV cord-cutters",
+      "exclusions": "Existing customers, employees, minors"
+    },
+    "compliance": {
+      "privacyStance": "On-device processing emphasized. No cloud storage of conversations unless user opts in.",
+      "disclosures": "\"AI-generated responses may not always be accurate. See lockeai.co/safety for details.\"",
+      "wordsToAvoid": "\"Always right\", \"replaces your phone\", \"listens to everything\", health/medical claims"
+    }
+  }
+}

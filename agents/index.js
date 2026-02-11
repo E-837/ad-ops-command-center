@@ -10,6 +10,7 @@ const creativeOps = require('./creative-ops');
 const compliance = require('./compliance');
 const projectManager = require('./project-manager');
 const creativeCoordinator = require('./creative-coordinator');
+const asanaProjectManager = require('./asana-project-manager');
 
 const AGENTS = {
   'media-planner': mediaPlanner,
@@ -18,7 +19,8 @@ const AGENTS = {
   'creative-ops': creativeOps,
   'compliance': compliance,
   'project-manager': projectManager,
-  'creative-coordinator': creativeCoordinator
+  'creative-coordinator': creativeCoordinator,
+  'asana-project-manager': asanaProjectManager
 };
 
 /**

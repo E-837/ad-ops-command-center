@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflows - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="/projects" class="nav-link">📁 Projects</a></li>
+      <li><a href="/workflows" class="nav-link active">⚡ Workflows</a></li>
+      <li><a href="/campaigns" class="nav-link">📈 Campaigns</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+      <li><a href="/reports" class="nav-link">📊 Reports</a></li>
+      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>⚡ Workflow Library</h2>
+      <p>Automated workflows for campaign ops, projects, and reporting</p>
+    </header>
+
+    <!-- Category Tabs -->
+    <div class="category-tabs">
+      <button class="category-tab active" data-category="all" onclick="switchCategory('all')">
+        All Workflows
+      </button>
+      <button class="category-tab" data-category="campaign-ops" onclick="switchCategory('campaign-ops')">
+        📊 Campaign Ops
+      </button>
+      <button class="category-tab" data-category="projects" onclick="switchCategory('projects')">
+        📋 Projects
+      </button>
+      <button class="category-tab" data-category="reporting" onclick="switchCategory('reporting')">
+        📈 Reporting
+      </button>
+      <button class="category-tab" data-category="orchestration" onclick="switchCategory('orchestration')">
+        🎯 Orchestration
+      </button>
+    </div>
+
+    <!-- Workflows Grid -->
+    <div id="workflows-container" class="workflows-grid">
+      <p class="loading">Loading workflows...</p>
+    </div>
+  </main>
+
+  <!-- Workflow Detail Modal -->
+  <div id="workflow-modal" class="modal" style="display: none;">
+    <div class="modal-content glass" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3 id="modal-workflow-name">Workflow</h3>
+        <button class="modal-close" onclick="hideWorkflowModal()">×</button>
+      </div>
+      <div id="modal-workflow-content">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    let allWorkflows = [];
+    let currentCategory = 'all';
+    let selectedWorkflow = null;
+
+    // Load workflows
+    async function loadWorkflows() {
+      try {
+        const response = await fetch('/api/workflows');
+        const data = await response.json();
+        allWorkflows = data.workflows || [];
+        renderWorkflows();
+      } catch (error) {
+        console.error('Error loading workflows:', error);
+        document.getElementById('workflows-container').innerHTML = '<p class="error">Failed to load workflows</p>';
+      }
+    }
+
+    // Switch category
+    function switchCategory(category) {
+      currentCategory = category;
+      
+      // Update tab styles
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.getAttribute('data-category') === category) {
+          tab.classList.add('active');
+        }
+      });
+
+      renderWorkflows();
+    }
+
+    // Render workflows
+    function renderWorkflows() {
+      const container = document.getElementById('workflows-container');
+      
+      let workflows = allWorkflows;
+      if (currentCategory !== 'all') {
+        workflows = allWorkflows.filter(w => w.category === currentCategory);
+      }
+
+      if (workflows.length === 0) {
+        container.innerHTML = '<p class="empty-state">No workflows found in this category</p>';
+        return;
+      }
+
+      container.innerHTML = workflows.map(workflow => `
+        <div class="workflow-card glass">
+          <div class="workflow-header">
+            <h3>${workflow.name}</h3>
+            <span class="workflow-category-badge">${getCategoryIcon(workflow.category)} ${getCategoryLabel(workflow.category)}</span>
+          </div>
+          
+          <p class="workflow-description">${workflow.description || 'No description'}</p>
+
+          <div class="workflow-meta">
+            ${workflow.estimatedDuration ? `
+              <div class="meta-badge">
+                <span class="meta-icon">⏱️</span>
+                <span>${workflow.estimatedDuration}</span>
+              </div>
+            ` : ''}
+            
+            ${workflow.requiredConnectors?.length > 0 ? `
+              <div class="meta-badge">
+                <span class="meta-icon">🔌</span>
+                <span>${workflow.requiredConnectors.length} connector${workflow.requiredConnectors.length > 1 ? 's' : ''}</span>
+              </div>
+            ` : ''}
+
+            ${workflow.triggers ? `
+              <div class="meta-badge">
+                ${workflow.triggers.manual ? '<span title="Manual trigger">👤</span>' : ''}
+                ${workflow.triggers.scheduled ? '<span title="Scheduled">⏰</span>' : ''}
+                ${workflow.triggers.events?.length > 0 ? '<span title="Event-driven">⚡</span>' : ''}
+              </div>
+            ` : ''}
+          </div>
+
+          ${workflow.stages?.length > 0 ? `
+            <div class="workflow-stages">
+              <div class="stages-label">Stages:</div>
+              <div class="stages-list">
+                ${workflow.stages.slice(0, 3).map(stage => `
+                  <span class="stage-badge">${stage.name || stage.id}</span>
+                `).join('')}
+                ${workflow.stages.length > 3 ? `<span class="stage-badge">+${workflow.stages.length - 3} more</span>` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="workflow-actions">
+            <button class="btn-secondary" onclick="viewWorkflowDetails('${workflow.id}')">View Details</button>
+            <button class="btn-primary" onclick="runWorkflowForm('${workflow.id}')">▶️ Run</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Category helpers
+    function getCategoryIcon(category) {
+      const icons = {
+        'campaign-ops': '📊',
+        'projects': '📋',
+        'reporting': '📈',
+        'orchestration': '🎯'
+      };
+      return icons[category] || '⚡';
+    }
+
+    function getCategoryLabel(category) {
+      const labels = {
+        'campaign-ops': 'Campaign Ops',
+        'projects': 'Projects',
+        'reporting': 'Reporting',
+        'orchestration': 'Orchestration'
+      };
+      return labels[category] || category;
+    }
+
+    // View workflow details
+    function viewWorkflowDetails(workflowId) {
+      const workflow = allWorkflows.find(w => w.id === workflowId);
+      if (!workflow) return;
+
+      selectedWorkflow = workflow;
+
+      document.getElementById('modal-workflow-name').textContent = workflow.name;
+      document.getElementById('modal-workflow-content').innerHTML = `
+        <div class="workflow-detail">
+          <div class="detail-section">
+            <h4>Description</h4>
+            <p>${workflow.description || 'No description available'}</p>
+          </div>
+
+          ${workflow.requiredConnectors?.length > 0 ? `
+            <div class="detail-section">
+              <h4>Required Connectors</h4>
+              <div class="connector-badges">
+                ${workflow.requiredConnectors.map(c => `<span class="connector-badge">${c}</span>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${workflow.inputs && Object.keys(workflow.inputs).length > 0 ? `
+            <div class="detail-section">
+              <h4>Input Parameters</h4>
+              <ul class="param-list">
+                ${Object.entries(workflow.inputs).map(([key, param]) => `
+                  <li>
+                    <strong>${key}</strong>${param.required ? ' <span class="required">*</span>' : ''}
+                    <br><span class="param-desc">${param.description || ''}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${workflow.stages?.length > 0 ? `
+            <div class="detail-section">
+              <h4>Workflow Stages (${workflow.stages.length})</h4>
+              <div class="stages-detail">
+                ${workflow.stages.map((stage, idx) => `
+                  <div class="stage-item">
+                    <span class="stage-number">${idx + 1}</span>
+                    <div>
+                      <div class="stage-name">${stage.name || stage.id}</div>
+                      ${stage.agent ? `<div class="stage-agent">Agent: ${stage.agent}</div>` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${workflow.outputs?.length > 0 ? `
+            <div class="detail-section">
+              <h4>Expected Outputs</h4>
+              <ul class="output-list">
+                ${workflow.outputs.map(output => `<li>${output}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          <div class="modal-footer">
+            <button class="btn-secondary" onclick="hideWorkflowModal()">Close</button>
+            <button class="btn-primary" onclick="runWorkflowForm('${workflow.id}')">▶️ Run Workflow</button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('workflow-modal').style.display = 'flex';
+    }
+
+    // Run workflow form
+    function runWorkflowForm(workflowId) {
+      const workflow = allWorkflows.find(w => w.id === workflowId);
+      if (!workflow) return;
+
+      selectedWorkflow = workflow;
+
+      document.getElementById('modal-workflow-name').textContent = `Run: ${workflow.name}`;
+      
+      const hasInputs = workflow.inputs && Object.keys(workflow.inputs).length > 0;
+
+      document.getElementById('modal-workflow-content').innerHTML = `
+        <form id="run-workflow-form" onsubmit="executeWorkflow(event)">
+          ${hasInputs ? `
+            <div class="detail-section">
+              <h4>Input Parameters</h4>
+              ${Object.entries(workflow.inputs).map(([key, param]) => `
+                <div class="form-group">
+                  <label>
+                    ${key}
+                    ${param.required ? '<span class="required">*</span>' : ''}
+                  </label>
+                  ${param.description ? `<p class="param-desc">${param.description}</p>` : ''}
+                  ${renderInputField(key, param)}
+                </div>
+              `).join('')}
+            </div>
+          ` : '<p>This workflow requires no input parameters.</p>'}
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" onclick="hideWorkflowModal()">Cancel</button>
+            <button type="submit" class="btn-primary">▶️ Execute</button>
+          </div>
+        </form>
+      `;
+
+      document.getElementById('workflow-modal').style.display = 'flex';
+    }
+
+    // Render input field based on type
+    function renderInputField(key, param) {
+      const required = param.required ? 'required' : '';
+      
+      if (param.type === 'string' && param.enum) {
+        return `
+          <select name="${key}" ${required}>
+            <option value="">Select...</option>
+            ${param.enum.map(val => `<option value="${val}">${val}</option>`).join('')}
+          </select>
+        `;
+      }
+
+      if (param.type === 'number') {
+        return `<input type="number" name="${key}" ${required} placeholder="Enter ${key}">`;
+      }
+
+      if (param.type === 'boolean') {
+        return `
+          <select name="${key}" ${required}>
+            <option value="">Select...</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        `;
+      }
+
+      if (param.type === 'array') {
+        return `<textarea name="${key}" ${required} placeholder="Enter values (one per line)" rows="3"></textarea>`;
+      }
+
+      // Default to text input
+      return `<input type="text" name="${key}" ${required} placeholder="Enter ${key}">`;
+    }
+
+    // Execute workflow
+    async function executeWorkflow(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(event.target);
+      const params = {};
+
+      for (const [key, value] of formData.entries()) {
+        const param = selectedWorkflow.inputs[key];
+        
+        if (param.type === 'number') {
+          params[key] = parseFloat(value);
+        } else if (param.type === 'boolean') {
+          params[key] = value === 'true';
+        } else if (param.type === 'array') {
+          params[key] = value.split('\n').map(v => v.trim()).filter(v => v);
+        } else {
+          params[key] = value;
+        }
+      }
+
+      try {
+        const response = await fetch('/api/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workflowId: selectedWorkflow.id,
+            params: params
+          })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+          hideWorkflowModal();
+          alert(`Workflow started! Execution ID: ${result.executionId}`);
+          // Redirect to execution detail page
+          window.location.href = `/workflow-detail.html?executionId=${result.executionId}`;
+        } else {
+          alert(`Failed to start workflow: ${result.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error executing workflow:', error);
+        alert('Failed to execute workflow');
+      }
+    }
+
+    // Modal functions
+    function hideWorkflowModal() {
+      document.getElementById('workflow-modal').style.display = 'none';
+      selectedWorkflow = null;
+    }
+
+    // Initialize
+    loadWorkflows();
+  </script>
+
+  <style>
+    .category-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .category-tab {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 10px 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .category-tab:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+
+    .category-tab.active {
+      background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+      color: white;
+      border-color: transparent;
+    }
+
+    .workflows-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .workflow-card {
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .workflow-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .workflow-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .workflow-header h3 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .workflow-category-badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    .workflow-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+      flex: 1;
+    }
+
+    .workflow-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+    }
+
+    .meta-badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .meta-icon {
+      font-size: 0.9rem;
+    }
+
+    .workflow-stages {
+      margin-bottom: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .stages-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .stages-list {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .stage-badge {
+      padding: 4px 8px;
+      background: rgba(139, 92, 246, 0.2);
+      color: #A78BFA;
+      border-radius: 6px;
+      font-size: 0.75rem;
+    }
+
+    .workflow-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 15px;
+    }
+
+    .workflow-actions button {
+      flex: 1;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 30px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 2rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .workflow-detail {
+      color: var(--text-primary);
+    }
+
+    .detail-section {
+      margin-bottom: 25px;
+    }
+
+    .detail-section h4 {
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .connector-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .connector-badge {
+      padding: 6px 12px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60A5FA;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+
+    .param-list, .output-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .param-list li, .output-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .param-list li:last-child, .output-list li:last-child {
+      border-bottom: none;
+    }
+
+    .param-desc {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .required {
+      color: var(--danger);
+    }
+
+    .stages-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stage-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+    }
+
+    .stage-number {
+      width: 30px;
+      height: 30px;
+      background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .stage-name {
+      font-weight: 500;
+    }
+
+    .stage-agent {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .loading, .empty-state, .error {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .error {
+      color: var(--danger);
+    }
+  </style>
+</body>
+</html>

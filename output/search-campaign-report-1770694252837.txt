@@ -1,0 +1,120 @@
+═══ SEARCH CAMPAIGN REPORT ═══
+Campaign: Locke AirPod AI — Search
+Budget: $5,000/day | Bidding: TARGET_CPA ($50 target)
+Flight: 2026-03-15 → 2026-05-31
+Final URL: https://lockeai.co/airpod-ai
+Keyword Model: dry-run (no API call)
+
+Negative Keywords: free, cheap, used, repair, manual, troubleshoot, hack, jailbreak, refurbished, broken, fix, job, hiring, salary, careers
+
+── Ad Group: Brand ──
+   Keywords (8): [EXACT] locke airpod ai, [EXACT] locke ai co, [PHRASE] locke earbuds, [EXACT] buy locke airpod ai, [PHRASE] locke wearable, [PHRASE] locke airpod ai review, [EXACT] locke airpod ai price, [PHRASE] locke ai device
+   RSA: ✅ 15 headlines, 4 descriptions
+   Headlines:
+     • "Locke AirPod AI — Pre-Order" (27 chars, position_1)
+     • "Locke AI Co. Earbuds" (20 chars, position_1)
+     • "AI-Powered Sound" (16 chars, position_2)
+     • "Translate 40+ Languages" (23 chars, position_2)
+     • "18-Hour AI Battery Life" (23 chars, position_2)
+     ... +10 more
+   Descriptions:
+     • "The first AI-native earbud. Real-time translation in 40+ languages. Pre-order $199." (83 chars)
+     • "On-device AI keeps your data private. 18-hour battery life. Order yours today." (78 chars)
+     • "AI assistant in your ear. Works with 200+ apps. Get 30% off — pre-order now." (76 chars)
+     • "Intelligent earbuds that translate, assist, and adapt. Hands-free AI. Shop now." (79 chars)
+
+── Ad Group: Generic — AI Earbuds ──
+   Keywords (7): [PHRASE] ai earbuds, [PHRASE] smart earbuds, [PHRASE] ai powered earbuds, [BROAD] intelligent earbuds, [PHRASE] earbuds with ai, [PHRASE] best ai earbuds 2026, [BROAD] wireless ai earbuds
+   RSA: ✅ 15 headlines, 4 descriptions
+   Headlines:
+     • "Locke AirPod AI — Pre-Order" (27 chars, position_1)
+     • "Locke AI Co. Earbuds" (20 chars, position_1)
+     • "AI-Powered Sound" (16 chars, position_2)
+     • "Translate 40+ Languages" (23 chars, position_2)
+     • "18-Hour AI Battery Life" (23 chars, position_2)
+     ... +10 more
+   Descriptions:
+     • "The first AI-native earbud. Real-time translation in 40+ languages. Pre-order $199." (83 chars)
+     • "On-device AI keeps your data private. 18-hour battery life. Order yours today." (78 chars)
+     • "AI assistant in your ear. Works with 200+ apps. Get 30% off — pre-order now." (76 chars)
+     • "Intelligent earbuds that translate, assist, and adapt. Hands-free AI. Shop now." (79 chars)
+
+── Ad Group: Generic — Wearable AI ──
+   Keywords (6): [PHRASE] wearable ai device, [BROAD] ai wearable, [PHRASE] wearable ai assistant, [BROAD] wearable technology ai, [PHRASE] ai companion device, [PHRASE] personal ai device
+   RSA: ✅ 15 headlines, 4 descriptions
+   Headlines:
+     • "Locke AirPod AI — Pre-Order" (27 chars, position_1)
+     • "Locke AI Co. Earbuds" (20 chars, position_1)
+     • "AI-Powered Sound" (16 chars, position_2)
+     • "Translate 40+ Languages" (23 chars, position_2)
+     • "18-Hour AI Battery Life" (23 chars, position_2)
+     ... +10 more
+   Descriptions:
+     • "The first AI-native earbud. Real-time translation in 40+ languages. Pre-order $199." (83 chars)
+     • "On-device AI keeps your data private. 18-hour battery life. Order yours today." (78 chars)
+     • "AI assistant in your ear. Works with 200+ apps. Get 30% off — pre-order now." (76 chars)
+     • "Intelligent earbuds that translate, assist, and adapt. Hands-free AI. Shop now." (79 chars)
+
+── Ad Group: Feature — Translation ──
+   Keywords (6): [EXACT] translation earbuds, [PHRASE] real time translation earbuds, [PHRASE] language translation earbuds, [BROAD] earbuds that translate, [PHRASE] live translation device, [PHRASE] translator earbuds 2026
+   RSA: ✅ 15 headlines, 4 descriptions
+   Headlines:
+     • "Locke AirPod AI — Pre-Order" (27 chars, position_1)
+     • "Locke AI Co. Earbuds" (20 chars, position_1)
+     • "AI-Powered Sound" (16 chars, position_2)
+     • "Translate 40+ Languages" (23 chars, position_2)
+     • "18-Hour AI Battery Life" (23 chars, position_2)
+     ... +10 more
+   Descriptions:
+     • "The first AI-native earbud. Real-time translation in 40+ languages. Pre-order $199." (83 chars)
+     • "On-device AI keeps your data private. 18-hour battery life. Order yours today." (78 chars)
+     • "AI assistant in your ear. Works with 200+ apps. Get 30% off — pre-order now." (76 chars)
+     • "Intelligent earbuds that translate, assist, and adapt. Hands-free AI. Shop now." (79 chars)
+
+── Ad Group: Feature — Privacy & On-Device AI ──
+   Keywords (5): [PHRASE] private ai earbuds, [BROAD] on device ai processing, [BROAD] earbuds with offline ai, [PHRASE] privacy first wearable, [BROAD] secure ai assistant
+   RSA: ✅ 15 headlines, 4 descriptions
+   Headlines:
+     • "Locke AirPod AI — Pre-Order" (27 chars, position_1)
+     • "Locke AI Co. Earbuds" (20 chars, position_1)
+     • "AI-Powered Sound" (16 chars, position_2)
+     • "Translate 40+ Languages" (23 chars, position_2)
+     • "18-Hour AI Battery Life" (23 chars, position_2)
+     ... +10 more
+   Descriptions:
+     • "The first AI-native earbud. Real-time translation in 40+ languages. Pre-order $199." (83 chars)
+     • "On-device AI keeps your data private. 18-hour battery life. Order yours today." (78 chars)
+     • "AI assistant in your ear. Works with 200+ apps. Get 30% off — pre-order now." (76 chars)
+     • "Intelligent earbuds that translate, assist, and adapt. Hands-free AI. Shop now." (79 chars)
+
+── Ad Group: Competitor ──
+   Keywords (7): [BROAD] airpods alternative with ai, [BROAD] apple airpods pro alternative, [BROAD] samsung galaxy buds alternative, [BROAD] nothing ear alternative, [BROAD] sony wf-1000xm5 alternative, [BROAD] best earbuds with assistant, [BROAD] earbuds better than airpods
+   RSA: ✅ 15 headlines, 4 descriptions
+   Headlines:
+     • "Locke AirPod AI — Pre-Order" (27 chars, position_1)
+     • "Locke AI Co. Earbuds" (20 chars, position_1)
+     • "AI-Powered Sound" (16 chars, position_2)
+     • "Translate 40+ Languages" (23 chars, position_2)
+     • "18-Hour AI Battery Life" (23 chars, position_2)
+     ... +10 more
+   Descriptions:
+     • "The first AI-native earbud. Real-time translation in 40+ languages. Pre-order $199." (83 chars)
+     • "On-device AI keeps your data private. 18-hour battery life. Order yours today." (78 chars)
+     • "AI assistant in your ear. Works with 200+ apps. Get 30% off — pre-order now." (76 chars)
+     • "Intelligent earbuds that translate, assist, and adapt. Hands-free AI. Shop now." (79 chars)
+
+── Ad Group: Long-Tail — Use Cases ──
+   Keywords (6): [BROAD] earbuds for language learning, [BROAD] ai assistant for commute, [BROAD] hands free ai for meetings, [BROAD] earbuds that summarize meetings, [BROAD] best earbuds for remote work 2026, [BROAD] ai earbuds for productivity
+   RSA: ✅ 15 headlines, 4 descriptions
+   Headlines:
+     • "Locke AirPod AI — Pre-Order" (27 chars, position_1)
+     • "Locke AI Co. Earbuds" (20 chars, position_1)
+     • "AI-Powered Sound" (16 chars, position_2)
+     • "Translate 40+ Languages" (23 chars, position_2)
+     • "18-Hour AI Battery Life" (23 chars, position_2)
+     ... +10 more
+   Descriptions:
+     • "The first AI-native earbud. Real-time translation in 40+ languages. Pre-order $199." (83 chars)
+     • "On-device AI keeps your data private. 18-hour battery life. Order yours today." (78 chars)
+     • "AI assistant in your ear. Works with 200+ apps. Get 30% off — pre-order now." (76 chars)
+     • "Intelligent earbuds that translate, assist, and adapt. Hands-free AI. Shop now." (79 chars)

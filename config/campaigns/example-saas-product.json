@@ -1,0 +1,64 @@
+{
+  "brand": "Nimbus Labs",
+  "product": "Nimbus Cloud Suite",
+  "tagline": "Your Business, Everywhere",
+  "price": "$49/mo",
+  "year": "2026",
+  "budget": 500000,
+  "flightStart": "2026-04-01",
+  "flightEnd": "2026-06-30",
+  "launchEvent": "SaaStr Annual 2026 — April 15, 2026",
+  "targetAudience": "B2B decision makers, IT directors, SaaS buyers 28-50",
+  "objectives": ["awareness", "trial", "conversion"],
+  "kpis": { 
+    "reach": "5M impressions", 
+    "CTR": "2.5%", 
+    "CPL": "$85", 
+    "trials": "2,500" 
+  },
+  "channels": ["Display", "Video", "LinkedIn", "Retargeting", "Search"],
+  "search": {
+    "dailyBudget": 3000,
+    "biddingStrategy": "TARGET_CPA",
+    "targetCpa": 85,
+    "competitors": ["Monday.com", "Asana", "Notion", "HubSpot", "Zoho One"],
+    "seedKeywords": ["business management software", "all in one business platform", "smb software suite", "project management crm"],
+    "negativeKeywords": ["free", "cheap", "open source", "crack", "torrent", "job", "hiring", "salary", "intern"]
+  },
+  "creativeSizes": [
+    { "name": "Medium Rectangle", "size": "300x250", "w": 300, "h": 250, "format": "static" },
+    { "name": "Leaderboard", "size": "728x90", "w": 728, "h": 90, "format": "static" },
+    { "name": "Wide Skyscraper", "size": "160x600", "w": 160, "h": 600, "format": "static" },
+    { "name": "LinkedIn Social", "size": "1200x628", "w": 1200, "h": 628, "format": "static" }
+  ],
+  "mediaPlan": [
+    { "channel": "Display", "dsp": "TTD", "tactic": "Programmatic Display — B2B Awareness & Lead Gen", "budget": 150000, "kpiTarget": "2M Impressions", "size": "300x250, 728x90, 160x600" },
+    { "channel": "Video", "dsp": "DV360", "tactic": "Online Video — Pre-roll Business Content", "budget": 150000, "kpiTarget": "65% VCR", "size": "1920x1080 :15/:30" },
+    { "channel": "Retargeting", "dsp": "TTD", "tactic": "Retargeting + Intent Data Audiences", "budget": 100000, "kpiTarget": "2.5% CTR", "size": "300x250, 728x90" },
+    { "channel": "LinkedIn", "dsp": "Amazon DSP", "tactic": "LinkedIn Sponsored Content + InMail", "budget": 100000, "kpiTarget": "$85 CPL", "size": "1200x628 social" }
+  ],
+  "brief": {
+    "executiveSummary": "Nimbus Labs is launching Nimbus Cloud Suite — an all-in-one business management platform for SMBs — at SaaStr Annual 2026. This campaign drives awareness and free trial signups through targeted B2B channels including LinkedIn, display, video, and intent-based retargeting.",
+    "whyNow": "SaaStr Annual is the premier SaaS conference, creating maximum visibility among target buyers. Post-pandemic SMBs are still consolidating their tech stack, creating opportunity for an integrated solution.",
+    "primaryOutcome": "2,500 free trial signups within 90 days of campaign launch",
+    "messagePillars": [
+      "One platform, everything connected — CRM, project management, accounting, team chat",
+      "Built for growing businesses — scales from 10 to 500 employees seamlessly",
+      "99.9% uptime guarantee — enterprise reliability at SMB pricing",
+      "Setup in 24 hours — no consultants, no complexity, just results"
+    ],
+    "valueProposition": "The only business platform that grows with you — from startup chaos to enterprise scale, everything connected in one place.",
+    "reasonToBelieve": "5-star G2 reviews, 99.9% uptime SLA, used by 10,000+ businesses, integrates with 200+ apps, SOC2 certified security",
+    "audience": {
+      "primary": "SMB decision makers 28-50, 10-500 employees, currently using multiple disconnected tools",
+      "secondary": "IT directors, operations managers, growing startups transitioning from spreadsheets",
+      "targeting": "Business software users, SaaS trial signups, B2B publication readers, LinkedIn professional targeting",
+      "exclusions": "Enterprise (500+ employees), existing customers, non-business email addresses"
+    },
+    "compliance": {
+      "privacyStance": "SOC2 Type II certified, GDPR compliant, enterprise-grade security emphasized",
+      "disclosures": "\"30-day free trial, no credit card required. See nimbuscloud.com/terms for details.\"",
+      "wordsToAvoid": "\"Free forever\", \"replaces all your tools\", \"enterprise-only features\", specific competitor mentions"
+    }
+  }
+}

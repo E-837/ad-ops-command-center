@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locke AirPod AI — Campaign Activation Results</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --surface3: #222233;
+    --border: #2a2a3e;
+    --border-light: #3a3a50;
+    --text: #e8e8f0;
+    --text-dim: #8888a0;
+    --text-muted: #5a5a70;
+    --indigo: #6366f1;
+    --cyan: #06b6d4;
+    --green: #22c55e;
+    --orange: #f59e0b;
+    --pink: #ec4899;
+    --blue: #3b82f6;
+    --red: #ef4444;
+  }
+  
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  
+  .page { max-width: 1100px; margin: 0 auto; padding: 40px; }
+  
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-logo {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--indigo), var(--cyan));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 900; color: white;
+    flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+  }
+  .header-text p { font-size: 13px; color: var(--text-dim); }
+  .header-meta {
+    margin-left: auto;
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .header-meta .time { font-family: 'JetBrains Mono', monospace; color: var(--cyan); font-size: 20px; font-weight: 700; }
+  
+  /* Stage Section */
+  .stage-section {
+    margin-bottom: 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .stage-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .stage-num {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px;
+    flex-shrink: 0;
+  }
+  .s1 .stage-num { background: rgba(99,102,241,0.2); color: var(--indigo); }
+  .s2 .stage-num { background: rgba(6,182,212,0.2); color: var(--cyan); }
+  .s3 .stage-num { background: rgba(245,158,11,0.2); color: var(--orange); }
+  .s4 .stage-num { background: rgba(236,72,153,0.2); color: var(--pink); }
+  .s5 .stage-num { background: rgba(34,197,94,0.2); color: var(--green); }
+  .s6 .stage-num { background: rgba(59,130,246,0.2); color: var(--blue); }
+  
+  .stage-title { font-size: 16px; font-weight: 700; }
+  .stage-agent {
+    font-size: 11px; font-weight: 600; padding: 3px 10px;
+    border-radius: 5px; margin-left: auto;
+  }
+  .agent-planner { background: rgba(99,102,241,0.15); color: var(--indigo); border: 1px solid rgba(99,102,241,0.3); }
+  .agent-trader { background: rgba(6,182,212,0.15); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3); }
+  .agent-pm { background: rgba(245,158,11,0.15); color: var(--orange); border: 1px solid rgba(245,158,11,0.3); }
+  .agent-creative { background: rgba(236,72,153,0.15); color: var(--pink); border: 1px solid rgba(236,72,153,0.3); }
+  .agent-analyst { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  
+  .badge-live {
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-sandbox {
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    background: rgba(245,158,11,0.15); color: var(--orange); border: 1px solid rgba(245,158,11,0.3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  
+  .stage-body { padding: 20px 22px; }
+  
+  /* Artifact Link */
+  .artifact {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .artifact-icon { font-size: 20px; }
+  .artifact-info { flex: 1; }
+  .artifact-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .artifact-url { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--cyan); word-break: break-all; }
+  .artifact-url a { color: var(--cyan); text-decoration: none; }
+  
+  /* Task List */
+  .task-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .task-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .task-check { color: var(--green); font-weight: 700; }
+  .task-date { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+  
+  /* Creative Grid */
+  .creative-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .creative-card {
+    background: var(--surface2);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .creative-img {
+    width: 100%; aspect-ratio: auto;
+    background: var(--surface3);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    max-height: 200px;
+  }
+  .creative-img img { width: 100%; height: 100%; object-fit: contain; background: #0d0d18; }
+  .creative-meta {
+    padding: 10px 12px;
+  }
+  .creative-name { font-size: 12px; font-weight: 600; }
+  .creative-size { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+  .creative-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .creative-tag {
+    font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .tag-ai { background: rgba(236,72,153,0.15); color: var(--pink); }
+  .tag-uploaded { background: rgba(245,158,11,0.15); color: var(--orange); }
+  .tag-canva { background: rgba(6,182,212,0.15); color: var(--cyan); }
+  
+  /* DSP Cards */
+  .dsp-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+  .dsp-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dsp-logo {
+    font-size: 12px; font-weight: 800; padding: 4px 10px;
+    border-radius: 6px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .dsp-ttd { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .dsp-dv360 { background: rgba(59,130,246,0.15); color: var(--blue); border: 1px solid rgba(59,130,246,0.3); }
+  .dsp-amazon { background: rgba(245,158,11,0.15); color: var(--orange); border: 1px solid rgba(245,158,11,0.3); }
+  .dsp-name { font-size: 14px; font-weight: 700; flex: 1; }
+  .dsp-budget { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--green); }
+  
+  .dsp-details {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .dsp-field {
+    font-size: 12px; padding: 6px 10px;
+    background: var(--surface3); border-radius: 6px;
+  }
+  .dsp-field-label { color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .dsp-field-value { color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-top: 2px; }
+  
+  /* Media Plan Table */
+  .media-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .media-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .media-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .media-table tr:last-child td { border-bottom: none; font-weight: 700; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  
+  /* Footer */
+  .footer {
+    margin-top: 40px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--text-muted);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">L</div>
+    <div class="header-text">
+      <h1>Locke AirPod AI — Campaign Activation</h1>
+      <p>End-to-end campaign lifecycle orchestrated by Ad Ops Command Center · 6 stages · 5 live APIs · $750K budget</p>
+    </div>
+    <div class="header-meta">
+      <div class="time">~3 min</div>
+      <div>Total runtime</div>
+      <div style="margin-top: 4px;">Feb 7, 2026</div>
+    </div>
+  </div>
+
+  <!-- Stage 1: Brief -->
+  <div class="stage-section s1">
+    <div class="stage-header">
+      <div class="stage-num">1</div>
+      <div class="stage-title">Campaign Brief</div>
+      <span class="stage-agent agent-planner">📝 MediaPlanner</span>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="stage-body">
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 12px;">18-section enterprise campaign brief generated from intake template and written to Google Docs via MCP.</p>
+      <div class="artifact">
+        <span class="artifact-icon">📄</span>
+        <div class="artifact-info">
+          <div class="artifact-label">Google Document</div>
+          <div class="artifact-url"><a href="https://docs.google.com/document/d/1iPiF69vQTQWMAosFdS9M6dGsqeKR3jZKryzTanfrf-g/edit" target="_blank">Locke AI Co. — Locke AirPod AI Campaign Brief</a></div>
+        </div>
+        <span class="badge-live">Live</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 2: Media Plan -->
+  <div class="stage-section s2">
+    <div class="stage-header">
+      <div class="stage-num">2</div>
+      <div class="stage-title">Media Plan</div>
+      <span class="stage-agent agent-planner">📝 MediaPlanner</span>
+      <span class="stage-agent agent-trader">📊 Trader</span>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="stage-body">
+      <div class="artifact" style="margin-bottom: 14px;">
+        <span class="artifact-icon">📊</span>
+        <div class="artifact-info">
+          <div class="artifact-label">Google Spreadsheet</div>
+          <div class="artifact-url"><a href="https://docs.google.com/spreadsheets/d/14C0Q67k7ts6IXtb8os3gShGZT6O_3wdyGuEMtvLXmhI/edit" target="_blank">Locke AirPod AI — Media Plan Q1-Q2 2026</a></div>
+        </div>
+        <span class="badge-live">Live</span>
+      </div>
+      <table class="media-table">
+        <thead>
+          <tr><th>Channel</th><th>DSP</th><th>Tactic</th><th>Budget</th><th>KPI Target</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Display</td><td>TTD</td><td>Programmatic Display — Awareness</td><td class="mono">$200,000</td><td>3M Impressions</td></tr>
+          <tr><td>Video</td><td>TTD</td><td>Online Video — Pre-roll + Mid-roll</td><td class="mono">$150,000</td><td>70% VCR</td></tr>
+          <tr><td>CTV</td><td>DV360</td><td>Connected TV — Streaming</td><td class="mono">$200,000</td><td>95% Completion</td></tr>
+          <tr><td>Display</td><td>Amazon</td><td>Retargeting + In-market</td><td class="mono">$100,000</td><td>1.2% CTR</td></tr>
+          <tr><td>Audio</td><td>TTD</td><td>Programmatic Audio — Spotify/Podcasts</td><td class="mono">$100,000</td><td>90% Listen-through</td></tr>
+          <tr><td colspan="3" style="text-align: right;">Total</td><td class="mono" style="color: var(--green);">$750,000</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stage 3: Asana -->
+  <div class="stage-section s3">
+    <div class="stage-header">
+      <div class="stage-num">3</div>
+      <div class="stage-title">Project Management</div>
+      <span class="stage-agent agent-pm">📋 ProjectManager</span>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="stage-body">
+      <div class="artifact" style="margin-bottom: 14px;">
+        <span class="artifact-icon">📋</span>
+        <div class="artifact-info">
+          <div class="artifact-label">Asana Project (V2 MCP — Official)</div>
+          <div class="artifact-url"><a href="https://app.asana.com/0/1213163807620451" target="_blank">Locke AI Co. Locke AirPod AI — Launch Campaign</a></div>
+        </div>
+        <span class="badge-live">Live · 13 tasks</span>
+      </div>
+      <div class="task-list">
+        <div class="task-item"><span class="task-check">✓</span> Campaign Kickoff + Brief Alignment <span class="task-date">Feb 12</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Finalize Audience + KPIs <span class="task-date">Feb 15</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Creative Production <span class="task-date">Feb 22</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Landing Page Build + QA <span class="task-date">Feb 25</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Legal + Privacy Review <span class="task-date">Feb 20</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Campaign Setup — TTD <span class="task-date">Feb 26</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Campaign Setup — DV360 <span class="task-date">Feb 26</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Campaign Setup — Amazon DSP <span class="task-date">Feb 26</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Trafficking + QA + Launch Checklist <span class="task-date">Feb 28</span></div>
+        <div class="task-item"><span class="task-check">🚀</span> Pre-launch Tease Begins <span class="task-date">Mar 15</span></div>
+        <div class="task-item"><span class="task-check">🎉</span> LAUNCH — OpenAI Device Day <span class="task-date">Apr 1</span></div>
+        <div class="task-item"><span class="task-check">✓</span> Week 1 Performance Review <span class="task-date">Apr 8</span></div>
+        <div class="task-item" style="grid-column: span 2;"><span class="task-check">✓</span> Post-Mortem + Learnings <span class="task-date">Jun 7</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 4: Creatives -->
+  <div class="stage-section s4">
+    <div class="stage-header">
+      <div class="stage-num">4</div>
+      <div class="stage-title">AI Creative Generation → Canva</div>
+      <span class="stage-agent agent-creative">🎨 CreativeOps</span>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="stage-body">
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 14px;">
+        Pipeline: <strong>Nano Banana Pro</strong> (Gemini 3 Pro Image) generates ad creative via OpenRouter → binary upload to <strong>Canva</strong> as asset → design created with image pre-loaded. Brand guide enforces typography, colors, and layout per ad size.
+      </p>
+      <div class="creative-grid" id="creativeGrid">
+        <!-- Populated by script -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 5: DSP Activation -->
+  <div class="stage-section s5">
+    <div class="stage-header">
+      <div class="stage-num">5</div>
+      <div class="stage-title">DSP Campaign Activation</div>
+      <span class="stage-agent agent-trader">📊 Trader</span>
+      <span class="badge-sandbox">Sandbox</span>
+    </div>
+    <div class="stage-body">
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 14px;">
+        5 campaigns created across 3 DSPs. Sandbox connectors mirror production API response shapes — same targeting, bid strategies, and campaign hierarchies.
+      </p>
+
+      <!-- TTD Display -->
+      <div class="dsp-card">
+        <div class="dsp-header">
+          <span class="dsp-logo dsp-ttd">TTD</span>
+          <span class="dsp-name">Programmatic Display — Awareness & Pre-order</span>
+          <span class="dsp-budget">$200,000</span>
+        </div>
+        <div class="dsp-details">
+          <div class="dsp-field"><div class="dsp-field-label">Bid Strategy</div><div class="dsp-field-value">KoaOptimized · $8.50 CPM</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Goal</div><div class="dsp-field-value">Reach · 3M Impressions</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Audiences</div><div class="dsp-field-value">TechEnthusiasts, EarlyAdopters, AI_Tool_Users</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Brand Safety</div><div class="dsp-field-value">IAS Standard · 3x/week freq cap</div></div>
+        </div>
+      </div>
+
+      <!-- TTD Video -->
+      <div class="dsp-card">
+        <div class="dsp-header">
+          <span class="dsp-logo dsp-ttd">TTD</span>
+          <span class="dsp-name">Online Video — Pre-roll + Mid-roll</span>
+          <span class="dsp-budget">$150,000</span>
+        </div>
+        <div class="dsp-details">
+          <div class="dsp-field"><div class="dsp-field-label">Bid Strategy</div><div class="dsp-field-value">KoaOptimized · $8.50 CPM</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Goal</div><div class="dsp-field-value">Reach · 70% VCR</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Inventory</div><div class="dsp-field-value">OpenExchange · Quality: High</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Devices</div><div class="dsp-field-value">Mobile, Desktop, Tablet</div></div>
+        </div>
+      </div>
+
+      <!-- DV360 CTV -->
+      <div class="dsp-card">
+        <div class="dsp-header">
+          <span class="dsp-logo dsp-dv360">DV360</span>
+          <span class="dsp-name">Connected TV — Hulu, Peacock, YouTube TV</span>
+          <span class="dsp-budget">$200,000</span>
+        </div>
+        <div class="dsp-details">
+          <div class="dsp-field"><div class="dsp-field-label">Insertion Order</div><div class="dsp-field-value">Pacing: EVEN · CPM goal: $12.00</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Device</div><div class="dsp-field-value">DEVICE_TYPE_CONNECTED_TV</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Inventory</div><div class="dsp-field-value">hulu-ctv, peacock-ctv, youtube-tv</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Audiences</div><div class="dsp-field-value">tech-enthusiasts, ai-early-adopters, cord-cutters-premium</div></div>
+        </div>
+      </div>
+
+      <!-- Amazon DSP -->
+      <div class="dsp-card">
+        <div class="dsp-header">
+          <span class="dsp-logo dsp-amazon">AMAZON</span>
+          <span class="dsp-name">Retargeting + In-market Audiences</span>
+          <span class="dsp-budget">$100,000</span>
+        </div>
+        <div class="dsp-details">
+          <div class="dsp-field"><div class="dsp-field-label">Amazon Audiences</div><div class="dsp-field-value">Consumer Electronics, Headphones & Earbuds, Smart Home</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Retargeting</div><div class="dsp-field-value">Site visitors 30d, Pre-order page viewers</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Supply</div><div class="dsp-field-value">Amazon.com, IMDb, Twitch, Fire TV, 3P Exchange</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Attribution</div><div class="dsp-field-value">LAST_TOUCH · 14-day window</div></div>
+        </div>
+      </div>
+
+      <!-- TTD Audio -->
+      <div class="dsp-card">
+        <div class="dsp-header">
+          <span class="dsp-logo dsp-ttd">TTD</span>
+          <span class="dsp-name">Programmatic Audio — Spotify / Podcasts</span>
+          <span class="dsp-budget">$100,000</span>
+        </div>
+        <div class="dsp-details">
+          <div class="dsp-field"><div class="dsp-field-label">Bid Strategy</div><div class="dsp-field-value">FixedBid · $15.00 CPM</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Goal</div><div class="dsp-field-value">Reach · 90% Listen-through</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Inventory</div><div class="dsp-field-value">Spotify, iHeart, Podcasts</div></div>
+          <div class="dsp-field"><div class="dsp-field-label">Devices</div><div class="dsp-field-value">Mobile, Desktop</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 6: Report -->
+  <div class="stage-section s6">
+    <div class="stage-header">
+      <div class="stage-num">6</div>
+      <div class="stage-title">Activation Report</div>
+      <span class="stage-agent agent-analyst">📈 Analyst</span>
+      <span class="badge-live">Live</span>
+    </div>
+    <div class="stage-body">
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 12px;">Comprehensive report linking all artifacts — brief, media plan, Asana project, creative designs, DSP campaign IDs, timeline, and next steps.</p>
+      <div class="artifact">
+        <span class="artifact-icon">📋</span>
+        <div class="artifact-info">
+          <div class="artifact-label">Google Document</div>
+          <div class="artifact-url"><a href="https://docs.google.com/document/d/143IUX8aazFGdIIX-3Clt-tV3u_2E5cqa6SXJwrzEAks/edit" target="_blank">Locke AI Co. — Locke AirPod AI Activation Report</a></div>
+        </div>
+        <span class="badge-live">Live</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Ad Ops Command Center · Built by Ross · February 2026</span>
+    <span>Google Docs MCP · Google Sheets MCP · Asana V2 MCP · Canva API · OpenRouter (Gemini 3 Pro) · TTD · DV360 · Amazon DSP</span>
+  </div>
+
+</div>
+
+<script>
+  // Load creative images from temp directory
+  const creatives = [
+    { name: 'Medium Rectangle', size: '300×250', file: 'ad-creative-300-250', aspect: '300/250' },
+    { name: 'Leaderboard', size: '728×90', file: 'ad-creative-728-90', aspect: '728/90' },
+    { name: 'Wide Skyscraper', size: '160×600', file: 'ad-creative-160-600', aspect: '160/600' },
+    { name: 'CTV / OLV Video', size: '1920×1080', file: 'ad-creative-1920-1080', aspect: '1920/1080' }
+  ];
+
+  const grid = document.getElementById('creativeGrid');
+  
+  creatives.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'creative-card';
+    card.innerHTML = `
+      <div class="creative-img">
+        <img src="${c.file}.png" alt="${c.name}" onerror="this.parentElement.innerHTML='<div style=\\'padding:20px;text-align:center;color:var(--text-muted);font-size:11px\\'>${c.size}<br>Image not found</div>'" />
+      </div>
+      <div class="creative-meta">
+        <div class="creative-name">${c.name}</div>
+        <div class="creative-size">${c.size}</div>
+        <div class="creative-tags">
+          <span class="creative-tag tag-ai">🖼️ Nano Banana Pro</span>
+          <span class="creative-tag tag-uploaded">📤 Uploaded</span>
+          <span class="creative-tag tag-canva">🎨 Canva</span>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>

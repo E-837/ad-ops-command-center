@@ -7,11 +7,16 @@ const express = require('express');
 const path = require('path');
 const db = require('./database/init');
 const campaigns = require('./database/campaigns');
+const projects = require('./database/projects');
+const executions = require('./database/executions');
+const events = require('./database/events');
 const connectors = require('./connectors');
 const agents = require('./agents');
 const workflows = require('./workflows');
 const domain = require('./domain');
 const router = require('./router');
+const eventTriggers = require('./events/triggers');
+const cronJobs = require('./cron-jobs');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -166,7 +171,30 @@ app.get('/api/connectors/status', (req, res) => {
 
 // --- API: Workflows ---
 app.get('/api/workflows', (req, res) => {
-  res.json(workflows.getAllWorkflows());
+  // NEW: Return from registry with categorization
+  const registry = workflows.getRegistry();
+  const categories = registry.getCategories();
+  const allWorkflows = registry.getAllWorkflows();
+  
+  res.json({
+    workflows: allWorkflows,
+    categories: categories,
+    stats: registry.getStats()
+  });
+});
+
+app.get('/api/workflows/:name', (req, res) => {
+  const registry = workflows.getRegistry();
+  const workflow = registry.getWorkflow(req.params.name);
+  
+  if (!workflow) {
+    return res.status(404).json({ error: 'Workflow not found' });
+  }
+  
+  res.json({
+    id: workflow.id,
+    ...workflow.meta
+  });
 });
 
 app.post('/api/workflows/:name/run', async (req, res) => {
@@ -175,6 +203,179 @@ app.post('/api/workflows/:name/run', async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/workflows/:name/history', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const history = executions.getRecentByWorkflow(req.params.name, limit);
+    res.json(history);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: Projects ---
+app.get('/api/projects', (req, res) => {
+  try {
+    const filter = {
+      type: req.query.type,
+      status: req.query.status,
+      owner: req.query.owner,
+      platform: req.query.platform,
+      health: req.query.health,
+      limit: req.query.limit ? parseInt(req.query.limit) : undefined
+    };
+    
+    const projectList = projects.list(filter);
+    const stats = projects.getStats();
+    
+    res.json({
+      projects: projectList,
+      stats: stats
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/projects', (req, res) => {
+  try {
+    const project = projects.create(req.body);
+    res.json(project);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get('/api/projects/:id', (req, res) => {
+  try {
+    const project = projects.get(req.params.id);
+    
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    // Include execution details
+    const projectExecutions = executions.list({ projectId: req.params.id });
+    
+    res.json({
+      ...project,
+      executionDetails: projectExecutions
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/projects/:id', (req, res) => {
+  try {
+    const project = projects.update(req.params.id, req.body);
+    res.json(project);
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.delete('/api/projects/:id', (req, res) => {
+  try {
+    const result = projects.delete(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/projects/:id/executions', (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const projectExecutions = executions.getRecentByProject(req.params.id, limit);
+    res.json(projectExecutions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: Executions ---
+app.get('/api/executions', (req, res) => {
+  try {
+    const filter = {
+      projectId: req.query.projectId,
+      workflowId: req.query.workflowId,
+      status: req.query.status,
+      limit: req.query.limit ? parseInt(req.query.limit) : 50
+    };
+    
+    const executionList = executions.list(filter);
+    const stats = executions.getStats();
+    
+    res.json({
+      executions: executionList,
+      stats: stats
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/executions/:id', (req, res) => {
+  try {
+    const execution = executions.get(req.params.id);
+    
+    if (!execution) {
+      return res.status(404).json({ error: 'Execution not found' });
+    }
+    
+    res.json(execution);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/executions/:id/cancel', (req, res) => {
+  try {
+    const execution = executions.get(req.params.id);
+    
+    if (!execution) {
+      return res.status(404).json({ error: 'Execution not found' });
+    }
+    
+    if (execution.status !== 'queued' && execution.status !== 'running') {
+      return res.status(400).json({ error: 'Can only cancel queued or running executions' });
+    }
+    
+    executions.update(req.params.id, {
+      status: 'cancelled',
+      completedAt: new Date().toISOString()
+    });
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: Events ---
+app.get('/api/events', (req, res) => {
+  try {
+    const filter = {
+      type: req.query.type,
+      source: req.query.source,
+      projectId: req.query.projectId,
+      workflowId: req.query.workflowId,
+      limit: req.query.limit ? parseInt(req.query.limit) : 100
+    };
+    
+    const eventList = events.query(filter);
+    const stats = events.getStats();
+    
+    res.json({
+      events: eventList,
+      stats: stats
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -298,12 +499,29 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'ui', 'dashboard.html'));
 });
 
+app.get('/projects', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'projects.html'));
+});
+
+app.get('/workflows', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'workflows.html'));
+});
+
+app.get('/workflow-detail', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'workflow-detail.html'));
+});
+
 app.get('/campaigns', (req, res) => {
   res.sendFile(path.join(__dirname, 'ui', 'campaigns.html'));
 });
 
+app.get('/reports', (req, res) => {
+  res.sendFile(path.join(__dirname, 'ui', 'reports.html'));
+});
+
+// Legacy route redirect
 app.get('/insights', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'insights.html'));
+  res.redirect('/reports');
 });
 
 app.get('/agents', (req, res) => {
@@ -336,13 +554,27 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🎯 Digital Advertising Command v2.0.0`);
   console.log(`🚀 Server running at http://localhost:${PORT}\n`);
   console.log(`📊 Dashboard:    http://localhost:${PORT}/dashboard`);
-  console.log(`📋 Campaigns:    http://localhost:${PORT}/campaigns`);
-  console.log(`💡 Insights:     http://localhost:${PORT}/insights`);
+  console.log(`📁 Projects:     http://localhost:${PORT}/projects`);
+  console.log(`⚡ Workflows:    http://localhost:${PORT}/workflows`);
+  console.log(`📈 Campaigns:    http://localhost:${PORT}/campaigns`);
+  console.log(`📊 Reports:      http://localhost:${PORT}/reports`);
   console.log(`🤖 Agents:       http://localhost:${PORT}/agents`);
-  console.log(`💬 Query:        http://localhost:${PORT}/query`);
-  console.log(`🏗️  Architecture: http://localhost:${PORT}/architecture`);
   console.log(`🔌 Connectors:   http://localhost:${PORT}/connectors`);
+  console.log(`🏗️  Architecture: http://localhost:${PORT}/architecture`);
+  console.log(`💬 Query:        http://localhost:${PORT}/query`);
   console.log(`\n📡 API: http://localhost:${PORT}/api/`);
+  
+  // Initialize event triggers and cron jobs
+  console.log('\n🔧 Initializing automation...');
+  try {
+    eventTriggers.initializeTriggers();
+    eventTriggers.autoRegisterWorkflowTriggers();
+    cronJobs.initializeCronJobs();
+    cronJobs.autoRegisterWorkflowCrons();
+    console.log('✅ Automation initialized\n');
+  } catch (error) {
+    console.error('❌ Failed to initialize automation:', error.message);
+  }
 });
 
 server.on('error', (err) => {

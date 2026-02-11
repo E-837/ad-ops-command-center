@@ -1,0 +1,8 @@
+═══ SEARCH CAMPAIGN REPORT ═══
+Campaign: Locke AirPod AI — Search
+Budget: $5,000/day | Bidding: TARGET_CPA ($50 target)
+Flight: 2026-03-15 → 2026-05-31
+Final URL: https://lockeai.co/airpod-ai
+Keyword Model: x-ai/grok-4.1-fast
+
+Negative Keywords: free, cheap, discount, coupon, repair, fix, manual, tutorial, job, hiring, careers, used, second hand, refurbished, case, charger, podcast, bluetooth only

@@ -1,0 +1,48 @@
+{
+  "brand": "Locke AI Co.",
+  "product": "Locke AirPod AI",
+  "guidelines": {
+    "tone": "Confident, innovative, premium but accessible. Not pushy or salesy.",
+    "voice": "Second person (you/your). Active voice. Present tense.",
+    "headline_rules": {
+      "max_chars": 30,
+      "min_headlines": 15,
+      "must_include": ["brand name in at least 2 headlines", "price point ($199)", "CTA in at least 3"],
+      "cta_options": ["Pre-Order Now", "Try It Free", "Learn More", "Get Yours Today", "Order Now", "Shop Now"],
+      "avoid": ["ALL CAPS (except brand name)", "Exclamation marks in more than 2 headlines", "Competitor names", "Superlatives without proof (best, #1)", "Health/medical claims"],
+      "power_words": ["AI-Powered", "Intelligent", "Seamless", "Private", "Personal", "Hands-Free", "Instant"],
+      "pinning_strategy": {
+        "position_1": "Brand or product name headline",
+        "position_2": "Key benefit or feature",
+        "position_3": "CTA or offer"
+      }
+    },
+    "description_rules": {
+      "max_chars": 90,
+      "min_descriptions": 4,
+      "must_include": ["value proposition", "proof point or feature", "CTA with urgency"],
+      "avoid": ["Repetitive phrasing across descriptions", "Generic filler", "Passive voice"]
+    },
+    "usps": [
+      "World's first AI-native earbud",
+      "Real-time translation in 40+ languages",
+      "18-hour battery with AI processing",
+      "On-device processing — your data stays private",
+      "Works with 200+ apps",
+      "$199 pre-order (30% off launch price)"
+    ],
+    "keywords_to_echo": ["AI earbud", "smart earbuds", "AI assistant", "wearable AI", "translation earbuds"],
+    "competitor_context": "Do NOT mention competitors (Apple AirPods, Samsung Galaxy Buds, etc.) but differentiate on AI-native capabilities",
+    "compliance": {
+      "disclaimers": [],
+      "restricted_claims": ["Always accurate", "Replaces your phone", "Medical device"]
+    }
+  },
+  "templates": {
+    "brand_headline": "{Product} — {USP}",
+    "feature_headline": "{Power Word} {Feature}",
+    "cta_headline": "{CTA} — {Offer}",
+    "benefit_description": "{USP}. {Feature detail}. {CTA}.",
+    "proof_description": "{Proof point}. {Differentiator}. {Action}."
+  }
+}

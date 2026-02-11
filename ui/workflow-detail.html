@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workflow Execution - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="/projects" class="nav-link">📁 Projects</a></li>
+      <li><a href="/workflows" class="nav-link">⚡ Workflows</a></li>
+      <li><a href="/campaigns" class="nav-link">📈 Campaigns</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+      <li><a href="/reports" class="nav-link">📊 Reports</a></li>
+      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <!-- Back Navigation -->
+    <div style="margin-bottom: 20px;">
+      <a href="/workflows" class="back-link">← Back to Workflows</a>
+    </div>
+
+    <!-- Execution Header -->
+    <div class="execution-header glass">
+      <div class="header-content">
+        <h2 id="workflow-name">--</h2>
+        <div class="header-meta">
+          <span id="execution-status" class="status-badge">--</span>
+          <span class="meta-item">
+            <span class="meta-icon">🆔</span>
+            <span id="execution-id">--</span>
+          </span>
+          <span class="meta-item">
+            <span class="meta-icon">⏱️</span>
+            <span id="execution-duration">--</span>
+          </span>
+          <span class="meta-item">
+            <span class="meta-icon">📅</span>
+            <span id="execution-start-time">--</span>
+          </span>
+        </div>
+        <div id="project-link" style="margin-top: 10px; display: none;">
+          <a href="#" id="project-link-anchor" class="project-link">View Project →</a>
+        </div>
+      </div>
+      <div class="header-actions" id="execution-actions">
+        <!-- Dynamic actions based on status -->
+      </div>
+    </div>
+
+    <!-- Stage Visualization -->
+    <section class="stage-visualization glass">
+      <h3>Execution Progress</h3>
+      <div id="stages-container" class="stages-container">
+        <p class="loading">Loading stages...</p>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section glass">
+      <h3>Results</h3>
+      <div id="results-container">
+        <p class="loading">Loading results...</p>
+      </div>
+    </section>
+
+    <!-- Event Timeline -->
+    <section class="event-timeline glass">
+      <h3>Event Timeline</h3>
+      <div id="timeline-container">
+        <p class="loading">Loading timeline...</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script>
+    let executionData = null;
+    let refreshInterval = null;
+
+    // Get execution ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const executionId = urlParams.get('executionId');
+
+    if (!executionId) {
+      alert('No execution ID provided');
+      window.location.href = '/workflows';
+    }
+
+    // Load execution data
+    async function loadExecution() {
+      try {
+        const response = await fetch(`/api/executions/${executionId}`);
+        if (!response.ok) {
+          throw new Error('Execution not found');
+        }
+
+        executionData = await response.json();
+        renderExecution();
+
+        // Auto-refresh if running
+        if (executionData.status === 'running' && !refreshInterval) {
+          refreshInterval = setInterval(loadExecution, 3000);
+        } else if (executionData.status !== 'running' && refreshInterval) {
+          clearInterval(refreshInterval);
+          refreshInterval = null;
+        }
+      } catch (error) {
+        console.error('Error loading execution:', error);
+        document.querySelector('.main-content').innerHTML = `
+          <div class="error-state glass">
+            <h2>Execution Not Found</h2>
+            <p>The execution "${executionId}" could not be found.</p>
+            <a href="/workflows" class="btn-primary">Back to Workflows</a>
+          </div>
+        `;
+      }
+    }
+
+    // Render execution data
+    function renderExecution() {
+      // Header
+      document.getElementById('workflow-name').textContent = executionData.workflowId || 'Workflow';
+      document.getElementById('execution-id').textContent = executionData.id.substring(0, 8);
+      
+      // Status badge
+      const statusBadge = document.getElementById('execution-status');
+      statusBadge.textContent = executionData.status;
+      statusBadge.className = `status-badge status-${executionData.status}`;
+
+      // Duration
+      const duration = calculateDuration(executionData.startedAt, executionData.completedAt);
+      document.getElementById('execution-duration').textContent = duration;
+
+      // Start time
+      const startTime = new Date(executionData.startedAt).toLocaleString();
+      document.getElementById('execution-start-time').textContent = startTime;
+
+      // Project link
+      if (executionData.projectId) {
+        document.getElementById('project-link').style.display = 'block';
+        document.getElementById('project-link-anchor').href = `/project-detail.html?id=${executionData.projectId}`;
+      }
+
+      // Actions
+      renderActions();
+
+      // Stages
+      renderStages();
+
+      // Results
+      renderResults();
+
+      // Timeline
+      renderTimeline();
+    }
+
+    // Render actions
+    function renderActions() {
+      const actionsContainer = document.getElementById('execution-actions');
+      const actions = [];
+
+      if (executionData.status === 'failed') {
+        actions.push('<button class="btn-secondary" onclick="retryExecution()">🔄 Retry</button>');
+      }
+
+      actions.push('<button class="btn-secondary" onclick="exportResults()">📥 Export</button>');
+
+      if (executionData.logs) {
+        actions.push('<button class="btn-secondary" onclick="viewLogs()">📋 View Logs</button>');
+      }
+
+      actionsContainer.innerHTML = actions.join('');
+    }
+
+    // Render stages
+    function renderStages() {
+      const container = document.getElementById('stages-container');
+      
+      if (!executionData.stages || executionData.stages.length === 0) {
+        container.innerHTML = '<p class="empty-state">No stage information available</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="stages-progress">
+          ${executionData.stages.map((stage, idx) => `
+            <div class="stage-item ${stage.status}">
+              <div class="stage-indicator">
+                <div class="stage-number">${idx + 1}</div>
+                <div class="stage-status-icon">${getStatusIcon(stage.status)}</div>
+              </div>
+              <div class="stage-info">
+                <div class="stage-name">${stage.name || stage.id}</div>
+                ${stage.agent ? `<div class="stage-agent">🤖 ${stage.agent}</div>` : ''}
+                <div class="stage-meta">
+                  <span class="stage-status-text">${stage.status}</span>
+                  ${stage.duration ? `<span>• ${stage.duration}</span>` : ''}
+                </div>
+              </div>
+              ${idx < executionData.stages.length - 1 ? '<div class="stage-connector"></div>' : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Render results
+    function renderResults() {
+      const container = document.getElementById('results-container');
+
+      if (executionData.status === 'running') {
+        container.innerHTML = '<p class="loading">Workflow is still running...</p>';
+        return;
+      }
+
+      if (executionData.status === 'failed') {
+        container.innerHTML = `
+          <div class="error-result">
+            <div class="error-icon">❌</div>
+            <div>
+              <h4>Execution Failed</h4>
+              <p>${executionData.error || 'Unknown error occurred'}</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (!executionData.result) {
+        container.innerHTML = '<p class="empty-state">No results available</p>';
+        return;
+      }
+
+      // Display result data
+      container.innerHTML = `
+        <div class="result-data">
+          ${executionData.result.artifacts?.length > 0 ? `
+            <div class="result-section">
+              <h4>Artifacts</h4>
+              <div class="artifacts-list">
+                ${executionData.result.artifacts.map(artifact => `
+                  <a href="${artifact.url}" class="artifact-link" target="_blank">
+                    <span class="artifact-icon">${getArtifactIcon(artifact.type)}</span>
+                    <span class="artifact-name">${artifact.name}</span>
+                    <span class="artifact-arrow">→</span>
+                  </a>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${executionData.result.summary ? `
+            <div class="result-section">
+              <h4>Summary</h4>
+              <p>${executionData.result.summary}</p>
+            </div>
+          ` : ''}
+
+          <div class="result-section">
+            <h4>Output Data</h4>
+            <pre class="result-json">${JSON.stringify(executionData.result, null, 2)}</pre>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render timeline
+    function renderTimeline() {
+      const container = document.getElementById('timeline-container');
+
+      if (!executionData.events || executionData.events.length === 0) {
+        container.innerHTML = '<p class="empty-state">No events recorded</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="timeline">
+          ${executionData.events.map(event => `
+            <div class="timeline-item">
+              <div class="timeline-time">${formatTime(event.timestamp)}</div>
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-event">${event.type}</div>
+                ${event.message ? `<div class="timeline-message">${event.message}</div>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // Helper functions
+    function getStatusIcon(status) {
+      const icons = {
+        'pending': '⏳',
+        'running': '▶️',
+        'completed': '✅',
+        'failed': '❌'
+      };
+      return icons[status] || '•';
+    }
+
+    function getArtifactIcon(type) {
+      const icons = {
+        'doc': '📄',
+        'sheet': '📊',
+        'link': '🔗',
+        'report': '📈'
+      };
+      return icons[type] || '📎';
+    }
+
+    function calculateDuration(start, end) {
+      if (!start) return '--';
+      const startDate = new Date(start);
+      const endDate = end ? new Date(end) : new Date();
+      const diffMs = endDate - startDate;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffSecs = Math.floor((diffMs % 60000) / 1000);
+      
+      if (diffMins > 0) {
+        return `${diffMins}m ${diffSecs}s`;
+      }
+      return `${diffSecs}s`;
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString();
+    }
+
+    // Action functions
+    async function retryExecution() {
+      if (!confirm('Retry this workflow execution?')) return;
+
+      try {
+        const response = await fetch(`/api/executions/${executionId}/retry`, {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          window.location.href = `/workflow-detail.html?executionId=${result.executionId}`;
+        } else {
+          alert('Failed to retry workflow');
+        }
+      } catch (error) {
+        console.error('Error retrying workflow:', error);
+        alert('Failed to retry workflow');
+      }
+    }
+
+    function exportResults() {
+      const dataStr = JSON.stringify(executionData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `execution-${executionId}.json`;
+      link.click();
+    }
+
+    function viewLogs() {
+      alert('Logs viewer coming soon!');
+    }
+
+    // Initialize
+    loadExecution();
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    });
+  </script>
+
+  <style>
+    .back-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--text-primary);
+    }
+
+    .execution-header {
+      padding: 30px;
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .header-content h2 {
+      margin: 0 0 15px 0;
+      font-size: 1.75rem;
+    }
+
+    .header-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .status-badge {
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-running { background: rgba(59, 130, 246, 0.2); color: #60A5FA; }
+    .status-completed { background: rgba(34, 197, 94, 0.2); color: #4ADE80; }
+    .status-failed { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+    .status-pending { background: rgba(156, 163, 175, 0.2); color: #9CA3AF; }
+
+    .project-link {
+      color: #60A5FA;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stage-visualization,
+    .results-section,
+    .event-timeline {
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+
+    .stage-visualization h3,
+    .results-section h3,
+    .event-timeline h3 {
+      margin: 0 0 20px 0;
+      font-size: 1.25rem;
+    }
+
+    .stages-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .stage-item {
+      display: flex;
+      align-items: flex-start;
+      position: relative;
+      padding: 20px 0;
+    }
+
+    .stage-indicator {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 80px;
+    }
+
+    .stage-number {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stage-item.completed .stage-number {
+      background: linear-gradient(135deg, #34D399, #10B981);
+    }
+
+    .stage-item.running .stage-number {
+      background: linear-gradient(135deg, #60A5FA, #3B82F6);
+      animation: pulse 2s infinite;
+    }
+
+    .stage-item.failed .stage-number {
+      background: linear-gradient(135deg, #F87171, #EF4444);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .stage-status-icon {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--bg-gradient);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+    }
+
+    .stage-connector {
+      position: absolute;
+      left: 19px;
+      top: 50px;
+      width: 2px;
+      height: calc(100% - 40px);
+      background: var(--glass-border);
+      z-index: 1;
+    }
+
+    .stage-item.completed .stage-connector {
+      background: linear-gradient(180deg, #10B981, var(--glass-border));
+    }
+
+    .stage-info {
+      flex: 1;
+      padding-left: 20px;
+    }
+
+    .stage-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .stage-agent {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .stage-meta {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .stage-status-text {
+      text-transform: capitalize;
+    }
+
+    .error-result {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+    }
+
+    .error-icon {
+      font-size: 2rem;
+    }
+
+    .error-result h4 {
+      margin: 0 0 8px 0;
+      color: #F87171;
+    }
+
+    .error-result p {
+      margin: 0;
+      color: var(--text-secondary);
+    }
+
+    .result-data {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .result-section h4 {
+      margin: 0 0 12px 0;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .artifacts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .artifact-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+
+    .artifact-link:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateX(5px);
+    }
+
+    .artifact-icon {
+      font-size: 1.5rem;
+    }
+
+    .artifact-name {
+      flex: 1;
+    }
+
+    .artifact-arrow {
+      color: var(--text-secondary);
+    }
+
+    .result-json {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 20px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      color: #A78BFA;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      padding: 15px 0;
+      border-left: 2px solid var(--glass-border);
+      margin-left: 80px;
+      padding-left: 25px;
+      position: relative;
+    }
+
+    .timeline-time {
+      position: absolute;
+      left: -95px;
+      top: 15px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      width: 70px;
+      text-align: right;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -6px;
+      top: 18px;
+      width: 10px;
+      height: 10px;
+      background: #60A5FA;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+    }
+
+    .timeline-event {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .timeline-message {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .error-state {
+      text-align: center;
+      padding: 60px 30px;
+      margin-top: 50px;
+    }
+
+    .error-state h2 {
+      margin-bottom: 15px;
+    }
+
+    .error-state p {
+      color: var(--text-secondary);
+      margin-bottom: 25px;
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
+    }
+
+    .loading, .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-secondary);
+    }
+  </style>
+</body>
+</html>

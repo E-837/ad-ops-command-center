@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Ad Ops</h1>
+      <span class="subtitle">Command Center</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="/projects" class="nav-link active">📁 Projects</a></li>
+      <li><a href="/workflows" class="nav-link">⚡ Workflows</a></li>
+      <li><a href="/campaigns" class="nav-link">📈 Campaigns</a></li>
+      <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
+      <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+      <li><a href="/reports" class="nav-link">📊 Reports</a></li>
+      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2>📁 Projects</h2>
+          <p>Manage ad ops projects and initiatives</p>
+        </div>
+        <button class="btn-primary" onclick="showCreateProjectModal()">+ Create Project</button>
+      </div>
+    </header>
+
+    <!-- Stats Header -->
+    <section class="quick-stats">
+      <div class="stat-card glass">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <h3 id="total-projects">--</h3>
+          <p>Total Projects</p>
+        </div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">🚀</div>
+        <div class="stat-content">
+          <h3 id="active-projects">--</h3>
+          <p>Active Projects</p>
+        </div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <h3 id="completion-rate">--</h3>
+          <p>Completion Rate</p>
+        </div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+          <h3 id="budget-allocated">--</h3>
+          <p>Budget Allocated</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="filters-section glass" style="padding: 20px; margin-bottom: 20px;">
+      <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+        <div>
+          <label style="color: var(--text-secondary); font-size: 0.85rem; margin-right: 8px;">Type:</label>
+          <select id="filter-type" class="filter-select">
+            <option value="all">All Types</option>
+            <option value="campaign">Campaign</option>
+            <option value="dsp-onboarding">DSP Onboarding</option>
+            <option value="jbp">JBP</option>
+            <option value="migration">Migration</option>
+          </select>
+        </div>
+        <div>
+          <label style="color: var(--text-secondary); font-size: 0.85rem; margin-right: 8px;">Status:</label>
+          <select id="filter-status" class="filter-select">
+            <option value="all">All Statuses</option>
+            <option value="planning">Planning</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="on-hold">On Hold</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <input type="text" id="search-projects" class="search-input" placeholder="🔍 Search projects...">
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects List -->
+    <section class="projects-list" id="projects-list">
+      <p class="loading">Loading projects...</p>
+    </section>
+  </main>
+
+  <!-- Create Project Modal -->
+  <div id="create-project-modal" class="modal" style="display: none;">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Create New Project</h3>
+        <button class="modal-close" onclick="hideCreateProjectModal()">×</button>
+      </div>
+      <form id="create-project-form" onsubmit="createProject(event)">
+        <div class="form-group">
+          <label>Project Name</label>
+          <input type="text" name="name" required placeholder="e.g., Q1 Campaign Launch">
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select name="type" required>
+            <option value="campaign">Campaign</option>
+            <option value="dsp-onboarding">DSP Onboarding</option>
+            <option value="jbp">JBP</option>
+            <option value="migration">Migration</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Owner</label>
+          <input type="text" name="owner" required placeholder="Team or person name">
+        </div>
+        <div class="form-group">
+          <label>Budget</label>
+          <input type="number" name="budget" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" rows="3" placeholder="Project description..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="hideCreateProjectModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/app.js"></script>
+  <script>
+    let allProjects = [];
+
+    // Load projects
+    async function loadProjects() {
+      try {
+        const response = await fetch('/api/projects');
+        const data = await response.json();
+        allProjects = data.projects || [];
+        
+        updateStats();
+        renderProjects(allProjects);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        document.getElementById('projects-list').innerHTML = '<p class="error">Failed to load projects</p>';
+      }
+    }
+
+    // Update stats
+    function updateStats() {
+      const total = allProjects.length;
+      const active = allProjects.filter(p => p.status === 'active').length;
+      const completed = allProjects.filter(p => p.status === 'completed').length;
+      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const totalBudget = allProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
+
+      document.getElementById('total-projects').textContent = total;
+      document.getElementById('active-projects').textContent = active;
+      document.getElementById('completion-rate').textContent = `${completionRate}%`;
+      document.getElementById('budget-allocated').textContent = totalBudget > 0 ? `$${(totalBudget / 1000).toFixed(0)}K` : '--';
+    }
+
+    // Render projects
+    function renderProjects(projects) {
+      const container = document.getElementById('projects-list');
+      
+      if (projects.length === 0) {
+        container.innerHTML = '<p class="empty-state">No projects found. Create your first project!</p>';
+        return;
+      }
+
+      container.innerHTML = projects.map(project => `
+        <div class="project-card glass">
+          <div class="project-header">
+            <div>
+              <h3>${project.name}</h3>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <span class="badge badge-${project.type}">${project.type}</span>
+                <span class="badge badge-${project.status}">${project.status}</span>
+              </div>
+            </div>
+            <div class="project-actions">
+              <button class="btn-icon" onclick="viewProjectDetails('${project.id}')" title="View Details">👁️</button>
+              <button class="btn-icon" onclick="runWorkflow('${project.id}')" title="Run Workflow">▶️</button>
+            </div>
+          </div>
+          
+          <div class="project-meta">
+            <div class="meta-item">
+              <span class="meta-label">Owner:</span>
+              <span class="meta-value">${project.owner || 'Unassigned'}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Created:</span>
+              <span class="meta-value">${new Date(project.createdAt).toLocaleDateString()}</span>
+            </div>
+            ${project.budget ? `
+            <div class="meta-item">
+              <span class="meta-label">Budget:</span>
+              <span class="meta-value">$${project.budget.toLocaleString()}</span>
+            </div>
+            ` : ''}
+          </div>
+
+          ${project.description ? `<p class="project-description">${project.description}</p>` : ''}
+
+          <div class="progress-section">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span class="progress-label">Progress</span>
+              <span class="progress-value">${project.completion || 0}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${project.completion || 0}%"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Filter projects
+    function filterProjects() {
+      const typeFilter = document.getElementById('filter-type').value;
+      const statusFilter = document.getElementById('filter-status').value;
+      const searchTerm = document.getElementById('search-projects').value.toLowerCase();
+
+      let filtered = allProjects;
+
+      if (typeFilter !== 'all') {
+        filtered = filtered.filter(p => p.type === typeFilter);
+      }
+
+      if (statusFilter !== 'all') {
+        filtered = filtered.filter(p => p.status === statusFilter);
+      }
+
+      if (searchTerm) {
+        filtered = filtered.filter(p => 
+          p.name.toLowerCase().includes(searchTerm) ||
+          (p.description && p.description.toLowerCase().includes(searchTerm))
+        );
+      }
+
+      renderProjects(filtered);
+    }
+
+    // Event listeners
+    document.getElementById('filter-type').addEventListener('change', filterProjects);
+    document.getElementById('filter-status').addEventListener('change', filterProjects);
+    document.getElementById('search-projects').addEventListener('input', filterProjects);
+
+    // Modal functions
+    function showCreateProjectModal() {
+      document.getElementById('create-project-modal').style.display = 'flex';
+    }
+
+    function hideCreateProjectModal() {
+      document.getElementById('create-project-modal').style.display = 'none';
+      document.getElementById('create-project-form').reset();
+    }
+
+    // Create project
+    async function createProject(event) {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const projectData = {
+        name: formData.get('name'),
+        type: formData.get('type'),
+        owner: formData.get('owner'),
+        budget: formData.get('budget') ? parseFloat(formData.get('budget')) : null,
+        description: formData.get('description'),
+        status: 'planning',
+        completion: 0
+      };
+
+      try {
+        const response = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(projectData)
+        });
+
+        if (response.ok) {
+          hideCreateProjectModal();
+          loadProjects();
+        } else {
+          alert('Failed to create project');
+        }
+      } catch (error) {
+        console.error('Error creating project:', error);
+        alert('Failed to create project');
+      }
+    }
+
+    // View project details
+    function viewProjectDetails(projectId) {
+      window.location.href = `/project-detail.html?id=${projectId}`;
+    }
+
+    // Run workflow
+    function runWorkflow(projectId) {
+      window.location.href = `/workflows.html?projectId=${projectId}`;
+    }
+
+    // Initialize
+    loadProjects();
+  </script>
+
+  <style>
+    .project-card {
+      padding: 25px;
+      margin-bottom: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .project-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+
+    .project-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .meta-item {
+      display: flex;
+      gap: 5px;
+      font-size: 0.9rem;
+    }
+
+    .meta-label {
+      color: var(--text-secondary);
+    }
+
+    .meta-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .project-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    .progress-section {
+      margin-top: 15px;
+    }
+
+    .progress-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .progress-value {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8B5CF6, #3B82F6);
+      transition: width 0.3s ease;
+    }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .badge-campaign { background: rgba(139, 92, 246, 0.2); color: #A78BFA; }
+    .badge-dsp-onboarding { background: rgba(59, 130, 246, 0.2); color: #60A5FA; }
+    .badge-jbp { background: rgba(251, 146, 60, 0.2); color: #FBBF24; }
+    .badge-migration { background: rgba(34, 197, 94, 0.2); color: #4ADE80; }
+
+    .badge-planning { background: rgba(156, 163, 175, 0.2); color: #9CA3AF; }
+    .badge-active { background: rgba(34, 197, 94, 0.2); color: #4ADE80; }
+    .badge-completed { background: rgba(59, 130, 246, 0.2); color: #60A5FA; }
+    .badge-on-hold { background: rgba(251, 146, 60, 0.2); color: #FBBF24; }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.1);
+    }
+
+    .filter-select, .search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .search-input {
+      min-width: 250px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 30px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 2rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .loading, .empty-state, .error {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .error {
+      color: var(--danger);
+    }
+  </style>
+</body>
+</html>

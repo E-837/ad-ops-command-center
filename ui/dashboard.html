@@ -3,169 +3,380 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Digital Advertising Command</title>
+  <title>Dashboard - Ad Ops Command Center</title>
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
+  <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-header">
-      <h1>🎯 Digital Ad</h1>
+      <h1>🎯 Ad Ops</h1>
       <span class="subtitle">Command Center</span>
     </div>
     <ul class="nav-links">
-      <li><a href="/dashboard" class="nav-link active">📈 Dashboard</a></li>
-      <li><a href="/campaigns" class="nav-link">📋 Campaigns</a></li>
-      <li><a href="/insights" class="nav-link">💡 Insights</a></li>
+      <li><a href="/dashboard" class="nav-link active">📊 Dashboard</a></li>
+      <li><a href="/projects" class="nav-link">📁 Projects</a></li>
+      <li><a href="/workflows" class="nav-link">⚡ Workflows</a></li>
+      <li><a href="/campaigns" class="nav-link">📈 Campaigns</a></li>
       <li><a href="/agents" class="nav-link">🤖 Agents</a></li>
-      <li><a href="/query" class="nav-link">💬 Query</a></li>
-      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
       <li><a href="/connectors" class="nav-link">🔌 Connectors</a></li>
+      <li><a href="/reports" class="nav-link">📊 Reports</a></li>
+      <li><a href="/architecture" class="nav-link">🏗️ Architecture</a></li>
+      <li><a href="/query" class="nav-link">💬 Query</a></li>
     </ul>
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <span class="status-dot online"></span>
+        <span>System Online</span>
+      </div>
+    </div>
   </nav>
 
   <main class="main-content">
     <header class="page-header">
-      <h2>📈 Dashboard</h2>
-      <p>Live pacing and performance overview</p>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2>📊 Dashboard</h2>
+          <p>Unified overview of projects, workflows, and campaigns</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-secondary" onclick="window.location.href='/projects?action=create'">+ Create Project</button>
+          <button class="btn-primary" onclick="showQuickActions()">⚡ Quick Actions</button>
+        </div>
+      </div>
     </header>
 
-    <!-- DSP Summary Cards -->
-    <section class="dsp-summary">
-      <div class="summary-card glass ttd">
-        <div class="card-header">
-          <h3>TTD</h3>
-          <span class="status-badge">Live</span>
-        </div>
-        <div class="card-metrics" id="ttd-metrics">
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Budget</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Spent</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Pacing</span>
-          </div>
+    <!-- Stats Overview -->
+    <section class="quick-stats">
+      <div class="stat-card glass">
+        <div class="stat-icon">📁</div>
+        <div class="stat-content">
+          <h3 id="total-projects">--</h3>
+          <p>Total Projects</p>
         </div>
       </div>
-      
-      <div class="summary-card glass dv360">
-        <div class="card-header">
-          <h3>DV360</h3>
-          <span class="status-badge">Live</span>
-        </div>
-        <div class="card-metrics" id="dv360-metrics">
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Budget</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Spent</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Pacing</span>
-          </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-content">
+          <h3 id="workflows-today">--</h3>
+          <p>Workflows Today</p>
         </div>
       </div>
-      
-      <div class="summary-card glass amazon">
-        <div class="card-header">
-          <h3>Amazon</h3>
-          <span class="status-badge">Live</span>
+      <div class="stat-card glass">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <h3 id="success-rate">--</h3>
+          <p>Success Rate</p>
         </div>
-        <div class="card-metrics" id="amazon-metrics">
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Budget</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Spent</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value">--</span>
-            <span class="metric-label">Pacing</span>
-          </div>
+      </div>
+      <div class="stat-card glass">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <h3 id="active-campaigns">--</h3>
+          <p>Active Campaigns</p>
         </div>
       </div>
     </section>
 
-    <!-- Pacing Alerts -->
-    <section class="alerts-section">
-      <h3>⚠️ Pacing Alerts</h3>
-      <div class="alerts-list" id="pacing-alerts">
-        <p class="loading">Loading alerts...</p>
+    <!-- Alerts Section -->
+    <section class="alerts-section glass" id="alerts-section" style="display: none;">
+      <div class="section-header">
+        <h3>⚠️ Alerts</h3>
+        <button class="btn-text" onclick="dismissAllAlerts()">Dismiss All</button>
       </div>
+      <div id="alerts-list" class="alerts-list"></div>
     </section>
 
-    <!-- Campaigns by Status -->
-    <section class="campaigns-overview">
-      <h3>Campaign Overview</h3>
-      <div class="overview-grid">
-        <div class="overview-item glass">
-          <span class="overview-value" id="live-count">--</span>
-          <span class="overview-label">Live</span>
-        </div>
-        <div class="overview-item glass">
-          <span class="overview-value" id="paused-count">--</span>
-          <span class="overview-label">Paused</span>
-        </div>
-        <div class="overview-item glass">
-          <span class="overview-value" id="scheduled-count">--</span>
-          <span class="overview-label">Scheduled</span>
-        </div>
-        <div class="overview-item glass">
-          <span class="overview-value" id="draft-count">--</span>
-          <span class="overview-label">Draft</span>
-        </div>
-      </div>
-    </section>
+    <!-- Two Column Layout -->
+    <div class="dashboard-grid">
+      <!-- Left Column -->
+      <div class="dashboard-column">
+        <!-- Active Projects -->
+        <section class="glass dashboard-section">
+          <div class="section-header">
+            <h3>📁 Active Projects</h3>
+            <a href="/projects" class="view-all-link">View All →</a>
+          </div>
+          <div id="active-projects" class="list-container">
+            <p class="loading">Loading projects...</p>
+          </div>
+        </section>
 
-    <!-- Recent Activity -->
-    <section class="activity-section">
-      <h3>📋 Recent Campaigns</h3>
-      <div class="activity-list" id="recent-campaigns">
-        <p class="loading">Loading campaigns...</p>
+        <!-- Campaign Metrics (existing) -->
+        <section class="glass dashboard-section">
+          <h3>📈 Campaign Metrics</h3>
+          <div class="dsp-summary">
+            <div class="summary-card glass ttd">
+              <div class="card-header">
+                <h4>TTD</h4>
+                <span class="status-badge">Live</span>
+              </div>
+              <div class="card-metrics" id="ttd-metrics">
+                <div class="metric">
+                  <span class="metric-value">--</span>
+                  <span class="metric-label">Spent</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value">--</span>
+                  <span class="metric-label">Pacing</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="summary-card glass dv360">
+              <div class="card-header">
+                <h4>DV360</h4>
+                <span class="status-badge">Live</span>
+              </div>
+              <div class="card-metrics" id="dv360-metrics">
+                <div class="metric">
+                  <span class="metric-value">--</span>
+                  <span class="metric-label">Spent</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value">--</span>
+                  <span class="metric-label">Pacing</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="summary-card glass amazon">
+              <div class="card-header">
+                <h4>Amazon</h4>
+                <span class="status-badge">Live</span>
+              </div>
+              <div class="card-metrics" id="amazon-metrics">
+                <div class="metric">
+                  <span class="metric-value">--</span>
+                  <span class="metric-label">Spent</span>
+                </div>
+                <div class="metric">
+                  <span class="metric-value">--</span>
+                  <span class="metric-label">Pacing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+
+      <!-- Right Column -->
+      <div class="dashboard-column">
+        <!-- Recent Workflow Executions -->
+        <section class="glass dashboard-section">
+          <div class="section-header">
+            <h3>⚡ Recent Executions</h3>
+            <a href="/workflows" class="view-all-link">View All →</a>
+          </div>
+          <div id="recent-executions" class="list-container">
+            <p class="loading">Loading executions...</p>
+          </div>
+        </section>
+
+        <!-- Quick Actions Panel -->
+        <section class="glass dashboard-section">
+          <h3>🚀 Quick Actions</h3>
+          <div class="quick-actions-grid">
+            <button class="action-card" onclick="window.location.href='/workflows?run=pacing-check'">
+              <span class="action-icon">⏱️</span>
+              <span class="action-label">Pacing Check</span>
+            </button>
+            <button class="action-card" onclick="window.location.href='/workflows?run=wow-report'">
+              <span class="action-icon">📊</span>
+              <span class="action-label">WoW Report</span>
+            </button>
+            <button class="action-card" onclick="window.location.href='/workflows?run=optimization'">
+              <span class="action-icon">🎯</span>
+              <span class="action-label">Optimize</span>
+            </button>
+            <button class="action-card" onclick="window.location.href='/projects?action=create'">
+              <span class="action-icon">📁</span>
+              <span class="action-label">New Project</span>
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
   </main>
 
   <script src="assets/app.js"></script>
   <script>
+    let dashboardData = {
+      projects: [],
+      executions: [],
+      campaigns: [],
+      alerts: []
+    };
+
+    // Load all dashboard data
     async function loadDashboard() {
+      await Promise.all([
+        loadProjects(),
+        loadExecutions(),
+        loadCampaigns(),
+        loadAlerts()
+      ]);
+
+      updateStats();
+      renderProjects();
+      renderExecutions();
+      renderCampaignMetrics();
+      renderAlerts();
+    }
+
+    // Load projects
+    async function loadProjects() {
       try {
-        // Load pacing data
-        const pacingData = await fetch('/api/pacing').then(r => r.json());
+        const response = await fetch('/api/projects');
+        const data = await response.json();
+        dashboardData.projects = (data.projects || []).filter(p => p.status === 'active').slice(0, 5);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+      }
+    }
+
+    // Load executions
+    async function loadExecutions() {
+      try {
+        const response = await fetch('/api/executions?limit=10');
+        const data = await response.json();
+        dashboardData.executions = data.executions || [];
+      } catch (error) {
+        console.error('Error loading executions:', error);
+      }
+    }
+
+    // Load campaigns (existing logic)
+    async function loadCampaigns() {
+      try {
+        const response = await fetch('/api/campaigns');
+        const data = await response.json();
+        dashboardData.campaigns = data.campaigns || [];
+      } catch (error) {
+        console.error('Error loading campaigns:', error);
+      }
+    }
+
+    // Load alerts
+    async function loadAlerts() {
+      try {
+        // Check for workflow failures
+        const failedWorkflows = dashboardData.executions.filter(e => e.status === 'failed');
         
-        // Aggregate by DSP
+        // Check for pacing issues
+        const pacingResponse = await fetch('/api/pacing');
+        const pacingData = await pacingResponse.json();
+        const pacingIssues = (pacingData.pacing || []).filter(p => p.pacingPercent < 85 || p.pacingPercent > 115);
+
+        dashboardData.alerts = [
+          ...failedWorkflows.map(w => ({
+            type: 'error',
+            message: `Workflow "${w.workflowId}" failed`,
+            action: `View Details`,
+            link: `/workflow-detail.html?executionId=${w.id}`
+          })),
+          ...pacingIssues.map(p => ({
+            type: 'warning',
+            message: `${p.campaignName} pacing at ${p.pacingPercent}%`,
+            action: 'Review Campaign',
+            link: `/campaigns?id=${p.campaignId}`
+          }))
+        ];
+      } catch (error) {
+        console.error('Error loading alerts:', error);
+      }
+    }
+
+    // Update stats
+    function updateStats() {
+      const totalProjects = dashboardData.projects.length;
+      const today = new Date().toDateString();
+      const workflowsToday = dashboardData.executions.filter(e => 
+        new Date(e.startedAt).toDateString() === today
+      ).length;
+
+      const completedWorkflows = dashboardData.executions.filter(e => e.status === 'completed').length;
+      const totalWorkflows = dashboardData.executions.length;
+      const successRate = totalWorkflows > 0 ? Math.round((completedWorkflows / totalWorkflows) * 100) : 0;
+
+      const activeCampaigns = dashboardData.campaigns.filter(c => c.status === 'active').length;
+
+      document.getElementById('total-projects').textContent = totalProjects;
+      document.getElementById('workflows-today').textContent = workflowsToday;
+      document.getElementById('success-rate').textContent = `${successRate}%`;
+      document.getElementById('active-campaigns').textContent = activeCampaigns;
+    }
+
+    // Render projects
+    function renderProjects() {
+      const container = document.getElementById('active-projects');
+      
+      if (dashboardData.projects.length === 0) {
+        container.innerHTML = '<p class="empty-state">No active projects</p>';
+        return;
+      }
+
+      container.innerHTML = dashboardData.projects.map(project => `
+        <div class="list-item" onclick="window.location.href='/project-detail.html?id=${project.id}'">
+          <div class="list-item-content">
+            <div class="list-item-title">${project.name}</div>
+            <div class="list-item-meta">
+              <span class="badge badge-${project.type}">${project.type}</span>
+              <span class="meta-text">${project.owner || 'Unassigned'}</span>
+            </div>
+          </div>
+          <div class="list-item-progress">
+            <div class="progress-circle">${project.completion || 0}%</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render executions
+    function renderExecutions() {
+      const container = document.getElementById('recent-executions');
+      
+      if (dashboardData.executions.length === 0) {
+        container.innerHTML = '<p class="empty-state">No recent executions</p>';
+        return;
+      }
+
+      container.innerHTML = dashboardData.executions.map(execution => `
+        <div class="list-item" onclick="window.location.href='/workflow-detail.html?executionId=${execution.id}'">
+          <div class="list-item-content">
+            <div class="list-item-title">${execution.workflowId}</div>
+            <div class="list-item-meta">
+              <span class="meta-text">${formatTime(execution.startedAt)}</span>
+            </div>
+          </div>
+          <div class="list-item-status">
+            <span class="status-badge status-${execution.status}">${execution.status}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Render campaign metrics (existing logic)
+    function renderCampaignMetrics() {
+      // Load pacing data
+      fetch('/api/pacing').then(r => r.json()).then(pacingData => {
         const byDSP = {};
         for (const p of pacingData.pacing || []) {
           if (!byDSP[p.dsp]) {
-            byDSP[p.dsp] = { budget: 0, spent: 0, campaigns: [] };
+            byDSP[p.dsp] = { spent: 0, budget: 0 };
           }
-          byDSP[p.dsp].budget += p.budget;
-          byDSP[p.dsp].spent += p.spent;
-          byDSP[p.dsp].campaigns.push(p);
+          byDSP[p.dsp].spent += p.spent || 0;
+          byDSP[p.dsp].budget += p.budget || 0;
         }
-        
-        // Update DSP cards
+
+        // Update metrics
         for (const [dsp, data] of Object.entries(byDSP)) {
-          const elementId = dsp === 'amazon-dsp' ? 'amazon-metrics' : `${dsp}-metrics`;
-          const element = document.getElementById(elementId);
-          if (element) {
-            const pacing = data.budget > 0 ? ((data.spent / data.budget) * 100).toFixed(0) : 0;
-            element.innerHTML = `
+          const container = document.getElementById(`${dsp.toLowerCase()}-metrics`);
+          if (container) {
+            const pacing = data.budget > 0 ? Math.round((data.spent / data.budget) * 100) : 0;
+            container.innerHTML = `
               <div class="metric">
-                <span class="metric-value">$${(data.budget/1000).toFixed(0)}K</span>
-                <span class="metric-label">Budget</span>
-              </div>
-              <div class="metric">
-                <span class="metric-value">$${(data.spent/1000).toFixed(0)}K</span>
+                <span class="metric-value">$${(data.spent / 1000).toFixed(1)}K</span>
                 <span class="metric-label">Spent</span>
               </div>
               <div class="metric">
@@ -175,64 +386,353 @@
             `;
           }
         }
-        
-        // Show pacing alerts
-        const alerts = (pacingData.pacing || []).filter(p => 
-          p.status && p.status.includes('critical')
-        );
-        
-        const alertsEl = document.getElementById('pacing-alerts');
-        if (alerts.length > 0) {
-          alertsEl.innerHTML = alerts.map(a => `
-            <div class="alert-item ${a.status}">
-              <span class="alert-campaign">${a.campaignName}</span>
-              <span class="alert-detail">${a.variance}% ${a.status.includes('behind') ? 'behind' : 'ahead'}</span>
-              <span class="alert-dsp">${a.dsp.toUpperCase()}</span>
-            </div>
-          `).join('');
-        } else {
-          alertsEl.innerHTML = '<p class="success">✅ All campaigns pacing normally</p>';
-        }
-        
-        // Load campaigns
-        const campaigns = await fetch('/api/campaigns').then(r => r.json());
-        
-        // Update counts
-        const statusCounts = { live: 0, paused: 0, scheduled: 0, draft: 0 };
-        campaigns.forEach(c => {
-          if (statusCounts[c.status] !== undefined) {
-            statusCounts[c.status]++;
-          }
-        });
-        
-        document.getElementById('live-count').textContent = statusCounts.live;
-        document.getElementById('paused-count').textContent = statusCounts.paused;
-        document.getElementById('scheduled-count').textContent = statusCounts.scheduled;
-        document.getElementById('draft-count').textContent = statusCounts.draft;
-        
-        // Show recent campaigns
-        const recent = campaigns.slice(0, 5);
-        document.getElementById('recent-campaigns').innerHTML = recent.map(c => `
-          <div class="campaign-item glass">
-            <div class="campaign-info">
-              <span class="campaign-name">${c.name}</span>
-              <span class="campaign-meta">${c.dsp} • ${c.channel || 'Display'} • ${c.lob || 'General'}</span>
-            </div>
-            <div class="campaign-status">
-              <span class="status-badge ${c.status}">${c.status}</span>
-              <span class="campaign-budget">$${((c.spent || 0)/1000).toFixed(1)}K / $${((c.budget || 0)/1000).toFixed(0)}K</span>
-            </div>
-          </div>
-        `).join('');
-        
-      } catch (err) {
-        console.error('Dashboard error:', err);
-      }
+      }).catch(err => console.error('Error loading pacing:', err));
     }
-    
+
+    // Render alerts
+    function renderAlerts() {
+      if (dashboardData.alerts.length === 0) {
+        document.getElementById('alerts-section').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('alerts-section').style.display = 'block';
+      document.getElementById('alerts-list').innerHTML = dashboardData.alerts.map(alert => `
+        <div class="alert-item alert-${alert.type}">
+          <span class="alert-icon">${alert.type === 'error' ? '❌' : '⚠️'}</span>
+          <span class="alert-message">${alert.message}</span>
+          <a href="${alert.link}" class="alert-action">${alert.action}</a>
+        </div>
+      `).join('');
+    }
+
+    // Helper functions
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays}d ago`;
+    }
+
+    function dismissAllAlerts() {
+      dashboardData.alerts = [];
+      renderAlerts();
+    }
+
+    function showQuickActions() {
+      window.location.href = '/workflows';
+    }
+
+    // Initialize
     loadDashboard();
-    // Refresh every 30 seconds
+
+    // Auto-refresh every 30 seconds
     setInterval(loadDashboard, 30000);
   </script>
+
+  <style>
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .dashboard-column {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .dashboard-section {
+      padding: 25px;
+    }
+
+    .dashboard-section h3 {
+      margin: 0 0 20px 0;
+      font-size: 1.15rem;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header h3 {
+      margin: 0;
+    }
+
+    .view-all-link {
+      color: #60A5FA;
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+
+    .view-all-link:hover {
+      color: #3B82F6;
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+
+    .btn-text:hover {
+      color: var(--text-primary);
+    }
+
+    .list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .list-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateX(3px);
+    }
+
+    .list-item-content {
+      flex: 1;
+    }
+
+    .list-item-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .list-item-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .meta-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .badge {
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .badge-campaign { background: rgba(139, 92, 246, 0.2); color: #A78BFA; }
+    .badge-dsp-onboarding { background: rgba(59, 130, 246, 0.2); color: #60A5FA; }
+    .badge-jbp { background: rgba(251, 146, 60, 0.2); color: #FBBF24; }
+    .badge-migration { background: rgba(34, 197, 94, 0.2); color: #4ADE80; }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-running { background: rgba(59, 130, 246, 0.2); color: #60A5FA; }
+    .status-completed { background: rgba(34, 197, 94, 0.2); color: #4ADE80; }
+    .status-failed { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+    .status-pending { background: rgba(156, 163, 175, 0.2); color: #9CA3AF; }
+
+    .progress-circle {
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .alerts-section {
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .alerts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid;
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .alert-warning {
+      background: rgba(251, 146, 60, 0.1);
+      border-color: rgba(251, 146, 60, 0.3);
+    }
+
+    .alert-icon {
+      font-size: 1.2rem;
+    }
+
+    .alert-message {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .alert-action {
+      color: #60A5FA;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .action-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-primary);
+    }
+
+    .action-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .action-icon {
+      font-size: 2rem;
+    }
+
+    .action-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .dsp-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+    }
+
+    .summary-card {
+      padding: 15px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-header h4 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .card-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .btn-primary, .btn-secondary {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
+    }
+
+    .loading, .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+  </style>
 </body>
 </html>

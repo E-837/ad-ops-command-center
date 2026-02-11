@@ -182,10 +182,46 @@ function getCriticalAlerts(results) {
   );
 }
 
+// Metadata for new registry system
+const meta = {
+  id: 'anomaly-detection',
+  name: 'Anomaly Detection',
+  category: 'reporting',
+  description: 'Detect unusual spikes or drops in campaign performance metrics',
+  version: '1.0.0',
+  
+  triggers: {
+    manual: true,
+    scheduled: '0 */4 * * *',  // Every 4 hours
+    events: ['metric.threshold']
+  },
+  
+  requiredConnectors: ['ttd', 'dv360', 'google-ads', 'meta-ads'],
+  optionalConnectors: [],
+  
+  inputs: {
+    sensitivity: { type: 'string', required: false, description: 'Detection sensitivity (low, medium, high)', default: 'medium' },
+    metrics: { type: 'array', required: false, description: 'Specific metrics to monitor (empty = all)', default: [] }
+  },
+  
+  outputs: ['workflowId', 'timestamp', 'anomalies', 'summary'],
+  
+  stages: [
+    { id: 'fetch', name: 'Fetch Metrics', agent: 'trader' },
+    { id: 'analyze', name: 'Detect Anomalies', agent: 'analyst' },
+    { id: 'assess', name: 'Assess Severity', agent: 'analyst' }
+  ],
+  estimatedDuration: '5 minutes',
+  
+  isOrchestrator: false,
+  subWorkflows: []
+};
+
 module.exports = {
   name,
   description,
   getInfo,
   run,
-  getCriticalAlerts
+  getCriticalAlerts,
+  meta  // New metadata export
 };

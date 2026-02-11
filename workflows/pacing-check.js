@@ -145,10 +145,46 @@ function getRecommendations(pacingResults) {
   return recommendations;
 }
 
+// Metadata for new registry system
+const meta = {
+  id: 'pacing-check',
+  name: 'Pacing Check',
+  category: 'reporting',
+  description: 'Daily monitoring of campaign pacing across all DSPs',
+  version: '1.0.0',
+  
+  triggers: {
+    manual: true,
+    scheduled: '0 9 * * *',  // Daily at 9 AM
+    events: []
+  },
+  
+  requiredConnectors: ['ttd', 'dv360', 'google-ads', 'meta-ads'],
+  optionalConnectors: [],
+  
+  inputs: {
+    dspFilter: { type: 'array', required: false, description: 'Filter by specific DSPs', default: [] },
+    threshold: { type: 'number', required: false, description: 'Pacing variance threshold for alerts', default: 10 }
+  },
+  
+  outputs: ['workflowId', 'timestamp', 'summary', 'alerts', 'dsps'],
+  
+  stages: [
+    { id: 'fetch', name: 'Fetch Pacing Data', agent: 'trader' },
+    { id: 'analyze', name: 'Analyze Variance', agent: 'analyst' },
+    { id: 'alert', name: 'Generate Alerts', agent: 'analyst' }
+  ],
+  estimatedDuration: '5 minutes',
+  
+  isOrchestrator: false,
+  subWorkflows: []
+};
+
 module.exports = {
   name,
   description,
   getInfo,
   run,
-  getRecommendations
+  getRecommendations,
+  meta  // New metadata export
 };

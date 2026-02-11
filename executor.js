@@ -7,6 +7,10 @@ const workflows = require('./workflows');
 const agents = require('./agents');
 const router = require('./router');
 const { load, save } = require('./database/init');
+const eventBus = require('./events/bus');
+const eventTypes = require('./events/types');
+const executions = require('./database/executions');
+const projects = require('./database/projects');
 
 // Workflow execution queue
 let executionQueue = [];
@@ -68,6 +72,40 @@ async function processQueue() {
     execution.startedAt = new Date().toISOString();
     saveQueueState();
     
+    // Create execution record in database
+    const executionRecord = executions.create({
+      id: execution.id,
+      projectId: execution.params.projectId || null,
+      workflowId: execution.workflow,
+      status: 'running',
+      params: execution.params
+    });
+    
+    executions.update(execution.id, {
+      startedAt: execution.startedAt
+    });
+    
+    // Link to project if specified
+    if (execution.params.projectId) {
+      try {
+        projects.addExecution(execution.params.projectId, execution.id);
+      } catch (err) {
+        console.warn(`Could not link execution to project: ${err.message}`);
+      }
+    }
+    
+    // Emit workflow started event
+    const startEvent = eventBus.emit(eventTypes.WORKFLOW_STARTED, {
+      source: execution.id,
+      workflowId: execution.workflow,
+      executionId: execution.id,
+      projectId: execution.params.projectId,
+      params: execution.params,
+      startedAt: execution.startedAt
+    });
+    
+    executions.addEvent(execution.id, startEvent.id);
+    
     try {
       const workflow = workflows.getWorkflow(execution.workflow);
       
@@ -75,17 +113,66 @@ async function processQueue() {
         throw new Error(`Unknown workflow: ${execution.workflow}`);
       }
       
-      // Execute workflow
-      const result = await workflow.run(execution.params);
+      // Check if workflow is an orchestrator
+      const registry = workflows.getRegistry();
+      const workflowMeta = registry.getWorkflowMeta(execution.workflow);
+      
+      let result;
+      if (workflowMeta && workflowMeta.isOrchestrator) {
+        // Execute orchestrator workflow with parallel support
+        result = await executeOrchestrator(workflow, execution.params, workflowMeta);
+      } else {
+        // Execute regular workflow
+        result = await workflow.run(execution.params);
+      }
       
       execution.status = 'completed';
       execution.result = result;
       execution.completedAt = new Date().toISOString();
       
+      // Update execution record
+      executions.update(execution.id, {
+        status: 'completed',
+        result: result,
+        completedAt: execution.completedAt
+      });
+      
+      // Emit workflow completed event
+      const completeEvent = eventBus.emit(eventTypes.WORKFLOW_COMPLETED, {
+        source: execution.id,
+        workflowId: execution.workflow,
+        executionId: execution.id,
+        projectId: execution.params.projectId,
+        result: result,
+        duration: new Date(execution.completedAt) - new Date(execution.startedAt),
+        completedAt: execution.completedAt
+      });
+      
+      executions.addEvent(execution.id, completeEvent.id);
+      
     } catch (error) {
       execution.status = 'failed';
       execution.error = error.message;
       execution.completedAt = new Date().toISOString();
+      
+      // Update execution record
+      executions.update(execution.id, {
+        status: 'failed',
+        error: error.message,
+        completedAt: execution.completedAt
+      });
+      
+      // Emit workflow failed event
+      const failEvent = eventBus.emit(eventTypes.WORKFLOW_FAILED, {
+        source: execution.id,
+        workflowId: execution.workflow,
+        executionId: execution.id,
+        projectId: execution.params.projectId,
+        error: error.message,
+        failedAt: execution.completedAt
+      });
+      
+      executions.addEvent(execution.id, failEvent.id);
     }
     
     saveQueueState();
@@ -202,6 +289,87 @@ function getStats() {
   };
 }
 
+/**
+ * Execute an orchestrator workflow with parallel stage support
+ */
+async function executeOrchestrator(workflow, params, meta) {
+  const results = {
+    orchestratorId: `orch-${Date.now()}`,
+    workflow: meta.id,
+    status: 'running',
+    startedAt: new Date().toISOString(),
+    stages: [],
+    subWorkflowResults: []
+  };
+  
+  try {
+    // Check if workflow has stages with parallel execution
+    for (const stage of meta.stages || []) {
+      if (stage.type === 'parallel-fan-out') {
+        // Execute sub-workflow in parallel for each item
+        const items = params[stage.foreachKey] || [];
+        const subWorkflow = workflows.getWorkflow(stage.subWorkflow);
+        
+        if (!subWorkflow) {
+          throw new Error(`Sub-workflow ${stage.subWorkflow} not found`);
+        }
+        
+        // Execute in parallel
+        const promises = items.map(async (item) => {
+          try {
+            const result = await subWorkflow.run({ ...params, ...item });
+            return { success: true, item, result };
+          } catch (error) {
+            return { success: false, item, error: error.message };
+          }
+        });
+        
+        const subResults = await Promise.all(promises);
+        
+        results.stages.push({
+          id: stage.id,
+          name: stage.name,
+          type: stage.type,
+          status: subResults.every(r => r.success) ? 'completed' : 'partial',
+          subWorkflowResults: subResults
+        });
+        
+        results.subWorkflowResults.push(...subResults);
+      } else {
+        // Regular stage - just execute the workflow normally
+        const result = await workflow.run(params);
+        results.stages.push({
+          id: stage.id,
+          name: stage.name,
+          status: 'completed',
+          result
+        });
+      }
+    }
+    
+    // If no special stages, just run the workflow
+    if (results.stages.length === 0) {
+      const result = await workflow.run(params);
+      results.stages.push({
+        id: 'default',
+        name: 'Execution',
+        status: 'completed',
+        result
+      });
+    }
+    
+    results.status = 'completed';
+    results.completedAt = new Date().toISOString();
+    
+  } catch (error) {
+    results.status = 'failed';
+    results.error = error.message;
+    results.completedAt = new Date().toISOString();
+  }
+  
+  return results;
+}
+
 // Initialize on load
 loadQueueState();
 
@@ -212,5 +380,6 @@ module.exports = {
   getPendingExecutions,
   cancelExecution,
   runImmediate,
-  getStats
+  getStats,
+  executeOrchestrator  // Export for testing
 };

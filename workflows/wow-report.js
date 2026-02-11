@@ -169,9 +169,45 @@ function generateInsights(results) {
   return insights;
 }
 
+// Metadata for new registry system
+const meta = {
+  id: 'wow-report',
+  name: 'Week-over-Week Report',
+  category: 'reporting',
+  description: 'Weekly performance comparison and trend analysis across all DSPs',
+  version: '1.0.0',
+  
+  triggers: {
+    manual: true,
+    scheduled: '0 9 * * 1',  // Mondays at 9 AM
+    events: []
+  },
+  
+  requiredConnectors: ['ttd', 'dv360', 'google-ads', 'meta-ads'],
+  optionalConnectors: [],
+  
+  inputs: {
+    weekOffset: { type: 'number', required: false, description: 'Week offset (0 = current week, -1 = last week)', default: 0 },
+    includeDSPBreakdown: { type: 'boolean', required: false, description: 'Include per-DSP breakdown', default: true }
+  },
+  
+  outputs: ['workflowId', 'timestamp', 'overall', 'byDSP', 'insights'],
+  
+  stages: [
+    { id: 'fetch', name: 'Fetch Performance Data', agent: 'trader' },
+    { id: 'analyze', name: 'WoW Analysis', agent: 'analyst' },
+    { id: 'insights', name: 'Generate Insights', agent: 'analyst' }
+  ],
+  estimatedDuration: '10 minutes',
+  
+  isOrchestrator: false,
+  subWorkflows: []
+};
+
 module.exports = {
   name,
   description,
   getInfo,
-  run
+  run,
+  meta  // New metadata export
 };

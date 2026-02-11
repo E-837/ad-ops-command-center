@@ -1,0 +1,278 @@
+{
+  "proj-1770779162326-3cy0io": {
+    "id": "proj-1770779162326-3cy0io",
+    "type": "campaign",
+    "name": "Test Campaign Project",
+    "status": "planning",
+    "owner": "test-user",
+    "startDate": null,
+    "endDate": null,
+    "budget": 50000,
+    "platform": null,
+    "metadata": {},
+    "executions": [],
+    "asanaProjectId": null,
+    "campaigns": [],
+    "milestones": [],
+    "artifacts": [],
+    "metrics": {
+      "completion": 0,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:06:02.326Z",
+    "updatedAt": "2026-02-11T03:06:02.326Z"
+  },
+  "proj-1770779162326-dqd53k": {
+    "id": "proj-1770779162326-dqd53k",
+    "type": "campaign",
+    "name": "Get Test Project",
+    "status": "planning",
+    "owner": "system",
+    "startDate": null,
+    "endDate": null,
+    "budget": null,
+    "platform": null,
+    "metadata": {},
+    "executions": [],
+    "asanaProjectId": null,
+    "campaigns": [],
+    "milestones": [],
+    "artifacts": [],
+    "metrics": {
+      "completion": 0,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:06:02.326Z",
+    "updatedAt": "2026-02-11T03:06:02.326Z"
+  },
+  "proj-1770779162328-qnoc57": {
+    "id": "proj-1770779162328-qnoc57",
+    "type": "campaign",
+    "name": "Update Test Project",
+    "status": "active",
+    "owner": "system",
+    "startDate": null,
+    "endDate": null,
+    "budget": 100000,
+    "platform": null,
+    "metadata": {},
+    "executions": [],
+    "asanaProjectId": null,
+    "campaigns": [],
+    "milestones": [],
+    "artifacts": [],
+    "metrics": {
+      "completion": 0,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:06:02.328Z",
+    "updatedAt": "2026-02-11T03:06:02.328Z"
+  },
+  "proj-1770779162330-ugrfq0": {
+    "id": "proj-1770779162330-ugrfq0",
+    "type": "campaign",
+    "name": "Execution Link Test",
+    "status": "planning",
+    "owner": "system",
+    "startDate": null,
+    "endDate": null,
+    "budget": null,
+    "platform": null,
+    "metadata": {},
+    "executions": [
+      "exec-1770779162330-hg2go3"
+    ],
+    "asanaProjectId": null,
+    "campaigns": [],
+    "milestones": [],
+    "artifacts": [],
+    "metrics": {
+      "completion": 0,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:06:02.330Z",
+    "updatedAt": "2026-02-11T03:06:02.331Z"
+  },
+  "proj-1770779162335-5idi60": {
+    "id": "proj-1770779162335-5idi60",
+    "type": "campaign",
+    "name": "Status Test Project",
+    "status": "planning",
+    "owner": "system",
+    "startDate": null,
+    "endDate": null,
+    "budget": null,
+    "platform": null,
+    "metadata": {},
+    "executions": [],
+    "asanaProjectId": "test-asana-123",
+    "campaigns": [],
+    "milestones": [],
+    "artifacts": [],
+    "metrics": {
+      "completion": 0,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:06:02.335Z",
+    "updatedAt": "2026-02-11T03:06:02.335Z"
+  },
+  "proj-1770779283917-dro4ju": {
+    "id": "proj-1770779283917-dro4ju",
+    "type": "campaign",
+    "name": "Q1 Brand Campaign",
+    "status": "active",
+    "owner": "media-planner",
+    "startDate": "2026-03-01",
+    "endDate": "2026-05-31",
+    "budget": 100000,
+    "platform": "ttd",
+    "metadata": {
+      "channel": "display",
+      "funnel": "awareness"
+    },
+    "executions": [],
+    "asanaProjectId": null,
+    "campaigns": [],
+    "milestones": [
+      {
+        "name": "Campaign Structure Finalized",
+        "status": "done",
+        "date": "2026-02-10",
+        "createdAt": "2026-02-11T03:08:03.919Z"
+      },
+      {
+        "name": "Creative Assets Approved",
+        "status": "done",
+        "date": "2026-02-15",
+        "createdAt": "2026-02-11T03:08:03.919Z"
+      },
+      {
+        "name": "Campaign Launch",
+        "status": "pending",
+        "date": "2026-03-01",
+        "createdAt": "2026-02-11T03:08:03.920Z"
+      }
+    ],
+    "artifacts": [
+      {
+        "type": "media-plan",
+        "url": "/output/q1-brand-plan.json",
+        "name": "Q1 Brand Media Plan",
+        "createdAt": "2026-02-11T03:08:03.921Z"
+      }
+    ],
+    "metrics": {
+      "completion": 65,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:08:03.917Z",
+    "updatedAt": "2026-02-11T03:08:03.921Z"
+  },
+  "proj-1770779283917-px8hnb": {
+    "id": "proj-1770779283917-px8hnb",
+    "type": "dsp-onboarding",
+    "name": "Google Ads DSP Onboarding",
+    "status": "planning",
+    "owner": "project-manager",
+    "startDate": "2026-02-15",
+    "endDate": "2026-04-30",
+    "budget": null,
+    "platform": "google-ads",
+    "metadata": {
+      "vendor": "Google",
+      "complexity": "medium"
+    },
+    "executions": [],
+    "asanaProjectId": null,
+    "campaigns": [],
+    "milestones": [],
+    "artifacts": [],
+    "metrics": {
+      "completion": 0,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:08:03.917Z",
+    "updatedAt": "2026-02-11T03:08:03.917Z"
+  },
+  "proj-1770779283918-xdnd4j": {
+    "id": "proj-1770779283918-xdnd4j",
+    "type": "jbp",
+    "name": "Amazon JBP 2026",
+    "status": "active",
+    "owner": "partnership-manager",
+    "startDate": "2026-01-01",
+    "endDate": "2026-12-31",
+    "budget": 5000000,
+    "platform": "multiple",
+    "metadata": {},
+    "executions": [],
+    "asanaProjectId": "asana-jbp-2026",
+    "campaigns": [],
+    "milestones": [],
+    "artifacts": [],
+    "metrics": {
+      "completion": 0,
+      "health": "on-track",
+      "blockers": []
+    },
+    "createdAt": "2026-02-11T03:08:03.918Z",
+    "updatedAt": "2026-02-11T03:08:03.918Z"
+  },
+  "proj-1770779283924-zfiel5": {
+    "id": "proj-1770779283924-zfiel5",
+    "type": "campaign",
+    "name": "Q2 Video Campaign - OLV & CTV",
+    "status": "active",
+    "owner": "Sarah Johnson",
+    "startDate": "March 15, 2026",
+    "endDate": "June 30, 2026",
+    "budget": null,
+    "platform": "asana",
+    "metadata": {
+      "sourceDocument": "PRD",
+      "sections": 4,
+      "deliverables": 7
+    },
+    "executions": [],
+    "asanaProjectId": "asana-1770779283923",
+    "campaigns": [],
+    "milestones": [
+      {
+        "name": "Project Created",
+        "status": "done",
+        "date": "2026-02-11"
+      },
+      {
+        "name": "Planning Complete",
+        "status": "pending",
+        "date": null
+      },
+      {
+        "name": "Launch",
+        "status": "pending",
+        "date": "June 30, 2026"
+      }
+    ],
+    "artifacts": [],
+    "metrics": {
+      "completion": 72,
+      "health": "at-risk",
+      "blockers": [
+        {
+          "task": "DSP API Integration",
+          "blockedBy": "Waiting on vendor credentials",
+          "severity": "high"
+        }
+      ]
+    },
+    "createdAt": "2026-02-11T03:08:03.924Z",
+    "updatedAt": "2026-02-11T03:08:03.925Z"
+  }
+}

@@ -209,10 +209,46 @@ async function applyOptimization(campaignId, recommendation) {
   return result;
 }
 
+// Metadata for new registry system
+const meta = {
+  id: 'optimization',
+  name: 'Optimization Recommendations',
+  category: 'reporting',
+  description: 'Generate bid and budget adjustment recommendations based on performance and pacing',
+  version: '1.0.0',
+  
+  triggers: {
+    manual: true,
+    scheduled: '0 10 * * *',  // Daily at 10 AM
+    events: ['metric.threshold', 'budget.pacing.alert']
+  },
+  
+  requiredConnectors: ['ttd', 'dv360', 'google-ads', 'meta-ads'],
+  optionalConnectors: [],
+  
+  inputs: {
+    campaignIds: { type: 'array', required: false, description: 'Specific campaigns to optimize (empty = all)', default: [] },
+    autoApply: { type: 'boolean', required: false, description: 'Automatically apply recommendations', default: false }
+  },
+  
+  outputs: ['workflowId', 'timestamp', 'recommendations', 'summary'],
+  
+  stages: [
+    { id: 'fetch', name: 'Fetch Campaign Data', agent: 'trader' },
+    { id: 'analyze', name: 'Analyze Performance', agent: 'analyst' },
+    { id: 'recommend', name: 'Generate Recommendations', agent: 'trader' }
+  ],
+  estimatedDuration: '10 minutes',
+  
+  isOrchestrator: false,
+  subWorkflows: []
+};
+
 module.exports = {
   name,
   description,
   getInfo,
   run,
-  applyOptimization
+  applyOptimization,
+  meta  // New metadata export
 };

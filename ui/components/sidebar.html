@@ -1,0 +1,38 @@
+<!-- Reusable Sidebar Component -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h1>🎯 Ad Ops</h1>
+    <span class="subtitle">Command Center</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="/dashboard" class="nav-link" data-page="dashboard">📊 Dashboard</a></li>
+    <li><a href="/projects" class="nav-link" data-page="projects">📁 Projects</a></li>
+    <li><a href="/workflows" class="nav-link" data-page="workflows">⚡ Workflows</a></li>
+    <li><a href="/campaigns" class="nav-link" data-page="campaigns">📈 Campaigns</a></li>
+    <li><a href="/agents" class="nav-link" data-page="agents">🤖 Agents</a></li>
+    <li><a href="/connectors" class="nav-link" data-page="connectors">🔌 Connectors</a></li>
+    <li><a href="/reports" class="nav-link" data-page="reports">📊 Reports</a></li>
+    <li><a href="/architecture" class="nav-link" data-page="architecture">🏗️ Architecture</a></li>
+    <li><a href="/query" class="nav-link" data-page="query">💬 Query</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="status-indicator">
+      <span class="status-dot online"></span>
+      <span>System Online</span>
+    </div>
+  </div>
+</nav>
+
+<script>
+  // Auto-highlight active page
+  (function() {
+    const currentPath = window.location.pathname.split('/').pop().replace('.html', '') || 'dashboard';
+    const links = document.querySelectorAll('.nav-link');
+    links.forEach(link => {
+      const page = link.getAttribute('data-page');
+      if (page === currentPath) {
+        link.classList.add('active');
+      }
+    });
+  })();
+</script>

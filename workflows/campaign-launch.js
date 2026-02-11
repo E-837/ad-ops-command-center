@@ -267,10 +267,49 @@ async function executeApprovalStage(params) {
   return stage;
 }
 
+// Metadata for new registry system
+const meta = {
+  id: 'campaign-launch',
+  name: 'Campaign Launch',
+  category: 'campaign-ops',
+  description: 'Multi-step workflow for launching new campaigns across DSPs',
+  version: '1.0.0',
+  
+  triggers: {
+    manual: true,
+    scheduled: null,
+    events: []
+  },
+  
+  requiredConnectors: ['ttd', 'dv360', 'google-ads', 'meta-ads'],
+  optionalConnectors: [],
+  
+  inputs: {
+    name: { type: 'string', required: true, description: 'Campaign name' },
+    budget: { type: 'number', required: true, description: 'Campaign budget in dollars' },
+    lob: { type: 'string', required: true, description: 'Line of business' },
+    channel: { type: 'string', required: true, description: 'Marketing channel (display, video, search, social)' },
+    funnel: { type: 'string', required: true, description: 'Funnel stage (awareness, consideration, conversion)' },
+    dsp: { type: 'string', required: true, description: 'DSP platform (ttd, dv360, google-ads, meta-ads)' },
+    startDate: { type: 'string', required: true, description: 'Campaign start date (ISO format)' },
+    endDate: { type: 'string', required: true, description: 'Campaign end date (ISO format)' },
+    creatives: { type: 'array', required: false, description: 'Array of creative objects', default: [] }
+  },
+  
+  outputs: ['workflowId', 'campaignId', 'status', 'stages'],
+  
+  stages: STAGES,
+  estimatedDuration: '2-4 hours',
+  
+  isOrchestrator: false,
+  subWorkflows: []
+};
+
 module.exports = {
   name,
   description,
   STAGES,
   getInfo,
-  run
+  run,
+  meta  // New metadata export
 };

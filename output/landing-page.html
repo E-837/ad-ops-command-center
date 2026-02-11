@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Locke AirPod AI - Intelligence You Can Wear</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'indigo-brand': '#4f46e5',
+                        'cyan-brand': '#06b6d4',
+                        'emerald-brand': '#10b981',
+                        'dark-bg': '#0a0a1a',
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: #0a0a1a;
+            overflow-x: hidden;
+        }
+        
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Logo styling */
+        .logo-l {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 2rem;
+            color: #4f46e5;
+            text-shadow: 0 0 20px #06b6d4;
+            position: relative;
+        }
+        
+        /* Glow effects */
+        .glow {
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.3), 0 0 40px rgba(6, 182, 212, 0.2);
+        }
+        
+        .glow-hover:hover {
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.5), 0 0 60px rgba(6, 182, 212, 0.3);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        
+        /* Hero earbud silhouette */
+        .earbud-hero {
+            width: 300px;
+            height: 400px;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 30px rgba(79, 70, 229, 0.3));
+        }
+        
+        .earbud-hero::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 100px;
+            background: linear-gradient(45deg, #06b6d4, #10b981);
+            border-radius: 30px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Particle background */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        
+        /* Fade in animation */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Custom button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            border: none;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3730a3, #0891b2);
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Specs grid */
+        .spec-item {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .spec-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(79, 70, 229, 0.3);
+        }
+        
+        /* Countdown styling */
+        .countdown-item {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            min-width: 100px;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg text-white">
+    <!-- Particle Background -->
+    <canvas id="particles"></canvas>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass">
+        <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="logo-l">L</div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#product" class="text-gray-300 hover:text-white transition-colors">PRODUCT</a>
+                <a href="#features" class="text-gray-300 hover:text-white transition-colors">FEATURES</a>
+                <a href="#specs" class="text-gray-300 hover:text-white transition-colors">SPECS</a>
+                <a href="#preorder" class="text-gray-300 hover:text-white transition-colors">PRE-ORDER</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+        <div class="container mx-auto px-6 flex flex-col lg:flex-row items-center justify-between">
+            <div class="lg:w-1/2 mb-12 lg:mb-0">
+                <h1 class="text-5xl md:text-7xl font-black text-white mb-6 tracking-wider">
+                    INTELLIGENCE<br>
+                    YOU CAN<br>
+                    <span class="bg-gradient-to-r from-indigo-brand to-cyan-brand bg-clip-text text-transparent">WEAR</span>
+                </h1>
+                <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                    The world's first AI-native earbud.<br>
+                    Launching at OpenAI Device Day.
+                </p>
+                <button class="btn-primary px-12 py-4 rounded-full text-lg glow-hover" onclick="document.getElementById('preorder').scrollIntoView()">
+                    PRE-ORDER $199
+                </button>
+            </div>
+            <div class="lg:w-1/2 flex justify-center">
+                <div class="earbud-hero"></div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Product Showcase -->
+    <section id="product" class="py-24">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl md:text-6xl font-black text-center mb-16 tracking-wider fade-in">
+                MEET LOCKE AIRPOD AI
+            </h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-indigo-brand to-cyan-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="brain" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">AI-First Design</h3>
+                    <p class="text-gray-400">Built from the ground up for artificial intelligence, not retrofitted.</p>
+                </div>
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-cyan-brand to-emerald-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Privacy First</h3>
+                    <p class="text-gray-400">On-device processing means your data never leaves your ear.</p>
+                </div>
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-emerald-brand to-indigo-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="zap" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Instant Response</h3>
+                    <p class="text-gray-400">Zero latency AI that responds faster than you can think.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Grid -->
+    <section id="features" class="py-24">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl md:text-6xl font-black text-center mb-16 tracking-wider fade-in">
+                REVOLUTIONARY FEATURES
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-indigo-brand to-cyan-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="languages" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wide">Real-Time Translation</h3>
+                    <p class="text-gray-400">40+ languages, instant, natural voice translation in real-time conversations.</p>
+                </div>
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-cyan-brand to-emerald-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="bot" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wide">Contextual AI Assistant</h3>
+                    <p class="text-gray-400">Knows your schedule, preferences, and environment. Your personal AI companion.</p>
+                </div>
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-emerald-brand to-indigo-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="volume-2" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wide">Spatial Audio</h3>
+                    <p class="text-gray-400">Adaptive sound that intelligently responds to your surroundings.</p>
+                </div>
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-indigo-brand to-cyan-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="battery" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wide">All-Day Battery</h3>
+                    <p class="text-gray-400">18 hours with AI processing, 36 hours music only. Wireless charging case included.</p>
+                </div>
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-cyan-brand to-emerald-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="shield" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wide">Privacy First</h3>
+                    <p class="text-gray-400">On-device processing, no cloud required for core features. Your data stays with you.</p>
+                </div>
+                <div class="glass rounded-2xl p-8 fade-in glow-hover">
+                    <div class="w-16 h-16 bg-gradient-to-r from-emerald-brand to-indigo-brand rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="smartphone" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white uppercase tracking-wide">Seamless Integration</h3>
+                    <p class="text-gray-400">Works with iOS, Android, and all major AI platforms. Universal compatibility.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Specs Section -->
+    <section id="specs" class="py-24">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl md:text-6xl font-black text-center mb-16 tracking-wider fade-in">
+                TECHNICAL SPECIFICATIONS
+            </h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+                <div class="spec-item">
+                    <h4 class="text-lg font-bold text-indigo-brand mb-2">AUDIO</h4>
+                    <p class="text-sm text-gray-400 mb-1">11mm custom driver</p>
+                    <p class="text-sm text-gray-400 mb-1">Bluetooth 5.4</p>
+                    <p class="text-sm text-gray-400">Spatial audio support</p>
+                </div>
+                <div class="spec-item">
+                    <h4 class="text-lg font-bold text-cyan-brand mb-2">AI PROCESSING</h4>
+                    <p class="text-sm text-gray-400 mb-1">Custom Locke Neural Engine</p>
+                    <p class="text-sm text-gray-400 mb-1">8 TOPS performance</p>
+                    <p class="text-sm text-gray-400">On-device inference</p>
+                </div>
+                <div class="spec-item">
+                    <h4 class="text-lg font-bold text-emerald-brand mb-2">BATTERY</h4>
+                    <p class="text-sm text-gray-400 mb-1">18hr AI / 36hr music</p>
+                    <p class="text-sm text-gray-400 mb-1">Wireless charging case</p>
+                    <p class="text-sm text-gray-400">Fast charging support</p>
+                </div>
+                <div class="spec-item">
+                    <h4 class="text-lg font-bold text-indigo-brand mb-2">DESIGN</h4>
+                    <p class="text-sm text-gray-400 mb-1">4.8g per earbud</p>
+                    <p class="text-sm text-gray-400 mb-1">IPX5 water resistance</p>
+                    <p class="text-sm text-gray-400">Premium titanium finish</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Launch Event Banner -->
+    <section class="py-24 bg-gradient-to-r from-indigo-brand/20 to-cyan-brand/20">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-6xl font-black mb-4 tracking-wider fade-in">
+                LAUNCHING AT OPENAI DEVICE DAY
+            </h2>
+            <p class="text-2xl md:text-3xl font-bold mb-12 text-cyan-brand fade-in">
+                APRIL 1, 2026 — SAN FRANCISCO
+            </p>
+            <div id="countdown" class="flex justify-center space-x-4 md:space-x-8 mb-12 fade-in">
+                <div class="countdown-item">
+                    <div id="days" class="text-3xl md:text-5xl font-black text-indigo-brand">00</div>
+                    <div class="text-sm text-gray-400 uppercase tracking-wide">Days</div>
+                </div>
+                <div class="countdown-item">
+                    <div id="hours" class="text-3xl md:text-5xl font-black text-cyan-brand">00</div>
+                    <div class="text-sm text-gray-400 uppercase tracking-wide">Hours</div>
+                </div>
+                <div class="countdown-item">
+                    <div id="minutes" class="text-3xl md:text-5xl font-black text-emerald-brand">00</div>
+                    <div class="text-sm text-gray-400 uppercase tracking-wide">Minutes</div>
+                </div>
+                <div class="countdown-item">
+                    <div id="seconds" class="text-3xl md:text-5xl font-black text-indigo-brand">00</div>
+                    <div class="text-sm text-gray-400 uppercase tracking-wide">Seconds</div>
+                </div>
+            </div>
+            <div class="glass rounded-full px-12 py-6 inline-block">
+                <p class="text-lg font-semibold text-white mb-2 uppercase tracking-wide">Get Notified</p>
+                <div class="flex">
+                    <input type="email" placeholder="Enter your email" class="bg-transparent border border-gray-600 rounded-l-full px-6 py-3 text-white placeholder-gray-400 flex-1">
+                    <button class="bg-gradient-to-r from-indigo-brand to-cyan-brand px-8 py-3 rounded-r-full font-semibold">
+                        NOTIFY ME
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Pre-Order CTA -->
+    <section id="preorder" class="py-24">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-6xl font-black mb-8 tracking-wider fade-in">
+                PRE-ORDER NOW
+            </h2>
+            <p class="text-3xl md:text-4xl font-bold text-cyan-brand mb-8 fade-in">$199</p>
+            <p class="text-lg text-gray-400 mb-12 fade-in">Free shipping. 30-day returns. 2-year warranty.</p>
+            <button class="btn-primary px-16 py-6 rounded-full text-xl glow-hover fade-in">
+                PRE-ORDER NOW — $199
+            </button>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="py-16 border-t border-gray-800">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="mb-8 md:mb-0">
+                    <div class="logo-l mb-4">L</div>
+                    <p class="text-gray-400">Locke AI Co. © 2026</p>
+                </div>
+                <div class="flex space-x-8">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Terms</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Support</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Press Kit</a>
+                </div>
+                <div class="flex space-x-6 mt-8 md:mt-0">
+                    <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-indigo-brand transition-colors">
+                        <i data-lucide="twitter" class="w-5 h-5"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-indigo-brand transition-colors">
+                        <i data-lucide="instagram" class="w-5 h-5"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-indigo-brand transition-colors">
+                        <i data-lucide="linkedin" class="w-5 h-5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Particle background
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        const particles = [];
+        const particleCount = 100;
+        
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2 + 0.5,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: (Math.random() - 0.5) * 0.5,
+                opacity: Math.random() * 0.5 + 0.2
+            });
+        }
+        
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(particle => {
+                particle.x += particle.speedX;
+                particle.y += particle.speedY;
+                
+                if (particle.x > canvas.width) particle.x = 0;
+                if (particle.x < 0) particle.x = canvas.width;
+                if (particle.y > canvas.height) particle.y = 0;
+                if (particle.y < 0) particle.y = canvas.height;
+                
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(79, 70, 229, ${particle.opacity})`;
+                ctx.fill();
+            });
+            
+            requestAnimationFrame(animateParticles);
+        }
+        
+        animateParticles();
+        
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+        
+        // Countdown timer
+        function updateCountdown() {
+            const launchDate = new Date('2026-04-01T00:00:00-07:00'); // PST
+            const now = new Date().getTime();
+            const timeLeft = launchDate - now;
+            
+            if (timeLeft > 0) {
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').textContent = days.toString().padStart(2, '0');
+                document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            } else {
+                document.getElementById('days').textContent = '00';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
+                document.getElementById('seconds').textContent = '00';
+            }
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+        
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

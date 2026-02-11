@@ -1,0 +1,47 @@
+{
+  "brand": "FocusFlow",
+  "product": "FocusFlow AI",
+  "guidelines": {
+    "tone": "Helpful, modern, efficient. Not pushy.",
+    "voice": "Second person (you/your). Active voice. Present tense.",
+    "headline_rules": {
+      "max_chars": 30,
+      "min_headlines": 10,
+      "must_include": ["brand name in at least 2 headlines", "price point ($29/mo)", "CTA in at least 2"],
+      "cta_options": ["Try Free", "Start Free Trial", "Learn More", "Get Started", "Sign Up Free"],
+      "avoid": ["ALL CAPS", "Exclamation marks in more than 2", "Competitor names", "Superlatives without proof"],
+      "power_words": ["AI-Powered", "Smart", "Automated", "Effortless", "Instant", "Focused"],
+      "pinning_strategy": {
+        "position_1": "Brand or product name headline",
+        "position_2": "Key benefit or feature",
+        "position_3": "CTA or offer"
+      }
+    },
+    "description_rules": {
+      "max_chars": 90,
+      "min_descriptions": 4,
+      "must_include": ["value proposition", "feature highlight", "CTA"],
+      "avoid": ["Repetitive phrasing", "Generic filler", "Passive voice"]
+    },
+    "usps": [
+      "AI auto-schedules your day",
+      "Meeting summaries in seconds",
+      "Smart task prioritization",
+      "100+ app integrations",
+      "Free 14-day trial, $29/mo after"
+    ],
+    "keywords_to_echo": ["ai productivity", "task manager", "ai assistant", "smart scheduling"],
+    "competitor_context": "Do NOT mention competitors directly. Differentiate on AI-native scheduling and focus features.",
+    "compliance": {
+      "disclaimers": [],
+      "restricted_claims": ["Guaranteed results", "Replaces your team", "100% accurate"]
+    }
+  },
+  "templates": {
+    "brand_headline": "{Product} — {USP}",
+    "feature_headline": "{Power Word} {Feature}",
+    "cta_headline": "{CTA} — {Offer}",
+    "benefit_description": "{USP}. {Feature detail}. {CTA}.",
+    "proof_description": "{Proof point}. {Differentiator}. {Action}."
+  }
+}

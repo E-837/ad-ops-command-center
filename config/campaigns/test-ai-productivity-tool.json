@@ -1,0 +1,32 @@
+{
+  "brand": "FocusFlow",
+  "product": "FocusFlow AI",
+  "tagline": "Work Smarter, Not Harder",
+  "price": "$29/mo",
+  "year": "2026",
+  "budget": 10000,
+  "flightStart": "2026-02-10",
+  "flightEnd": "2026-03-10",
+  "targetAudience": "Knowledge workers, remote professionals, productivity enthusiasts 25-45",
+  "objectives": ["trial", "conversion"],
+  "channels": ["Search"],
+  "search": {
+    "dailyBudget": 10,
+    "biddingStrategy": "MANUAL_CPC",
+    "competitors": ["Notion AI", "Todoist"],
+    "seedKeywords": ["ai productivity tool", "ai task manager", "smart to do list"]
+  },
+  "brief": {
+    "executiveSummary": "FocusFlow AI is an AI-powered productivity tool that helps knowledge workers manage tasks, prioritize work, and stay focused. It uses AI to auto-schedule tasks, summarize meetings, and suggest optimal work blocks.",
+    "messagePillars": [
+      "AI auto-schedules your day for peak productivity",
+      "Meeting summaries and action items in seconds",
+      "Smart task prioritization based on deadlines and energy levels",
+      "Works with Google Calendar, Slack, and 100+ integrations"
+    ],
+    "valueProposition": "The AI productivity assistant that actually saves you time — auto-schedule, summarize, and focus.",
+    "audience": {
+      "primary": "Remote knowledge workers 25-45 who juggle multiple projects and tools"
+    }
+  }
+}
