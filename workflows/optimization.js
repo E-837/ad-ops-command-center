@@ -6,6 +6,7 @@
 const connectors = require('../connectors');
 const trader = require('../agents/trader');
 const domain = require('../domain');
+const logger = require('../utils/logger');
 
 const name = 'Optimization';
 const description = 'Generate bid and budget adjustment recommendations';
@@ -61,7 +62,12 @@ async function run(params = {}) {
         });
       }
     } catch (error) {
-      console.error(`Error optimizing ${campaign.id}:`, error.message);
+      logger.error('Optimization error for campaign', { 
+        campaignId: campaign.id, 
+        campaignName: campaign.name,
+        error: error.message,
+        stack: error.stack 
+      });
     }
   }
   

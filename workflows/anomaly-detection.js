@@ -5,6 +5,7 @@
 
 const connectors = require('../connectors');
 const analyst = require('../agents/analyst');
+const logger = require('../utils/logger');
 
 const name = 'Anomaly Detection';
 const description = 'Detect unusual spikes or drops in campaign performance';
@@ -62,7 +63,12 @@ async function run(params = {}) {
         });
       }
     } catch (error) {
-      console.error(`Error checking ${campaign.id}:`, error.message);
+      logger.error('Anomaly detection error for campaign', { 
+        campaignId: campaign.id, 
+        campaignName: campaign.name,
+        error: error.message,
+        stack: error.stack 
+      });
     }
   }
   

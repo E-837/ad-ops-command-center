@@ -5,6 +5,7 @@
 
 const { metrics, campaigns } = require('../database/models');
 const knex = require('../database/db');
+const logger = require('../utils/logger');
 
 const Predictions = {
   /**
@@ -115,7 +116,7 @@ const Predictions = {
         dataPoints
       };
     } catch (error) {
-      console.error(`❌ Error predicting performance for campaign ${campaignId}:`, error);
+      logger.error('Operation failed', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -143,7 +144,7 @@ const Predictions = {
 
       return result.totalRevenue / result.totalSpend;
     } catch (error) {
-      console.error(`❌ Error getting avg ROAS for ${platform}:`, error);
+      logger.error('Operation failed', { error: error.message, stack: error.stack });
       return 1.0;
     }
   },
@@ -164,7 +165,7 @@ const Predictions = {
 
       return result?.totalSpend || 0;
     } catch (error) {
-      console.error(`❌ Error getting current spend for ${platform}:`, error);
+      logger.error('Operation failed', { error: error.message, stack: error.stack });
       return 0;
     }
   },
@@ -196,7 +197,7 @@ const Predictions = {
 
       return adjustedROAS;
     } catch (error) {
-      console.error(`❌ Error predicting ROAS for ${platform}:`, error);
+      logger.error('Operation failed', { error: error.message, stack: error.stack });
       return 1.0;
     }
   },
@@ -284,7 +285,7 @@ const Predictions = {
         confidence: 0.75
       };
     } catch (error) {
-      console.error('❌ Error optimizing budget allocation:', error);
+      logger.error('Operation failed', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -364,7 +365,7 @@ const Predictions = {
         avgValue: Math.round(yMean * 100) / 100
       };
     } catch (error) {
-      console.error(`❌ Error detecting trend for campaign ${campaignId}, metric ${metric}:`, error);
+      logger.error('Operation failed', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -407,7 +408,7 @@ const Predictions = {
         }
       };
     } catch (error) {
-      console.error(`❌ Error getting trend analysis for campaign ${campaignId}:`, error);
+      logger.error('Operation failed', { error: error.message, stack: error.stack });
       throw error;
     }
   }

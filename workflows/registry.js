@@ -5,6 +5,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const logger = require('../utils/logger');
 
 class WorkflowRegistry {
   constructor() {
@@ -55,7 +56,10 @@ class WorkflowRegistry {
     }
 
     if (!meta.category) {
-      console.warn(`Workflow ${workflowId} has no category, defaulting to 'campaign-ops'`);
+      logger.warn('Workflow missing category, using default', { 
+        workflowId, 
+        defaultCategory: 'campaign-ops' 
+      });
       meta.category = 'campaign-ops';
     }
 

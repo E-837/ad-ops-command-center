@@ -5,6 +5,7 @@
 
 const EventEmitter = require('events');
 const { load, save } = require('../database/init');
+const logger = require('../utils/logger');
 
 class EventBus extends EventEmitter {
   constructor() {
@@ -61,7 +62,7 @@ class EventBus extends EventEmitter {
     
     // Broadcast to webhooks (async, don't await)
     this.broadcastToWebhooks(type, data).catch(err => {
-      console.error('Error broadcasting to webhooks:', err);
+      logger.error('Event bus error', { error });
     });
     
     return event;
@@ -76,7 +77,7 @@ class EventBus extends EventEmitter {
       await webhooks.broadcastToWebhooks(eventType, data);
     } catch (err) {
       // Fail silently if webhook module not available
-      console.debug('Webhooks not available:', err.message);
+      logger.debug('Webhooks not available:', { error: err.message });
     }
   }
 

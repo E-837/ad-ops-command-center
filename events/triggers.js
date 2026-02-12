@@ -6,6 +6,7 @@
 const eventBus = require('./bus');
 const registry = require('../workflows/registry');
 const executor = require('../executor');
+const logger = require('../utils/logger');
 
 // Track active triggers
 const activeTriggers = new Map();
@@ -14,11 +15,11 @@ const activeTriggers = new Map();
  * Initialize event-driven triggers
  */
 function initializeTriggers() {
-  console.log('🎯 Initializing event-driven workflow triggers...');
+  logger.info('🎯 Initializing event-driven workflow triggers...');
 
   // Metric Threshold → Anomaly Detection
   registerTrigger('metric.threshold', async (event) => {
-    console.log(`⚡ Metric threshold event detected: ${event.payload.metric} for campaign ${event.payload.campaignId}`);
+    logger.info('Event trigger');
     
     try {
       const result = await executor.executeWorkflow('anomaly-detection', {
@@ -28,15 +29,15 @@ function initializeTriggers() {
         currentValue: event.payload.currentValue
       });
 
-      console.log(`✅ Anomaly detection workflow triggered: ${result.executionId}`);
+      logger.info('Event trigger');
     } catch (error) {
-      console.error(`❌ Failed to trigger anomaly detection:`, error.message);
+      logger.error('❌ Failed to trigger anomaly detection:', { error: error.message });
     }
   });
 
   // Plan Created → Media Plan Execute
   registerTrigger('plan.created', async (event) => {
-    console.log(`⚡ Plan created event detected: ${event.payload.planId}`);
+    logger.info('Event trigger');
     
     try {
       const result = await executor.executeWorkflow('media-plan-execute', {
@@ -45,15 +46,15 @@ function initializeTriggers() {
         autoLaunch: false // Create drafts, don't auto-launch
       });
 
-      console.log(`✅ Media plan execute workflow triggered: ${result.executionId}`);
+      logger.info('Event trigger');
     } catch (error) {
-      console.error(`❌ Failed to trigger media plan execute:`, error.message);
+      logger.error('❌ Failed to trigger media plan execute:', { error: error.message });
     }
   });
 
   // Plan Approved → Media Plan Execute (with auto-launch)
   registerTrigger('plan.approved', async (event) => {
-    console.log(`⚡ Plan approved event detected: ${event.payload.planId}`);
+    logger.info('Event trigger');
     
     try {
       const result = await executor.executeWorkflow('media-plan-execute', {
@@ -62,15 +63,15 @@ function initializeTriggers() {
         autoLaunch: true // Auto-launch approved plans
       });
 
-      console.log(`✅ Media plan execute workflow triggered with auto-launch: ${result.executionId}`);
+      logger.info('Event trigger');
     } catch (error) {
-      console.error(`❌ Failed to trigger media plan execute:`, error.message);
+      logger.error('❌ Failed to trigger media plan execute:', { error: error.message });
     }
   });
 
   // Budget Depleted → Optimization
   registerTrigger('budget.depleted', async (event) => {
-    console.log(`⚡ Budget depleted event detected for campaign: ${event.payload.campaignId}`);
+    logger.info('Event trigger');
     
     try {
       const result = await executor.executeWorkflow('optimization', {
@@ -79,15 +80,15 @@ function initializeTriggers() {
         recommendations: ['pause-underperforming', 'reallocate-budget']
       });
 
-      console.log(`✅ Optimization workflow triggered: ${result.executionId}`);
+      logger.info('Event trigger');
     } catch (error) {
-      console.error(`❌ Failed to trigger optimization:`, error.message);
+      logger.error('❌ Failed to trigger optimization:', { error: error.message });
     }
   });
 
   // Campaign Approved → Cross-Channel Launch
   registerTrigger('campaign.approved', async (event) => {
-    console.log(`⚡ Campaign approved event detected: ${event.payload.campaignName}`);
+    logger.info('Event trigger');
     
     // Only trigger if multi-platform launch requested
     if (event.payload.platforms && event.payload.platforms.length > 1) {
@@ -102,9 +103,9 @@ function initializeTriggers() {
           endDate: event.payload.endDate
         });
 
-        console.log(`✅ Cross-channel launch workflow triggered: ${result.executionId}`);
+        logger.info('Event trigger');
       } catch (error) {
-        console.error(`❌ Failed to trigger cross-channel launch:`, error.message);
+        logger.error('❌ Failed to trigger cross-channel launch:', { error: error.message });
       }
     }
   });
@@ -112,21 +113,21 @@ function initializeTriggers() {
   // Workflow Completed → Project Status Update
   registerTrigger('workflow.completed', async (event) => {
     if (event.payload.projectId) {
-      console.log(`⚡ Workflow completed, updating project ${event.payload.projectId}...`);
+      logger.info('Event trigger');
       
       // Would update project completion status
       // For now, just log
-      console.log(`📝 Project ${event.payload.projectId} updated with workflow result`);
+      logger.info('Event trigger');
     }
   });
 
   // Workflow Failed → Alert
   registerTrigger('workflow.failed', async (event) => {
-    console.log(`⚠️ Workflow failed: ${event.payload.workflowId} (${event.payload.executionId})`);
+    logger.info('Event trigger');
     
     // Would send alert via email/Slack
     // For now, just log
-    console.log(`📧 Alert sent: Workflow ${event.payload.workflowId} failed - ${event.payload.error}`);
+    logger.info('Event trigger');
   });
 
   // Project Created → PRD to Asana (if project type is suitable)
@@ -134,7 +135,7 @@ function initializeTriggers() {
     const projectType = event.payload.type;
     
     if (['campaign', 'dsp-onboarding', 'jbp'].includes(projectType)) {
-      console.log(`⚡ Project created event detected: ${event.payload.name} (${projectType})`);
+      logger.info('Event trigger');
       
       // If there's a PRD document attached, trigger PRD-to-Asana workflow
       if (event.payload.prdUrl) {
@@ -145,15 +146,15 @@ function initializeTriggers() {
             projectType: projectType
           });
 
-          console.log(`✅ PRD-to-Asana workflow triggered: ${result.executionId}`);
+          logger.info('Event trigger');
         } catch (error) {
-          console.error(`❌ Failed to trigger PRD-to-Asana:`, error.message);
+          logger.error('❌ Failed to trigger PRD-to-Asana:', { error: error.message });
         }
       }
     }
   });
 
-  console.log(`✅ ${activeTriggers.size} event triggers registered`);
+  logger.info('Event trigger');
 }
 
 /**
@@ -161,7 +162,7 @@ function initializeTriggers() {
  */
 function registerTrigger(eventType, handler) {
   if (activeTriggers.has(eventType)) {
-    console.warn(`⚠️ Trigger for event "${eventType}" already registered, replacing...`);
+    logger.warn('⚠️ Trigger for event "${eventType}" already registered, replacing...');
     // Remove old listener
     const oldHandler = activeTriggers.get(eventType);
     eventBus.off(eventType, oldHandler);
@@ -171,7 +172,7 @@ function registerTrigger(eventType, handler) {
   eventBus.on(eventType, handler);
   activeTriggers.set(eventType, handler);
   
-  console.log(`  ✓ Registered trigger: ${eventType}`);
+  logger.info('Event trigger');
 }
 
 /**
@@ -182,7 +183,7 @@ function unregisterTrigger(eventType) {
     const handler = activeTriggers.get(eventType);
     eventBus.off(eventType, handler);
     activeTriggers.delete(eventType);
-    console.log(`✓ Unregistered trigger: ${eventType}`);
+    logger.info('Event trigger');
     return true;
   }
   return false;
@@ -199,7 +200,7 @@ function getActiveTriggers() {
  * Auto-register triggers for workflows that define event triggers
  */
 function autoRegisterWorkflowTriggers() {
-  console.log('🔍 Auto-registering workflow event triggers...');
+  logger.info('🔍 Auto-registering workflow event triggers...');
   
   const workflows = registry.getAllWorkflows();
   let registered = 0;
@@ -210,16 +211,16 @@ function autoRegisterWorkflowTriggers() {
         // Only register if not already registered
         if (!activeTriggers.has(eventType)) {
           registerTrigger(eventType, async (event) => {
-            console.log(`⚡ Auto-trigger: ${eventType} → ${workflow.id}`);
+            logger.info('Event trigger');
             
             try {
               // Extract params from event payload
               const params = event.payload || {};
               
               const result = await executor.executeWorkflow(workflow.id, params);
-              console.log(`✅ Workflow ${workflow.id} triggered: ${result.executionId}`);
+              logger.info('Event trigger');
             } catch (error) {
-              console.error(`❌ Failed to auto-trigger ${workflow.id}:`, error.message);
+              logger.error('❌ Failed to auto-trigger ${workflow.id}:', { error: error.message });
             }
           });
           
@@ -229,21 +230,21 @@ function autoRegisterWorkflowTriggers() {
     }
   }
 
-  console.log(`✅ Auto-registered ${registered} workflow event triggers`);
+  logger.info('Event trigger');
 }
 
 /**
  * Cleanup all triggers
  */
 function cleanup() {
-  console.log('🧹 Cleaning up event triggers...');
+  logger.info('🧹 Cleaning up event triggers...');
   
   for (const [eventType, handler] of activeTriggers.entries()) {
     eventBus.off(eventType, handler);
   }
   
   activeTriggers.clear();
-  console.log('✅ Event triggers cleaned up');
+  logger.info('✅ Event triggers cleaned up');
 }
 
 module.exports = {

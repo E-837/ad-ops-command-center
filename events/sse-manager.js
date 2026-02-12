@@ -3,6 +3,8 @@
  * Manages Server-Sent Events connections for real-time updates
  */
 
+const logger = require('../utils/logger');
+
 class SSEManager {
   constructor() {
     this.clients = new Map(); // Map of response objects to client metadata
@@ -73,7 +75,7 @@ class SSEManager {
       this.removeClient(res);
     });
     
-    console.log(`[SSE] Client connected: ${clientId} (filters: ${JSON.stringify(filters)})`);
+    logger.debug('SSE operation');
     return clientId;
   }
 
@@ -84,7 +86,7 @@ class SSEManager {
   removeClient(res) {
     const metadata = this.clients.get(res);
     if (metadata) {
-      console.log(`[SSE] Client disconnected: ${metadata.id} (sent ${metadata.eventsSent} events)`);
+      logger.debug('SSE operation');
       this.clients.delete(res);
     }
   }
@@ -104,7 +106,7 @@ class SSEManager {
         metadata.eventsSent++;
       }
     } catch (err) {
-      console.error('[SSE] Error sending to client:', err.message);
+      logger.error('SSE error', { error });
       this.removeClient(res);
     }
   }
@@ -255,7 +257,7 @@ class SSEManager {
     
     this.clients.forEach((metadata, res) => {
       if (now - metadata.lastPing > timeout) {
-        console.log(`[SSE] Cleaning up dead connection: ${metadata.id}`);
+        logger.debug('SSE operation');
         this.removeClient(res);
       }
     });

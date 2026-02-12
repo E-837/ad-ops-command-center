@@ -4,6 +4,7 @@
  */
 
 const knex = require('../database/db');
+const logger = require('../utils/logger');
 
 /**
  * Parse filter parameters
@@ -82,7 +83,7 @@ async function getSpendTrend(filters = {}) {
     };
 
   } catch (err) {
-    console.error('Error fetching spend trend:', err);
+    logger.error('Error fetching spend trend', { error: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -124,7 +125,7 @@ async function getCTRComparison(filters = {}) {
     };
 
   } catch (err) {
-    console.error('Error fetching CTR comparison:', err);
+    logger.error('Error fetching CTR comparison', { error: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -192,7 +193,7 @@ async function getConversionFunnel(filters = {}) {
     };
 
   } catch (err) {
-    console.error('Error fetching conversion funnel:', err);
+    logger.error('Error fetching conversion funnel', { error: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -237,7 +238,7 @@ async function getROASByCampaign(filters = {}) {
     };
 
   } catch (err) {
-    console.error('Error fetching ROAS by campaign:', err);
+    logger.error('Error fetching ROAS by campaign', { error: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -283,7 +284,7 @@ async function getBudgetUtilization(filters = {}) {
     };
 
   } catch (err) {
-    console.error('Error fetching budget utilization:', err);
+    logger.error('Error fetching budget utilization', { error: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -339,7 +340,7 @@ async function getPerformanceSummary(filters = {}) {
     };
 
   } catch (err) {
-    console.error('Error fetching performance summary:', err);
+    logger.error('Error fetching performance summary', { error: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -408,7 +409,7 @@ async function getPlatformComparison(filters = {}) {
     };
 
   } catch (err) {
-    console.error('Error fetching platform comparison:', err);
+    logger.error('Error fetching platform comparison', { error: err.message, stack: err.stack });
     throw err;
   }
 }

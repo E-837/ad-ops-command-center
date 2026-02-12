@@ -5,6 +5,7 @@
 
 const { campaigns, metrics, agentMemory } = require('../database/models');
 const knex = require('../database/db');
+const logger = require('../utils/logger');
 
 const Recommendations = {
   /**
@@ -96,7 +97,7 @@ const Recommendations = {
         confidence: Math.min(0.9, 0.6 + (pastReallocations.length * 0.05))
       };
     } catch (error) {
-      console.error('❌ Error generating budget recommendation:', error);
+      logger.error('❌ Error generating budget recommendation', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -175,7 +176,7 @@ const Recommendations = {
 
       return recommendation;
     } catch (error) {
-      console.error('❌ Error generating bid recommendation:', error);
+      logger.error('❌ Error generating bid recommendation', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -248,7 +249,7 @@ const Recommendations = {
         confidence: 0.7
       };
     } catch (error) {
-      console.error('❌ Error generating targeting recommendation:', error);
+      logger.error('❌ Error generating targeting recommendation', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -321,7 +322,7 @@ const Recommendations = {
         confidence: 0.6
       };
     } catch (error) {
-      console.error('❌ Error generating creative recommendation:', error);
+      logger.error('❌ Error generating creative recommendation', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -399,7 +400,7 @@ const Recommendations = {
         confidence: platformMemories.length > 10 ? 0.85 : 0.65
       };
     } catch (error) {
-      console.error('❌ Error generating platform recommendation:', error);
+      logger.error('❌ Error generating platform recommendation', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -432,7 +433,7 @@ const Recommendations = {
 
       return recommendations.slice(0, 3);
     } catch (error) {
-      console.error('❌ Error getting optimization priorities:', error);
+      logger.error('❌ Error getting optimization priorities', { error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -464,7 +465,7 @@ const Recommendations = {
         priorities
       };
     } catch (error) {
-      console.error('❌ Error getting all recommendations:', error);
+      logger.error('❌ Error getting all recommendations', { error: error.message, stack: error.stack });
       throw error;
     }
   }

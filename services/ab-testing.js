@@ -5,6 +5,7 @@
 
 const { abTests, agentMemory, metrics } = require('../database/models');
 const knex = require('../database/db');
+const logger = require('../utils/logger');
 
 const ABTesting = {
   /**
@@ -50,10 +51,10 @@ const ABTesting = {
       // Start the test immediately
       await abTests.start(test.id);
 
-      console.log(`🧪 Started ${testType} A/B test ${test.id} for campaign ${campaignId}`);
+      logger.info('A/B test started', { testId: test.id, campaignId, testType, variantCount: variants.length });
       return test;
     } catch (error) {
-      console.error('❌ Error creating A/B test:', error);
+      logger.error('Error creating A/B test', { error: error.message, stack: error.stack, campaignId, testType });
       throw error;
     }
   },
@@ -104,7 +105,7 @@ const ABTesting = {
         sufficientSample: totalConversions >= 100
       };
     } catch (error) {
-      console.error(`❌ Error getting test status ${testId}:`, error);
+      logger.error('Error getting test status', { testId, error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -215,7 +216,7 @@ const ABTesting = {
 
       return result;
     } catch (error) {
-      console.error(`❌ Error analyzing test ${testId}:`, error);
+      logger.error('Error analyzing test', { testId, error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -231,7 +232,7 @@ const ABTesting = {
       const analysis = await this.analyzeTest(testId);
 
       if (!analysis.significant) {
-        console.log(`⚠️ Test ${testId} results not statistically significant`);
+        logger.warn('Test results not statistically significant', { testId });
         await abTests.complete(testId, null);
         return {
           ...analysis,
@@ -266,10 +267,10 @@ const ABTesting = {
       if (autoApply && parseFloat(analysis.lift) > 20) {
         await abTests.markApplied(testId);
         applied = true;
-        console.log(`✅ Auto-applied winner from test ${testId}`);
+        logger.info('Auto-applied test winner', { testId, winner: analysis.winner });
       }
 
-      console.log(`🏆 Test ${testId} winner: ${analysis.winner} (+${analysis.lift}% lift)`);
+      logger.info('Test winner declared', { testId, winner: analysis.winner, lift: analysis.lift });
 
       return {
         ...analysis,
@@ -277,7 +278,7 @@ const ABTesting = {
         message: `Winner: ${analysis.winner} with ${analysis.lift}% lift (${analysis.confidence}% confidence)`
       };
     } catch (error) {
-      console.error(`❌ Error declaring winner for test ${testId}:`, error);
+      logger.error('Error declaring test winner', { testId, error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -296,7 +297,7 @@ const ABTesting = {
         .first();
 
       if (!recentMetrics) {
-        console.log(`⚠️ No metrics found for campaign ${campaignId}`);
+        logger.warn('No metrics found for campaign', { campaignId });
         return [];
       }
 
@@ -330,10 +331,10 @@ const ABTesting = {
         scheduledTests.push(bidTest);
       }
 
-      console.log(`📅 Scheduled ${scheduledTests.length} tests for campaign ${campaignId}`);
+      logger.info('Tests scheduled for campaign', { campaignId, testCount: scheduledTests.length });
       return scheduledTests;
     } catch (error) {
-      console.error(`❌ Error scheduling tests for campaign ${campaignId}:`, error);
+      logger.error('Error scheduling tests', { campaignId, error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -375,7 +376,7 @@ const ABTesting = {
 
       return await abTests.getById(testId);
     } catch (error) {
-      console.error(`❌ Error updating test metrics ${testId}:`, error);
+      logger.error('Error updating test metrics', { testId, error: error.message, stack: error.stack });
       throw error;
     }
   },
@@ -388,7 +389,7 @@ const ABTesting = {
     try {
       return await abTests.getNeedingAnalysis();
     } catch (error) {
-      console.error('❌ Error getting tests needing analysis:', error);
+      logger.error('Error getting tests needing analysis', { error: error.message, stack: error.stack });
       throw error;
     }
   }

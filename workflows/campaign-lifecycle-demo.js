@@ -6,6 +6,7 @@
 const path = require('path');
 const fs = require('fs');
 const { callTool } = require(path.join(__dirname, '..', 'scripts', 'mcp-helper'));
+const logger = require('../utils/logger');
 
 const name = 'Campaign Lifecycle Demo';
 const description = 'Full end-to-end campaign lifecycle demonstration';
@@ -83,7 +84,10 @@ function loadCampaign(name = 'locke-airpod-ai') {
     const campaignData = JSON.parse(fs.readFileSync(campaignPath, 'utf8'));
     return campaignData;
   } catch (err) {
-    console.warn(`[WARN] Could not load campaign '${name}': ${err.message}. Using default campaign data.`);
+    logger.warn('Could not load campaign, using default data', { 
+      campaignName: name, 
+      error: err.message 
+    });
     return DEFAULT_CAMPAIGN_DATA;
   }
 }
@@ -136,7 +140,9 @@ async function run(opts = {}) {
 function extractId(output) {
   const m = output.match(/\(ID:\s*([a-zA-Z0-9_-]+)\)/) || output.match(/ID:\s*([a-zA-Z0-9_-]+)/);
   if (!m) {
-    console.warn('[WARN] extractId: Could not extract ID from output:', output.slice(0, 200));
+    logger.warn('Could not extract ID from output', { 
+      outputPreview: output.slice(0, 200) 
+    });
   }
   return m ? m[1] : null;
 }
