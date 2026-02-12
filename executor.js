@@ -11,6 +11,7 @@ const eventBus = require('./events/bus');
 const eventTypes = require('./events/types');
 const executions = require('./database/executions');
 const projects = require('./database/projects');
+const logger = require('./utils/logger');
 
 // Workflow execution queue
 let executionQueue = [];
@@ -90,7 +91,11 @@ async function processQueue() {
       try {
         projects.addExecution(execution.params.projectId, execution.id);
       } catch (err) {
-        console.warn(`Could not link execution to project: ${err.message}`);
+        logger.warn('Could not link execution to project', {
+          executionId: execution.id,
+          projectId: execution.params.projectId,
+          error: err.message
+        });
       }
     }
     

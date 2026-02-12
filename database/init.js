@@ -5,6 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const logger = require('../utils/logger');
 
 const DB_DIR = path.join(__dirname);
 const DATA_DIR = path.join(__dirname, 'data');
@@ -31,7 +32,7 @@ function load(name, fallback = {}) {
       return JSON.parse(fs.readFileSync(filePath, 'utf8'));
     }
   } catch (err) {
-    console.error(`[db] Load error for ${name}:`, err.message);
+    logger.error('Database load error', { store: name, error: err.message });
   }
   return fallback;
 }
@@ -42,7 +43,7 @@ function save(name, data) {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
     return true;
   } catch (err) {
-    console.error(`[db] Save error for ${name}:`, err.message);
+    logger.error('Database save error', { store: name, error: err.message });
     return false;
   }
 }
@@ -51,7 +52,7 @@ function save(name, data) {
  * Initialize database
  */
 function initialize() {
-  console.log('[db] Initializing database...');
+  logger.info('Initializing database');
   
   // Initialize default data stores
   const stores = [
@@ -76,7 +77,7 @@ function initialize() {
     seedInitialData();
   }
   
-  console.log('[db] Database initialized');
+  logger.info('Database initialized successfully');
   return true;
 }
 
@@ -120,7 +121,7 @@ function seedInitialData() {
   };
   save('agents', agents);
   
-  console.log('[db] Seeded initial data');
+  logger.info('Seeded initial database data');
 }
 
 /**
