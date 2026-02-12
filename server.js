@@ -145,6 +145,34 @@ app.get('/connectors', (req, res) => {
   res.sendFile(path.join(__dirname, 'ui', 'connectors.html'));
 });
 
+// --- Global Error Handler Middleware ---
+// Must be defined after all routes
+app.use((err, req, res, next) => {
+  // Log the error
+  logger.error('Request error', {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    statusCode: err.statusCode || 500
+  });
+  
+  // Determine status code
+  const statusCode = err.statusCode || 500;
+  
+  // Send error response
+  res.status(statusCode).json({
+    success: false,
+    error: err.message || 'Internal server error',
+    ...(err.details && { details: err.details }),
+    ...(err.resource && { resource: err.resource }),
+    ...(err.platform && { platform: err.platform }),
+    ...(err.retryAfter && { retryAfter: err.retryAfter }),
+    // Include stack trace in development only
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
+});
+
 // --- Error Handling ---
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught exception', { error: err.message, stack: err.stack });
