@@ -1,9 +1,9 @@
 /**
- * Seed: LOB-aware performance data
+ * Seed: LOB-aware performance data (Locke AI Co. AI product lines)
  */
 
 exports.seed = async function(knex) {
-  console.log('🌱 Starting LOB-aware performance data seeding...');
+  console.log('🌱 Starting AI LOB performance data seeding...');
 
   const daysAgo = (days) => {
     const d = new Date();
@@ -15,26 +15,85 @@ exports.seed = async function(knex) {
 
   await knex('metrics').where('date', '>=', daysAgo(90)).del();
 
-  const campaignTemplates = [
-    { id: 'camp-auto-dv360-001', platform: 'dv360', lob: 'auto', cpcRange: [3.2, 4.8], ctrRange: [0.8, 1.3], convRateRange: [0.010, 0.018], avgDealSize: 42000, baseImpressions: 42000 },
-    { id: 'camp-auto-meta-001', platform: 'meta-ads', lob: 'auto', cpcRange: [3.0, 4.5], ctrRange: [0.9, 1.5], convRateRange: [0.012, 0.020], avgDealSize: 39000, baseImpressions: 52000 },
-    { id: 'camp-auto-google-001', platform: 'google-ads', lob: 'auto', cpcRange: [3.5, 5.0], ctrRange: [2.5, 4.2], convRateRange: [0.020, 0.035], avgDealSize: 35000, baseImpressions: 18000 },
+  const lobBenchmarks = {
+    ai_audio: {
+      cpcRange: [1.5, 2.5],
+      ctrRange: [2.1, 2.9],
+      convRateRange: [0.024, 0.036],
+      avgOrderValueRange: [150, 300],
+      baseImpressions: 62000
+    },
+    ai_wearables: {
+      cpcRange: [2.0, 3.5],
+      ctrRange: [1.7, 2.3],
+      convRateRange: [0.020, 0.030],
+      avgOrderValueRange: [200, 500],
+      baseImpressions: 52000
+    },
+    ai_home: {
+      cpcRange: [1.8, 3.0],
+      ctrRange: [1.9, 2.5],
+      convRateRange: [0.023, 0.033],
+      avgOrderValueRange: [100, 400],
+      baseImpressions: 56000
+    },
+    ai_vision: {
+      cpcRange: [3.0, 5.0],
+      ctrRange: [1.4, 2.1],
+      convRateRange: [0.011, 0.019],
+      avgOrderValueRange: [300, 800],
+      baseImpressions: 34000
+    },
+    ai_productivity: {
+      cpcRange: [2.5, 4.0],
+      ctrRange: [2.0, 2.6],
+      convRateRange: [0.018, 0.026],
+      avgOrderValueRange: [100, 350],
+      baseImpressions: 43000
+    }
+  };
 
-    { id: 'camp-ins-google-001', platform: 'google-ads', lob: 'insurance', cpcRange: [8.0, 12.0], ctrRange: [3.0, 5.0], convRateRange: [0.018, 0.030], avgDealSize: 2400, baseImpressions: 15000 },
-    { id: 'camp-ins-meta-001', platform: 'meta-ads', lob: 'insurance', cpcRange: [8.5, 11.5], ctrRange: [1.0, 1.8], convRateRange: [0.010, 0.018], avgDealSize: 1800, baseImpressions: 32000 },
-    { id: 'camp-ins-microsoft-001', platform: 'microsoft-ads', lob: 'insurance', cpcRange: [7.8, 10.8], ctrRange: [2.8, 4.6], convRateRange: [0.016, 0.028], avgDealSize: 2200, baseImpressions: 12000 },
+  const platformTemplates = {
+    ai_audio: [
+      { id: 'camp-aiaudio-meta-001', platform: 'meta-ads', impressionMultiplier: 1.08 },
+      { id: 'camp-aiaudio-google-001', platform: 'google-ads', impressionMultiplier: 0.9 },
+      { id: 'camp-aiaudio-tiktok-001', platform: 'tiktok-ads', impressionMultiplier: 1.18 }
+    ],
+    ai_wearables: [
+      { id: 'camp-aiwear-meta-001', platform: 'meta-ads', impressionMultiplier: 1.05 },
+      { id: 'camp-aiwear-google-001', platform: 'google-ads', impressionMultiplier: 0.92 },
+      { id: 'camp-aiwear-pinterest-001', platform: 'pinterest', impressionMultiplier: 0.88 }
+    ],
+    ai_home: [
+      { id: 'camp-aihome-google-001', platform: 'google-ads', impressionMultiplier: 0.95 },
+      { id: 'camp-aihome-meta-001', platform: 'meta-ads', impressionMultiplier: 1.02 },
+      { id: 'camp-aihome-microsoft-001', platform: 'microsoft-ads', impressionMultiplier: 0.84 }
+    ],
+    ai_vision: [
+      { id: 'camp-aivision-google-001', platform: 'google-ads', impressionMultiplier: 0.82 },
+      { id: 'camp-aivision-tiktok-001', platform: 'tiktok-ads', impressionMultiplier: 1.1 },
+      { id: 'camp-aivision-linkedin-001', platform: 'linkedin-ads', impressionMultiplier: 0.68 }
+    ],
+    ai_productivity: [
+      { id: 'camp-aiproduct-linkedin-001', platform: 'linkedin-ads', impressionMultiplier: 0.74 },
+      { id: 'camp-aiproduct-google-001', platform: 'google-ads', impressionMultiplier: 0.96 },
+      { id: 'camp-aiproduct-microsoft-001', platform: 'microsoft-ads', impressionMultiplier: 0.8 }
+    ]
+  };
 
-    { id: 'camp-travel-dv360-001', platform: 'dv360', lob: 'travel', cpcRange: [1.8, 2.8], ctrRange: [0.9, 1.5], convRateRange: [0.016, 0.028], avgDealSize: 1400, baseImpressions: 46000 },
-    { id: 'camp-travel-meta-001', platform: 'meta-ads', lob: 'travel', cpcRange: [1.6, 2.6], ctrRange: [1.1, 2.1], convRateRange: [0.018, 0.030], avgDealSize: 900, baseImpressions: 50000 },
-    { id: 'camp-travel-tiktok-001', platform: 'tiktok-ads', lob: 'travel', cpcRange: [1.4, 2.4], ctrRange: [1.3, 2.3], convRateRange: [0.012, 0.020], avgDealSize: 1100, baseImpressions: 62000 },
-
-    { id: 'camp-fin-google-001', platform: 'google-ads', lob: 'finance', cpcRange: [6.5, 9.5], ctrRange: [2.5, 4.2], convRateRange: [0.016, 0.026], avgDealSize: 75000, baseImpressions: 14000 },
-    { id: 'camp-fin-linkedin-001', platform: 'linkedin-ads', lob: 'finance', cpcRange: [7.0, 10.5], ctrRange: [0.7, 1.2], convRateRange: [0.020, 0.032], avgDealSize: 120000, baseImpressions: 11000 },
-
-    { id: 'camp-retail-google-001', platform: 'google-ads', lob: 'retail', cpcRange: [0.6, 1.3], ctrRange: [3.5, 5.5], convRateRange: [0.030, 0.055], avgDealSize: 95, baseImpressions: 65000 },
-    { id: 'camp-retail-meta-001', platform: 'meta-ads', lob: 'retail', cpcRange: [0.5, 1.2], ctrRange: [1.4, 2.4], convRateRange: [0.020, 0.038], avgDealSize: 82, baseImpressions: 70000 },
-    { id: 'camp-retail-pinterest-001', platform: 'pinterest', lob: 'retail', cpcRange: [0.7, 1.5], ctrRange: [1.0, 1.8], convRateRange: [0.022, 0.040], avgDealSize: 88, baseImpressions: 48000 }
-  ];
+  const campaignTemplates = Object.entries(platformTemplates).flatMap(([lob, campaigns]) => {
+    const benchmark = lobBenchmarks[lob];
+    return campaigns.map((campaign) => ({
+      id: campaign.id,
+      platform: campaign.platform,
+      lob,
+      cpcRange: benchmark.cpcRange,
+      ctrRange: benchmark.ctrRange,
+      convRateRange: benchmark.convRateRange,
+      avgOrderValueRange: benchmark.avgOrderValueRange,
+      baseImpressions: Math.round(benchmark.baseImpressions * campaign.impressionMultiplier)
+    }));
+  });
 
   const rows = [];
   for (const c of campaignTemplates) {
@@ -43,18 +102,22 @@ exports.seed = async function(knex) {
       const dow = new Date(date).getDay();
       const weekend = dow === 0 || dow === 6;
       let mult = 1;
-      if (c.platform === 'linkedin-ads') mult = weekend ? 0.45 : 1;
-      if (c.lob === 'retail') mult *= weekend ? 1.2 : 1;
-      if (c.lob === 'travel') mult *= weekend ? 1.15 : 1;
 
-      const impressions = Math.round(c.baseImpressions * mult * between(0.78, 1.22));
+      if (c.platform === 'linkedin-ads') mult *= weekend ? 0.55 : 1.05;
+      if (c.platform === 'tiktok-ads') mult *= weekend ? 1.12 : 0.98;
+      if (c.platform === 'pinterest') mult *= weekend ? 1.1 : 0.95;
+      if (c.lob === 'ai_home') mult *= weekend ? 1.06 : 1;
+      if (c.lob === 'ai_vision') mult *= weekend ? 0.92 : 1.04;
+
+      const impressions = Math.round(c.baseImpressions * mult * between(0.8, 1.2));
       const ctr = between(c.ctrRange[0], c.ctrRange[1]);
-      const clicks = Math.round(impressions * ctr / 100);
+      const clicks = Math.round((impressions * ctr) / 100);
       const cpc = between(c.cpcRange[0], c.cpcRange[1]);
       const spend = clicks * cpc;
       const cr = between(c.convRateRange[0], c.convRateRange[1]);
       const conversions = Math.round(clicks * cr);
-      const revenue = conversions * c.avgDealSize * between(0.7, 1.3);
+      const aov = between(c.avgOrderValueRange[0], c.avgOrderValueRange[1]);
+      const revenue = conversions * aov * between(0.85, 1.15);
 
       rows.push({
         campaignId: c.id,
@@ -68,7 +131,14 @@ exports.seed = async function(knex) {
         cpc: Number(cpc.toFixed(2)),
         cpa: Number((conversions ? spend / conversions : 0).toFixed(2)),
         roas: Number((spend ? revenue / spend : 0).toFixed(2)),
-        metadata: JSON.stringify({ lob: c.lob, platform: c.platform, cpcBenchmarkRange: c.cpcRange }),
+        metadata: JSON.stringify({
+          lob: c.lob,
+          platform: c.platform,
+          cpcBenchmarkRange: c.cpcRange,
+          ctrBenchmarkRange: c.ctrRange,
+          conversionRateBenchmarkRange: c.convRateRange,
+          aovRange: c.avgOrderValueRange
+        }),
         syncedAt: new Date().toISOString()
       });
     }
@@ -78,5 +148,5 @@ exports.seed = async function(knex) {
     await knex('metrics').insert(rows.slice(i, i + 500));
   }
 
-  console.log(`✅ Seeded ${rows.length} LOB-aware metrics records`);
+  console.log(`✅ Seeded ${rows.length} AI LOB metrics records`);
 };
