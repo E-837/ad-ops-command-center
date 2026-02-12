@@ -29,6 +29,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const BaseConnector = require('./base-connector');
 
 const name = 'TikTok Ads';
 const shortName = 'TikTok';
@@ -1655,15 +1656,33 @@ function setStatus(newStatus) {
   lastSync = new Date().toISOString();
 }
 
-// Exports
-module.exports = {
-  name,
-  shortName,
-  version,
-  getInfo,
-  testConnection,
-  handleToolCall,
-  getTools,
-  setStatus,
-  oauth
-};
+class TikTokAdsConnector extends BaseConnector {
+  constructor() {
+    super({
+      name: 'TikTok Ads',
+      shortName: 'TikTok',
+      version: '1.0.0',
+      oauth: {
+        provider: 'tiktok',
+        scopes: ['ad_management', 'ad_reporting'],
+        apiEndpoint: 'https://business-api.tiktok.com/open_api/v1.3',
+        tokenType: 'long_lived_access_token',
+        accountIdKey: 'TIKTOK_ADVERTISER_ID'
+      },
+      envVars: ['TIKTOK_ACCESS_TOKEN', 'TIKTOK_ADVERTISER_ID'],
+      connectionCheck: (creds) => !!(creds.TIKTOK_ACCESS_TOKEN && creds.TIKTOK_ADVERTISER_ID)
+    });
+    this.tools = tools;
+  }
+
+  async performConnectionTest() { return await testConnection(); }
+  async executeLiveCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async executeSandboxCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async handleToolCall(toolName, params = {}) { return await handleToolCall(toolName, params); }
+  getInfo() { return getInfo(); }
+  getTools() { return getTools(); }
+  async testConnection() { return await testConnection(); }
+  setStatus(newStatus) { return setStatus(newStatus); }
+}
+
+module.exports = new TikTokAdsConnector();
