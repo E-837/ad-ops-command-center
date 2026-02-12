@@ -272,6 +272,16 @@ class BaseConnector {
   setStatus(newStatus) {
     this.status = newStatus;
   }
+  
+  /**
+   * Backward compatibility: handleToolCall is an alias for callTool
+   * @param {string} toolName - Name of the tool to call
+   * @param {Object} params - Tool parameters
+   * @returns {Promise<Object>} Tool execution result
+   */
+  async handleToolCall(toolName, params = {}) {
+    return await this.callTool(toolName, params);
+  }
 }
 
 module.exports = BaseConnector;
