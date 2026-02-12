@@ -24,7 +24,7 @@ router.get('/pacing', async (req, res) => {
 router.get('/insights', async (req, res) => {
   try {
     const allCampaigns = await connectors.fetchAllCampaigns({ status: 'live' });
-    
+
     // Get metrics for each campaign
     const campaignsWithMetrics = [];
     for (const campaign of allCampaigns.campaigns) {
@@ -39,10 +39,10 @@ router.get('/insights', async (req, res) => {
         campaignsWithMetrics.push(campaign);
       }
     }
-    
+
     const analyst = agents.getAgent('analyst');
     const insights = analyst.generateInsights(campaignsWithMetrics);
-    
+
     res.json(insights);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -63,13 +63,13 @@ router.get('/spend-trend', async (req, res) => {
 router.get('/ctr-comparison', async (req, res) => {
   try {
     const result = await analytics.getCTRComparison(req.query);
-    
+
     // Add benchmarks to the response
     const dataWithBenchmarks = result.data.map(platform => ({
       ...platform,
       benchmark: benchmarks[platform.platform]?.ctr || null
     }));
-    
+
     res.json({
       ...result,
       data: dataWithBenchmarks
@@ -123,27 +123,17 @@ router.get('/performance-summary', async (req, res) => {
 router.get('/platform-comparison', async (req, res) => {
   try {
     const result = await analytics.getPlatformComparison(req.query);
-    
+
     // Add benchmarks to platform data
     const platformsWithBenchmarks = result.platforms.map(platform => ({
       ...platform,
       benchmarks: benchmarks[platform.name] || {}
     }));
-    
+
     res.json({
       ...result,
       platforms: platformsWithBenchmarks
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// LOB breakdown
-router.get('/lob-breakdown', async (req, res) => {
-  try {
-    const result = await analytics.getLOBBreakdown(req.query);
-    res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -163,7 +153,7 @@ router.get('/lob-breakdown', async (req, res) => {
 router.get('/lob-options', async (req, res) => {
   try {
     const result = await analytics.getLOBBreakdown(req.query);
-    const lobs = [...new Set((result.data || []).map(item => item.lob).filter(Boolean))].sort();
+    const lobs = [...new Set((result.data || []).map((item) => item.lob).filter(Boolean))].sort();
     res.json({ data: lobs });
   } catch (err) {
     res.status(500).json({ error: err.message });
