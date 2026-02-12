@@ -29,6 +29,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const BaseConnector = require('./base-connector');
 
 const name = 'Meta Ads';
 const shortName = 'Meta';
@@ -1821,32 +1822,47 @@ async function testConnection() {
   }
 }
 
-// Export all functions following the pattern from existing connectors
-module.exports = {
-  name,
-  shortName,
-  version,
-  status,
-  lastSync,
-  oauth,
-  tools,
-  hasMetaAds,
-  getInfo,
-  handleToolCall,
-  testConnection,
-  // Individual method exports for direct access
-  getCampaigns,
-  createCampaign,
-  updateCampaign,
-  getAdSets,
-  createAdSet,
-  updateAdSet,
-  getAds,
-  createAd,
-  updateAd,
-  getInsights,
-  getAudiences,
-  createAudience,
-  getAdAccounts,
-  refreshAccessToken
-};
+class MetaAdsConnector extends BaseConnector {
+  constructor() {
+    super({
+      name: 'Meta Ads',
+      shortName: 'Meta',
+      version: '1.0.0',
+      oauth: {
+        provider: 'meta',
+        scopes: ['ads_management', 'ads_read', 'read_insights'],
+        apiEndpoint: 'https://graph.facebook.com/v22.0',
+        tokenType: 'long_lived_user_token',
+        accountIdKey: 'META_AD_ACCOUNT_ID'
+      },
+      envVars: ['META_APP_ID', 'META_APP_SECRET', 'META_ACCESS_TOKEN', 'META_AD_ACCOUNT_ID'],
+      connectionCheck: (creds) => !!(creds.META_ACCESS_TOKEN && creds.META_AD_ACCOUNT_ID)
+    });
+    this.tools = tools;
+  }
+
+  async performConnectionTest() { return await testConnection(); }
+  async executeLiveCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async executeSandboxCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async handleToolCall(toolName, params = {}) { return await handleToolCall(toolName, params); }
+  getInfo() { return getInfo(); }
+  getTools() { return tools; }
+  async testConnection() { return await testConnection(); }
+
+  async getCampaigns(params = {}) { return await getCampaigns(params); }
+  async createCampaign(params) { return await createCampaign(params); }
+  async updateCampaign(params) { return await updateCampaign(params); }
+  async getAdSets(params = {}) { return await getAdSets(params); }
+  async createAdSet(params) { return await createAdSet(params); }
+  async updateAdSet(params) { return await updateAdSet(params); }
+  async getAds(params = {}) { return await getAds(params); }
+  async createAd(params) { return await createAd(params); }
+  async updateAd(params) { return await updateAd(params); }
+  async getInsights(params = {}) { return await getInsights(params); }
+  async getAudiences(params = {}) { return await getAudiences(params); }
+  async createAudience(params) { return await createAudience(params); }
+  async getAdAccounts(params = {}) { return await getAdAccounts(params); }
+  async refreshAccessToken() { return await refreshAccessToken(); }
+}
+
+module.exports = new MetaAdsConnector();
