@@ -11,6 +11,7 @@
     "verify": "node verify-ui-ready.js",
     "verify:tests": "node scripts/verify-test-environments.js",
     "test": "node test.js",
+    "test:unit": "jest tests/unit",
     "test:db": "node test-database.js",
     "test:realtime": "node test-realtime.js",
     "test:integration": "node test-integration.js",
@@ -39,7 +40,8 @@
   },
   "devDependencies": {
     "esbuild": "^0.27.3",
-    "eventsource": "^2.0.2"
+    "eventsource": "^2.0.2",
+    "jest": "^30.2.0"
   },
   "engines": {
     "node": ">=18.0.0"
