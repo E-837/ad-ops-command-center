@@ -6,9 +6,23 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "build": "node scripts/build-frontend.js",
+    "build:prod": "NODE_ENV=production node scripts/build-frontend.js",
+    "verify": "node verify-ui-ready.js",
+    "verify:tests": "node scripts/verify-test-environments.js",
     "test": "node test.js",
     "test:db": "node test-database.js",
     "test:realtime": "node test-realtime.js",
+    "test:integration": "node test-integration.js",
+    "test:performance": "node test-performance.js",
+    "test:errors": "node test-error-handling.js",
+    "test:connectors": "node connectors/test-google-ads.js && node connectors/test-meta-ads.js && node connectors/test-pinterest.js && node connectors/test-microsoft-ads.js && node connectors/test-linkedin-ads.js && node connectors/test-tiktok-ads.js",
+    "test:google-ads": "node connectors/test-google-ads.js",
+    "test:meta-ads": "node connectors/test-meta-ads.js",
+    "test:pinterest": "node connectors/test-pinterest.js",
+    "test:microsoft-ads": "node connectors/test-microsoft-ads.js",
+    "test:linkedin-ads": "node connectors/test-linkedin-ads.js",
+    "test:tiktok-ads": "node connectors/test-tiktok-ads.js",
     "demo:realtime": "node demo-realtime.js",
     "migrate": "npx knex migrate:latest --knexfile database/knexfile.js",
     "migrate:rollback": "npx knex migrate:rollback --knexfile database/knexfile.js",
@@ -20,9 +34,11 @@
     "knex": "^3.1.0",
     "node-cron": "^3.0.3",
     "sqlite3": "^5.1.7",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
+    "esbuild": "^0.27.3",
     "eventsource": "^2.0.2"
   },
   "engines": {

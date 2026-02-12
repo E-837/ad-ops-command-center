@@ -1,11 +1,11 @@
-config/.env
 node_modules/
+.env
 *.log
-
-# Database files
+logs/
+build/
+dist/
+.DS_Store
 *.db
-*.db-journal
-*.db-shm
-*.db-wal
-database/data/*.json
-database/data-backup/
+*.sqlite
+*.sqlite3
+config/.env

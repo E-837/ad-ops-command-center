@@ -2,6 +2,17 @@
 
 > **AI-powered platform for managing digital advertising operations across search, social, and programmatic channels with intelligent automation, real-time analytics, and multi-agent orchestration.**
 
+## 🎯 Recent Updates (Feb 2026)
+
+**Code Quality Refactoring - v2.1.0**
+- ✅ **Modular Architecture:** Server.js reduced from 32KB to 5.7KB (82% reduction) with 10+ route modules
+- ✅ **BaseConnector Pattern:** DRY refactoring eliminates 30% code duplication across connectors
+- ✅ **Winston Logging:** Production-ready structured logging with file rotation
+- ✅ **Build Pipeline:** esbuild minification for optimized production deployments
+- ✅ **Technical Debt Tracking:** Comprehensive documentation in TECHNICAL-DEBT.md
+
+📖 See [REFACTORING-SUMMARY.md](./REFACTORING-SUMMARY.md) for detailed changes
+
 ## 🚀 What It Does
 
 A comprehensive ad ops platform that combines:
@@ -183,6 +194,20 @@ A comprehensive ad ops platform that combines:
 ad-ops-command/
 ├── agents/              # 9 AI agents with specialized capabilities
 ├── connectors/          # Platform integrations (Google, Meta, Pinterest + mocks)
+│   └── base-connector.js   # NEW: DRY base class for all connectors
+├── routes/              # NEW: Modular API routes (12 route files)
+│   ├── campaigns.js
+│   ├── analytics.js
+│   ├── workflows.js
+│   ├── connectors.js
+│   ├── agents.js
+│   ├── sse.js
+│   ├── integrations.js
+│   ├── projects.js
+│   ├── executions.js
+│   ├── events.js
+│   ├── templates.js
+│   └── domain.js
 ├── database/           
 │   ├── models/         # Knex.js data access layer (12 models)
 │   ├── migrations/     # Schema migrations (10 migrations)
@@ -192,13 +217,21 @@ ad-ops-command/
 ├── integrations/       # Webhooks, notifications, templates
 ├── services/           # Business logic (analytics, recommendations, A/B testing, predictions)
 ├── utils/              # Export utilities, formatters, helpers
+│   └── logger.js          # NEW: Winston structured logging
 ├── workflows/          # Automated workflows (12 workflows across 4 categories)
 ├── ui/                 # 9 HTML pages with Chart.js + SSE real-time updates
 │   ├── components/     # Reusable components (sidebar, charts)
 │   ├── css/            # Dark glass-morphism theme
 │   └── js/             # Real-time client, utilities
+├── build/              # NEW: Production-optimized frontend builds (esbuild)
+├── logs/               # NEW: Winston log files (production)
+├── scripts/            # Build and utility scripts
+│   └── build-frontend.js  # NEW: esbuild minification
 ├── docs/               # Comprehensive documentation (15+ guides)
-└── tests/              # Test suites (30+ tests, 100% pass rate)
+├── tests/              # Test suites (30+ tests, 100% pass rate)
+├── server.js           # NEW: Streamlined (5.7KB, was 32KB)
+├── REFACTORING-SUMMARY.md  # NEW: Refactoring documentation
+└── TECHNICAL-DEBT.md   # NEW: Debt tracking
 ```
 
 ## 🚀 Quick Start
@@ -221,13 +254,46 @@ npx knex seed:run --knexfile database/knexfile.js
 
 ### Start Server
 
+**Development mode:**
 ```bash
-npm start
+npm run dev
+# Serves unminified files from ui/ with auto-restart
+```
+
+**Production mode:**
+```bash
+# Build optimized frontend first
+npm run build
+
+# Start with production settings
+NODE_ENV=production npm start
+
 # Or with PM2 for production
 pm2 start ecosystem.config.js
 ```
 
 Server runs at **http://localhost:3002**
+
+### Configuration
+
+**Environment Variables (.env):**
+```bash
+# Server
+NODE_ENV=production     # Set to 'production' for optimized builds
+PORT=3002              # Server port (default: 3002)
+
+# Logging
+LOG_LEVEL=info         # debug, info, warn, error
+LOG_FILES=true         # Enable file logging (auto-enabled in production)
+
+# Connectors (optional - work in sandbox mode without these)
+META_ACCESS_TOKEN=your_token
+META_AD_ACCOUNT_ID=act_xxx
+GOOGLE_ADS_DEVELOPER_TOKEN=your_token
+GOOGLE_ADS_CUSTOMER_ID=xxx
+PINTEREST_ACCESS_TOKEN=your_token
+PINTEREST_AD_ACCOUNT_ID=xxx
+```
 
 ### Run Tests
 
