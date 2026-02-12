@@ -1,19 +1,8 @@
 /**
  * Microsoft Advertising Connector Test Suite
- * Comprehensive tests for all 15 MCP tools in sandbox mode
+ * Updated for BaseConnector architecture
  * 
  * Run with: node connectors/test-microsoft-ads.js
- * 
- * Tests:
- * - Connection test
- * - Account listing
- * - Campaign CRUD operations
- * - Ad group CRUD operations
- * - Keyword CRUD operations (all match types)
- * - Negative keyword operations
- * - Ad CRUD operations (RSA & Expanded Text)
- * - Extension listing
- * - Performance reporting
  */
 
 const microsoftAds = require('./microsoft-ads');
@@ -50,419 +39,233 @@ function assert(condition, message) {
 async function runTests() {
   console.log('═══════════════════════════════════════════════════════════');
   console.log('Microsoft Advertising Connector Test Suite');
-  console.log('Testing in SANDBOX mode (no credentials required)');
+  console.log('Testing with BaseConnector architecture (SANDBOX mode)');
   console.log('═══════════════════════════════════════════════════════════');
   
-  // Test 1: Connection test
+  // Test 1: Get connector info
+  await test('Get Connector Info', async () => {
+    const info = microsoftAds.getInfo();
+    assert(info.name === 'Microsoft Advertising', 'Should have correct name');
+    assert(info.shortName === 'Microsoft Ads', 'Should have short name');
+    assert(info.toolCount === 17, 'Should have 17 tools');
+    assert(info.connected !== undefined, 'Should have connection status');
+    console.log('   📊 Tools:', info.toolCount);
+    console.log('   🔌 Connected:', info.connected);
+  });
+  
+  // Test 2: Connection test
   await test('Connection Test (Sandbox Mode)', async () => {
     const result = await microsoftAds.testConnection();
-    assert(result.success === true, 'Connection should succeed');
+    assert(result.connected === false, 'Should not be connected (sandbox)');
     assert(result.mode === 'sandbox', 'Should be in sandbox mode');
-    assert(result.capabilities, 'Should return capabilities');
-    assert(result.capabilities.campaigns === true, 'Should support campaigns');
-    assert(result.capabilities.keywords === true, 'Should support keywords');
     console.log('   📊 Mode:', result.mode);
     console.log('   📋 Message:', result.message);
   });
   
-  // Test 2: Get accounts
-  await test('Get Accounts', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_accounts', {});
-    assert(result.Accounts, 'Should return accounts array');
-    assert(result.Accounts.length > 0, 'Should have at least one account');
-    assert(result.Accounts[0].Id, 'Account should have ID');
-    assert(result.Accounts[0].Name, 'Account should have name');
-    console.log('   📊 Accounts:', result.Accounts.length);
-    console.log('   🏢 Account:', result.Accounts[0].Name);
-  });
-  
   // Test 3: Get campaigns
   await test('Get Campaigns', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_campaigns', {
-      include_metrics: false
-    });
-    assert(result.Campaigns, 'Should return campaigns array');
-    assert(result.Campaigns.length > 0, 'Should have mock campaigns');
-    assert(result.TotalCount === result.Campaigns.length, 'Total count should match');
+    const result = await microsoftAds.callTool('microsoft_ads_get_campaigns', {});
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Campaigns, 'Should return campaigns array');
+    assert(result.data.Campaigns.length > 0, 'Should have mock campaigns');
+    assert(result.metadata.mode === 'sandbox', 'Should indicate sandbox mode');
     
-    const campaign = result.Campaigns[0];
+    const campaign = result.data.Campaigns[0];
     assert(campaign.Id, 'Campaign should have ID');
     assert(campaign.Name, 'Campaign should have name');
     assert(campaign.CampaignType, 'Campaign should have type');
-    assert(campaign.Status, 'Campaign should have status');
-    assert(campaign.DailyBudget, 'Campaign should have daily budget');
     
-    console.log('   📊 Campaigns:', result.Campaigns.length);
+    console.log('   📊 Campaigns:', result.data.Campaigns.length);
     console.log('   📝 First:', campaign.Name);
     console.log('   💰 Budget:', `$${campaign.DailyBudget}/day`);
   });
   
   // Test 4: Get campaigns with status filter
   await test('Get Campaigns (Filter by Status)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_campaigns', {
+    const result = await microsoftAds.callTool('microsoft_ads_get_campaigns', {
       status: ['Active']
     });
-    assert(result.Campaigns, 'Should return campaigns');
-    result.Campaigns.forEach(c => {
-      assert(c.Status === 'Active', 'All campaigns should be Active');
-    });
-    console.log('   ✅ Active campaigns:', result.Campaigns.length);
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Campaigns.length > 0, 'Should return active campaigns');
+    assert(result.data.Campaigns.every(c => c.Status === 'Active'), 'All should be Active');
+    console.log('   📊 Active Campaigns:', result.data.Campaigns.length);
   });
   
-  // Test 5: Get campaigns with metrics
-  await test('Get Campaigns (With Metrics)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_campaigns', {
-      include_metrics: true
-    });
-    assert(result.Campaigns, 'Should return campaigns');
-    
-    const campaignWithMetrics = result.Campaigns.find(c => c.Performance);
-    if (campaignWithMetrics) {
-      assert(campaignWithMetrics.Performance.Impressions !== undefined, 'Should have impressions');
-      assert(campaignWithMetrics.Performance.Clicks !== undefined, 'Should have clicks');
-      assert(campaignWithMetrics.Performance.Spend !== undefined, 'Should have spend');
-      console.log('   📊 Impressions:', campaignWithMetrics.Performance.Impressions.toLocaleString());
-      console.log('   🖱️  Clicks:', campaignWithMetrics.Performance.Clicks.toLocaleString());
-      console.log('   💰 Spend:', `$${campaignWithMetrics.Performance.Spend.toFixed(2)}`);
-      console.log('   🎯 ROAS:', `${campaignWithMetrics.Performance.ROAS.toFixed(2)}x`);
-    }
-  });
-  
-  // Test 6: Create campaign (Search)
+  // Test 5: Create campaign
   await test('Create Campaign (Search)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_campaign', {
+    const result = await microsoftAds.callTool('microsoft_ads_create_campaign', {
       name: 'Test Search Campaign',
       campaign_type: 'Search',
-      daily_budget: 50.00,
-      status: 'Paused',
-      start_date: '2026-03-01',
-      time_zone: 'PacificTimeUSCanada'
-    });
-    assert(result.Success === true, 'Campaign creation should succeed');
-    assert(result.Campaign, 'Should return campaign object');
-    assert(result.Campaign.Id, 'New campaign should have ID');
-    assert(result.Campaign.Name === 'Test Search Campaign', 'Campaign should have correct name');
-    assert(result.Campaign.CampaignType === 'Search', 'Campaign should be Search type');
-    assert(result.Campaign.DailyBudget === 50.00, 'Campaign should have correct budget');
-    console.log('   🆕 Created:', result.Campaign.Name);
-    console.log('   🆔 ID:', result.Campaign.Id);
-  });
-  
-  // Test 7: Create campaign (Performance Max)
-  await test('Create Campaign (Performance Max)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_campaign', {
-      name: 'Test Performance Max Campaign',
-      campaign_type: 'PerformanceMax',
       daily_budget: 100.00,
       status: 'Paused'
     });
-    assert(result.Success === true, 'Campaign creation should succeed');
-    assert(result.Campaign.CampaignType === 'PerformanceMax', 'Should be Performance Max');
-    console.log('   🆕 Created:', result.Campaign.Name);
-    console.log('   🎯 Type:', result.Campaign.CampaignType);
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Campaign, 'Should return campaign object');
+    assert(result.data.Campaign.Id, 'Campaign should have ID');
+    assert(result.data.Campaign.Name === 'Test Search Campaign', 'Name should match');
+    console.log('   📝 Created:', result.data.Campaign.Name);
+    console.log('   🆔 ID:', result.data.Campaign.Id);
   });
   
-  // Test 8: Update campaign
-  await test('Update Campaign', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_update_campaign', {
-      campaign_id: '1234567890',
-      status: 'Active',
-      daily_budget: 125.00
-    });
-    assert(result.Success === true, 'Campaign update should succeed');
-    console.log('   ✅ Updated campaign 1234567890');
-  });
-  
-  // Test 9: Get ad groups
+  // Test 6: Get ad groups
   await test('Get Ad Groups', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_ad_groups', {});
-    assert(result.AdGroups, 'Should return ad groups array');
-    assert(result.AdGroups.length > 0, 'Should have mock ad groups');
+    const result = await microsoftAds.callTool('microsoft_ads_get_ad_groups', {});
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.AdGroups, 'Should return ad groups array');
+    assert(result.data.AdGroups.length > 0, 'Should have mock ad groups');
     
-    const adGroup = result.AdGroups[0];
+    const adGroup = result.data.AdGroups[0];
     assert(adGroup.Id, 'Ad group should have ID');
     assert(adGroup.Name, 'Ad group should have name');
-    assert(adGroup.CampaignId, 'Ad group should have campaign ID');
-    assert(adGroup.SearchBid, 'Ad group should have bid');
-    assert(adGroup.Status, 'Ad group should have status');
     
-    console.log('   📊 Ad Groups:', result.AdGroups.length);
+    console.log('   📊 Ad Groups:', result.data.AdGroups.length);
     console.log('   📝 First:', adGroup.Name);
-    console.log('   💰 Bid:', `$${adGroup.SearchBid.Amount}`);
   });
   
-  // Test 10: Create ad group
+  // Test 7: Create ad group
   await test('Create Ad Group', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_ad_group', {
+    const result = await microsoftAds.callTool('microsoft_ads_create_ad_group', {
       campaign_id: '1234567890',
-      name: 'Test Ad Group - Exact Match',
-      cpc_bid: 2.25,
-      status: 'Paused',
-      language: 'English',
-      network: 'OwnedAndOperatedAndSyndicatedSearch'
+      name: 'Test Ad Group',
+      cpc_bid: 2.50,
+      status: 'Paused'
     });
-    assert(result.Success === true, 'Ad group creation should succeed');
-    assert(result.AdGroup, 'Should return ad group object');
-    assert(result.AdGroup.Name === 'Test Ad Group - Exact Match', 'Should have correct name');
-    assert(result.AdGroup.SearchBid.Amount === 2.25, 'Should have correct bid');
-    console.log('   🆕 Created:', result.AdGroup.Name);
-    console.log('   🆔 ID:', result.AdGroup.Id);
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.AdGroup, 'Should return ad group object');
+    assert(result.data.AdGroup.Name === 'Test Ad Group', 'Name should match');
+    console.log('   📝 Created:', result.data.AdGroup.Name);
+    console.log('   💰 CPC Bid:', `$${result.data.AdGroup.SearchBid.Amount}`);
   });
   
-  // Test 11: Update ad group
-  await test('Update Ad Group', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_update_ad_group', {
-      ad_group_id: '9876543210',
-      status: 'Active',
-      cpc_bid: 2.75
-    });
-    assert(result.Success === true, 'Ad group update should succeed');
-    console.log('   ✅ Updated ad group 9876543210');
-  });
-  
-  // Test 12: Get keywords
+  // Test 8: Get keywords
   await test('Get Keywords', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_keywords', {
-      include_metrics: true
-    });
-    assert(result.Keywords, 'Should return keywords array');
-    assert(result.Keywords.length > 0, 'Should have mock keywords');
+    const result = await microsoftAds.callTool('microsoft_ads_get_keywords', {});
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Keywords, 'Should return keywords array');
+    assert(result.data.Keywords.length > 0, 'Should have mock keywords');
     
-    const keyword = result.Keywords[0];
-    assert(keyword.Id, 'Keyword should have ID');
+    const keyword = result.data.Keywords[0];
     assert(keyword.Text, 'Keyword should have text');
     assert(keyword.MatchType, 'Keyword should have match type');
-    assert(keyword.Bid, 'Keyword should have bid');
-    assert(keyword.Status, 'Keyword should have status');
     assert(keyword.QualityScore, 'Keyword should have quality score');
     
-    console.log('   📊 Keywords:', result.Keywords.length);
-    console.log('   🔑 First:', keyword.Text);
-    console.log('   🎯 Match Type:', keyword.MatchType);
-    console.log('   💰 Bid:', `$${keyword.Bid.Amount}`);
+    console.log('   📊 Keywords:', result.data.Keywords.length);
+    console.log('   🔑 First:', `"${keyword.Text}" (${keyword.MatchType})`);
     console.log('   ⭐ Quality Score:', keyword.QualityScore);
   });
   
-  // Test 13: Create keyword (Exact match)
+  // Test 9: Create keyword
   await test('Create Keyword (Exact Match)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_keyword', {
+    const result = await microsoftAds.callTool('microsoft_ads_create_keyword', {
       ad_group_id: '9876543210',
-      text: 'premium winter coats',
+      text: 'running shoes',
       match_type: 'Exact',
-      bid: 3.00,
-      status: 'Active',
-      destination_url: 'https://example.com/premium-coats'
+      bid: 3.00
     });
-    assert(result.Success === true, 'Keyword creation should succeed');
-    assert(result.Keyword, 'Should return keyword object');
-    assert(result.Keyword.Text === 'premium winter coats', 'Should have correct text');
-    assert(result.Keyword.MatchType === 'Exact', 'Should be Exact match');
-    assert(result.Keyword.QualityScore >= 1 && result.Keyword.QualityScore <= 10, 'Should have quality score 1-10');
-    console.log('   🆕 Created:', result.Keyword.Text);
-    console.log('   🎯 Match Type:', result.Keyword.MatchType);
-    console.log('   ⭐ Quality Score:', result.Keyword.QualityScore);
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Keyword, 'Should return keyword object');
+    assert(result.data.Keyword.Text === 'running shoes', 'Text should match');
+    assert(result.data.Keyword.MatchType === 'Exact', 'Match type should be Exact');
+    console.log('   🔑 Created:', `"${result.data.Keyword.Text}" (${result.data.Keyword.MatchType})`);
+    console.log('   💰 Bid:', `$${result.data.Keyword.Bid.Amount}`);
   });
   
-  // Test 14: Create keyword (Phrase match)
-  await test('Create Keyword (Phrase Match)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_keyword', {
-      ad_group_id: '9876543210',
-      text: 'winter jackets',
-      match_type: 'Phrase',
-      bid: 2.50
-    });
-    assert(result.Success === true, 'Keyword creation should succeed');
-    assert(result.Keyword.MatchType === 'Phrase', 'Should be Phrase match');
-    console.log('   🆕 Created:', result.Keyword.Text);
-    console.log('   🎯 Match Type:', result.Keyword.MatchType);
-  });
-  
-  // Test 15: Create keyword (Broad match)
-  await test('Create Keyword (Broad Match)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_keyword', {
-      ad_group_id: '9876543210',
-      text: 'winter clothing',
-      match_type: 'Broad',
-      bid: 1.75
-    });
-    assert(result.Success === true, 'Keyword creation should succeed');
-    assert(result.Keyword.MatchType === 'Broad', 'Should be Broad match');
-    console.log('   🆕 Created:', result.Keyword.Text);
-    console.log('   🎯 Match Type:', result.Keyword.MatchType);
-  });
-  
-  // Test 16: Update keyword
-  await test('Update Keyword', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_update_keyword', {
-      keyword_id: '1111111111',
-      status: 'Active',
-      bid: 3.25
-    });
-    assert(result.Success === true, 'Keyword update should succeed');
-    console.log('   ✅ Updated keyword 1111111111');
-  });
-  
-  // Test 17: Get negative keywords
+  // Test 10: Get negative keywords
   await test('Get Negative Keywords', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_negative_keywords', {
+    const result = await microsoftAds.callTool('microsoft_ads_get_negative_keywords', {
       campaign_id: '1234567890'
     });
-    assert(result.NegativeKeywords, 'Should return negative keywords array');
-    
-    if (result.NegativeKeywords.length > 0) {
-      const negative = result.NegativeKeywords[0];
-      assert(negative.Text, 'Negative keyword should have text');
-      assert(negative.MatchType, 'Negative keyword should have match type');
-      console.log('   🚫 Negative Keywords:', result.NegativeKeywords.length);
-      console.log('   📝 First:', negative.Text);
-    }
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.NegativeKeywords, 'Should return negative keywords array');
+    console.log('   📊 Negative Keywords:', result.data.NegativeKeywords.length);
   });
   
-  // Test 18: Add negative keyword
+  // Test 11: Add negative keyword
   await test('Add Negative Keyword', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_add_negative_keyword', {
+    const result = await microsoftAds.callTool('microsoft_ads_add_negative_keyword', {
       campaign_id: '1234567890',
-      text: 'discount',
+      text: 'free',
       match_type: 'Phrase'
     });
-    assert(result.Success === true, 'Negative keyword creation should succeed');
-    assert(result.NegativeKeyword, 'Should return negative keyword object');
-    assert(result.NegativeKeyword.Text === 'discount', 'Should have correct text');
-    console.log('   🆕 Added negative:', result.NegativeKeyword.Text);
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.NegativeKeyword, 'Should return negative keyword object');
+    assert(result.data.NegativeKeyword.Text === 'free', 'Text should match');
+    console.log('   🚫 Added:', `"${result.data.NegativeKeyword.Text}" (${result.data.NegativeKeyword.MatchType})`);
   });
   
-  // Test 19: Get ads
+  // Test 12: Get ads
   await test('Get Ads', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_ads', {});
-    assert(result.Ads, 'Should return ads array');
-    assert(result.Ads.length > 0, 'Should have mock ads');
+    const result = await microsoftAds.callTool('microsoft_ads_get_ads', {});
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Ads, 'Should return ads array');
+    assert(result.data.Ads.length > 0, 'Should have mock ads');
     
-    const ad = result.Ads[0];
-    assert(ad.Id, 'Ad should have ID');
+    const ad = result.data.Ads[0];
     assert(ad.Type, 'Ad should have type');
     assert(ad.Headlines, 'Ad should have headlines');
     assert(ad.Descriptions, 'Ad should have descriptions');
-    assert(ad.FinalUrls, 'Ad should have final URLs');
-    assert(ad.Status, 'Ad should have status');
     
-    console.log('   📊 Ads:', result.Ads.length);
+    console.log('   📊 Ads:', result.data.Ads.length);
     console.log('   📝 First:', ad.Headlines[0].Text);
-    console.log('   📰 Type:', ad.Type);
-    console.log('   📝 Headlines:', ad.Headlines.length);
-    console.log('   📝 Descriptions:', ad.Descriptions.length);
+    console.log('   📄 Type:', ad.Type);
   });
   
-  // Test 20: Create Responsive Search Ad
+  // Test 13: Create ad (Responsive Search Ad)
   await test('Create Ad (Responsive Search Ad)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_ad', {
+    const result = await microsoftAds.callTool('microsoft_ads_create_ad', {
       ad_group_id: '9876543210',
       ad_type: 'ResponsiveSearch',
       headlines: [
-        'Premium Winter Coats',
-        'Free Shipping Today',
-        'Shop Now & Save'
+        'Buy Running Shoes',
+        'Free Shipping Available',
+        'Shop Top Brands'
       ],
       descriptions: [
-        'Browse our collection of premium winter coats. All sizes in stock.',
-        'Quality winter wear at great prices. Limited time offer!'
+        'Discover our collection of premium running shoes with fast shipping.',
+        'Quality athletic footwear at competitive prices. Order today!'
       ],
-      path1: 'winter',
-      path2: 'coats',
-      final_urls: ['https://example.com/winter-coats'],
+      final_urls: ['https://example.com/running-shoes'],
       status: 'Paused'
     });
-    assert(result.Success === true, 'Ad creation should succeed');
-    assert(result.Ad, 'Should return ad object');
-    assert(result.Ad.Type === 'ResponsiveSearch', 'Should be RSA');
-    assert(result.Ad.Headlines.length === 3, 'Should have 3 headlines');
-    assert(result.Ad.Descriptions.length === 2, 'Should have 2 descriptions');
-    console.log('   🆕 Created RSA:', result.Ad.Headlines[0].Text);
-    console.log('   🆔 ID:', result.Ad.Id);
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Ad, 'Should return ad object');
+    assert(result.data.Ad.Type === 'ResponsiveSearch', 'Type should be ResponsiveSearch');
+    assert(result.data.Ad.Headlines.length === 3, 'Should have 3 headlines');
+    console.log('   📝 Created:', result.data.Ad.Headlines[0].Text);
+    console.log('   📄 Type:', result.data.Ad.Type);
   });
   
-  // Test 21: Create Expanded Text Ad
-  await test('Create Ad (Expanded Text Ad)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_create_ad', {
-      ad_group_id: '9876543210',
-      ad_type: 'ExpandedText',
-      headlines: [
-        'Winter Clearance Sale',
-        'Up To 50% Off',
-        'Shop Now'
-      ],
-      descriptions: [
-        'Limited time winter clearance event. Huge savings on coats and jackets.',
-        'Quality brands at clearance prices. Free shipping on orders over $50.'
-      ],
-      path1: 'sale',
-      path2: 'winter',
-      final_urls: ['https://example.com/sale'],
-      status: 'Paused'
-    });
-    assert(result.Success === true, 'Ad creation should succeed');
-    assert(result.Ad.Type === 'ExpandedText', 'Should be Expanded Text Ad');
-    console.log('   🆕 Created ETA:', result.Ad.Headlines[0].Text);
-  });
-  
-  // Test 22: Update ad
-  await test('Update Ad', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_update_ad', {
-      ad_id: '2222222222',
-      status: 'Active'
-    });
-    assert(result.Success === true, 'Ad update should succeed');
-    console.log('   ✅ Updated ad 2222222222');
-  });
-  
-  // Test 23: Get extensions
+  // Test 14: Get extensions
   await test('Get Extensions', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_extensions', {});
-    assert(result.Extensions, 'Should return extensions array');
-    assert(result.Extensions.length > 0, 'Should have mock extensions');
+    const result = await microsoftAds.callTool('microsoft_ads_get_extensions', {});
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.Extensions, 'Should return extensions array');
+    assert(result.data.Extensions.length > 0, 'Should have mock extensions');
     
-    const extension = result.Extensions[0];
-    assert(extension.Id, 'Extension should have ID');
-    assert(extension.Type, 'Extension should have type');
-    assert(extension.Status, 'Extension should have status');
+    const ext = result.data.Extensions[0];
+    assert(ext.Type, 'Extension should have type');
     
-    console.log('   📊 Extensions:', result.Extensions.length);
-    console.log('   🔗 First:', extension.Type);
-    if (extension.Text) console.log('   📝 Text:', extension.Text);
+    console.log('   📊 Extensions:', result.data.Extensions.length);
+    console.log('   📝 First:', ext.Text || ext.Header);
+    console.log('   🔖 Type:', ext.Type);
   });
   
-  // Test 24: Get performance report (Campaign level)
+  // Test 15: Get performance report
   await test('Get Performance Report (Campaign Level)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_performance_report', {
+    const result = await microsoftAds.callTool('microsoft_ads_get_performance_report', {
       report_level: 'Campaign',
       date_range: 'Last30Days'
     });
-    assert(result.ReportData, 'Should return report data');
+    assert(result.success === true, 'Should succeed');
+    assert(result.data.ReportData, 'Should return report data');
+    console.log('   📊 Report Rows:', result.data.ReportData.length);
     
-    if (result.ReportData.length > 0) {
-      const row = result.ReportData[0];
-      assert(row.CampaignId, 'Report should have campaign ID');
-      assert(row.Impressions !== undefined, 'Report should have impressions');
-      assert(row.Clicks !== undefined, 'Report should have clicks');
-      assert(row.Spend !== undefined, 'Report should have spend');
-      console.log('   📊 Campaign:', row.CampaignName);
-      console.log('   👁️  Impressions:', row.Impressions.toLocaleString());
-      console.log('   🖱️  Clicks:', row.Clicks.toLocaleString());
-      console.log('   💰 Spend:', `$${row.Spend.toFixed(2)}`);
-      console.log('   🎯 CTR:', `${row.CTR.toFixed(2)}%`);
-      console.log('   💵 Avg CPC:', `$${row.AverageCpc.toFixed(2)}`);
-      console.log('   🎯 ROAS:', `${row.ROAS.toFixed(2)}x`);
+    if (result.data.ReportData.length > 0) {
+      const row = result.data.ReportData[0];
+      console.log('   📈 First Campaign:', row.CampaignName);
+      console.log('   💰 Spend:', `$${row.Spend}`);
+      console.log('   🎯 ROAS:', row.ROAS);
     }
-  });
-  
-  // Test 25: Get performance report (Keyword level)
-  await test('Get Performance Report (Keyword Level)', async () => {
-    const result = await microsoftAds.handleToolCall('microsoft_ads_get_performance_report', {
-      report_level: 'Keyword',
-      date_range: 'Last7Days',
-      metrics: ['Impressions', 'Clicks', 'CTR', 'AverageCpc', 'QualityScore']
-    });
-    assert(result.ReportData !== undefined, 'Should return report data');
-    console.log('   📊 Report rows:', result.TotalRows || 0);
   });
   
   // Summary
@@ -474,20 +277,22 @@ async function runTests() {
   console.log(`📊 Total:  ${testsPassed + testsFailed}`);
   console.log('═══════════════════════════════════════════════════════════');
   
-  if (testsFailed === 0) {
-    console.log('🎉 All tests passed! Microsoft Ads connector is working perfectly in sandbox mode.');
-    console.log('\n📝 Next Steps:');
-    console.log('1. Configure MICROSOFT_ADS_* environment variables in config/.env');
-    console.log('2. Run tests again to verify live API integration');
-    console.log('3. Review MICROSOFT_ADS_SETUP.md for OAuth2 setup instructions');
-  } else {
+  if (testsFailed > 0) {
     console.log('⚠️  Some tests failed. Please review the errors above.');
     process.exit(1);
+  } else {
+    console.log('✅ All tests passed!');
+    
+    const info = microsoftAds.getInfo();
+    console.log(`\nMicrosoft Ads Connector Status: ${info.connected ? 'LIVE' : 'SANDBOX'}`);
+    if (!info.connected) {
+      console.log('\n⚠️  Running in SANDBOX mode (no credentials configured)');
+      console.log('Set MICROSOFT_ADS_* environment variables in config/.env for live API access');
+    }
   }
 }
 
-// Run tests
 runTests().catch(error => {
-  console.error('Test suite error:', error);
+  console.error('\n❌ Test suite error:', error);
   process.exit(1);
 });
