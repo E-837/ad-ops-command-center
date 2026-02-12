@@ -491,6 +491,13 @@ canvas {
   outline-offset: 2px;
 }
 
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.25);
+}
+
 /* Skip to main content link */
 .skip-link {
   position: absolute;

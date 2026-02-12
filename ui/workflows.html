@@ -55,11 +55,11 @@
     </header>
 
     <!-- Main Tabs -->
-    <div class="main-tabs" style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 0;">
-      <button class="main-tab active" onclick="switchMainTab('workflows')" style="background: none; border: none; border-bottom: 2px solid #3b82f6; color: #fff; padding: 12px 24px; font-size: 16px; font-weight: 500; cursor: pointer; margin-bottom: -2px;">
+    <div class="main-tabs tabs">
+      <button class="main-tab tabs__item active" onclick="switchMainTab('workflows')">
         Workflows
       </button>
-      <button class="main-tab" onclick="switchMainTab('templates')" style="background: none; border: none; border-bottom: 2px solid transparent; color: rgba(255,255,255,0.6); padding: 12px 24px; font-size: 16px; font-weight: 500; cursor: pointer; margin-bottom: -2px;">
+      <button class="main-tab tabs__item" onclick="switchMainTab('templates')">
         Templates
       </button>
     </div>
@@ -92,7 +92,7 @@
     </div>
 
     <!-- Templates View -->
-    <div id="templates-view" style="display: none;">
+    <div id="templates-view" class="templates-view">
       <!-- Template Categories -->
       <div class="category-tabs">
         <button class="template-category-tab active" data-category="all" onclick="switchTemplateCategory('all')">
@@ -120,8 +120,8 @@
   </main>
 
   <!-- Workflow Detail Modal -->
-  <div id="workflow-modal" class="modal" style="display: none;">
-    <div class="modal-content glass" style="max-width: 700px;">
+  <div id="workflow-modal" class="modal workflow-modal">
+    <div class="modal-content glass modal-content--wide">
       <div class="modal-header">
         <h3 id="modal-workflow-name">Workflow</h3>
         <button class="modal-close" onclick="hideWorkflowModal()">×</button>
@@ -226,8 +226,8 @@
           ` : ''}
 
           <div class="workflow-actions">
-            <button class="btn-secondary" onclick="viewWorkflowDetails('${workflow.id}')">View Details</button>
-            <button class="btn-primary" onclick="runWorkflowForm('${workflow.id}')">▶️ Run</button>
+            <button class="btn btn--secondary" onclick="viewWorkflowDetails('${workflow.id}')">View Details</button>
+            <button class="btn btn--primary" onclick="runWorkflowForm('${workflow.id}')">▶️ Run</button>
           </div>
         </div>
       `).join('');
@@ -319,8 +319,8 @@
           ` : ''}
 
           <div class="modal-footer">
-            <button class="btn-secondary" onclick="hideWorkflowModal()">Close</button>
-            <button class="btn-primary" onclick="runWorkflowForm('${workflow.id}')">▶️ Run Workflow</button>
+            <button class="btn btn--secondary" onclick="hideWorkflowModal()">Close</button>
+            <button class="btn btn--primary" onclick="runWorkflowForm('${workflow.id}')">▶️ Run Workflow</button>
           </div>
         </div>
       `;
@@ -358,8 +358,8 @@
           ` : '<p>This workflow requires no input parameters.</p>'}
 
           <div class="modal-footer">
-            <button type="button" class="btn-secondary" onclick="hideWorkflowModal()">Cancel</button>
-            <button type="submit" class="btn-primary">▶️ Execute</button>
+            <button type="button" class="btn btn--secondary" onclick="hideWorkflowModal()">Cancel</button>
+            <button type="submit" class="btn btn--primary">▶️ Execute</button>
           </div>
         </form>
       `;
@@ -557,6 +557,22 @@
       font-size: 0.9rem;
     }
 
+    .workflow-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .workflow-tag--presets {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+
     .workflow-stages {
       margin-bottom: 15px;
       padding-top: 15px;
@@ -592,6 +608,25 @@
 
     .workflow-actions button {
       flex: 1;
+    }
+
+    .templates-view {
+      display: none;
+    }
+
+    .main-tabs {
+      margin-bottom: 24px;
+      gap: 8px;
+    }
+
+    .main-tabs .main-tab {
+      margin-bottom: -2px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .modal-content--wide {
+      max-width: 700px;
     }
 
     /* Modal styles */
@@ -808,12 +843,8 @@
       // Update tab UI
       document.querySelectorAll('.main-tab').forEach(t => {
         t.classList.remove('active');
-        t.style.borderBottomColor = 'transparent';
-        t.style.color = 'rgba(255,255,255,0.6)';
       });
       event.target.classList.add('active');
-      event.target.style.borderBottomColor = '#3b82f6';
-      event.target.style.color = '#fff';
 
       // Show/hide views
       if (tab === 'workflows') {
@@ -875,7 +906,7 @@
           </div>
           <div class="workflow-meta">
             <span class="workflow-tag">${getCategoryLabel(template.category)}</span>
-            ${template.presets ? `<span class="workflow-tag" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">${template.presets.length} presets</span>` : ''}
+            ${template.presets ? `<span class="workflow-tag workflow-tag--presets">${template.presets.length} presets</span>` : ''}
           </div>
         </div>
       `).join('');

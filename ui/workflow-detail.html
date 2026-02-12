@@ -129,7 +129,7 @@
           <div class="error-state glass">
             <h2>Execution Not Found</h2>
             <p>The execution "${executionId}" could not be found.</p>
-            <a href="/workflows" class="btn-primary">Back to Workflows</a>
+            <a href="/workflows" class="btn btn--primary">Back to Workflows</a>
           </div>
         `;
       }
@@ -179,13 +179,13 @@
       const actions = [];
 
       if (executionData.status === 'failed') {
-        actions.push('<button class="btn-secondary" onclick="retryExecution()">🔄 Retry</button>');
+        actions.push('<button class="btn btn--secondary" onclick="retryExecution()">🔄 Retry</button>');
       }
 
-      actions.push('<button class="btn-secondary" onclick="exportResults()">📥 Export</button>');
+      actions.push('<button class="btn btn--secondary" onclick="exportResults()">📥 Export</button>');
 
       if (executionData.logs) {
-        actions.push('<button class="btn-secondary" onclick="viewLogs()">📋 View Logs</button>');
+        actions.push('<button class="btn btn--secondary" onclick="viewLogs()">📋 View Logs</button>');
       }
 
       actionsContainer.innerHTML = actions.join('');

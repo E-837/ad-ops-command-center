@@ -404,7 +404,7 @@ textarea:focus {
 
 /* ===== NOTIFICATION ANIMATIONS ===== */
 
-@keyframes slideInRight {
+@keyframes toastSlideInRight {
   from {
     opacity: 0;
     transform: translateX(100%);
@@ -427,7 +427,7 @@ textarea:focus {
 }
 
 .notification-enter {
-  animation: slideInRight 0.3s ease forwards;
+  animation: toastSlideInRight 0.3s ease forwards;
 }
 
 .notification-exit {
