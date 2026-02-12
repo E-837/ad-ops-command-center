@@ -29,6 +29,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const BaseConnector = require('./base-connector');
 
 const name = 'Pinterest Ads';
 const shortName = 'Pinterest';
@@ -1905,34 +1906,48 @@ function getInfo() {
   };
 }
 
-// =============================================================================
-// EXPORTS
-// =============================================================================
+class PinterestAdsConnector extends BaseConnector {
+  constructor() {
+    super({
+      name: 'Pinterest Ads',
+      shortName: 'Pinterest',
+      version: '1.0.0',
+      oauth: {
+        provider: 'pinterest',
+        scopes: ['ads:read', 'ads:write', 'user_accounts:read', 'boards:read', 'pins:read', 'pins:write'],
+        apiEndpoint: 'https://api.pinterest.com/v5',
+        tokenType: 'oauth2_access_token',
+        accountIdKey: 'PINTEREST_AD_ACCOUNT_ID'
+      },
+      envVars: ['PINTEREST_APP_ID', 'PINTEREST_APP_SECRET', 'PINTEREST_ACCESS_TOKEN', 'PINTEREST_AD_ACCOUNT_ID'],
+      connectionCheck: (creds) => !!(creds.PINTEREST_ACCESS_TOKEN && creds.PINTEREST_AD_ACCOUNT_ID)
+    });
+    this.tools = tools;
+  }
 
-module.exports = {
-  name,
-  shortName,
-  version,
-  status,
-  oauth,
-  testConnection,
-  handleToolCall,
-  getTools,
-  getInfo,
-  // Direct function exports for internal use
-  getCampaigns,
-  createCampaign,
-  updateCampaign,
-  getAdGroups,
-  createAdGroup,
-  updateAdGroup,
-  getAds,
-  createAd,
-  updateAd,
-  getAudiences,
-  createAudience,
-  getInsights,
-  getAdAccounts,
-  getPins,
-  createPin
-};
+  async performConnectionTest() { return await testConnection(); }
+  async executeLiveCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async executeSandboxCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async handleToolCall(toolName, params = {}) { return await handleToolCall(toolName, params); }
+  getInfo() { return getInfo(); }
+  getTools() { return getTools(); }
+  async testConnection() { return await testConnection(); }
+
+  async getCampaigns(params = {}) { return await getCampaigns(params); }
+  async createCampaign(params) { return await createCampaign(params); }
+  async updateCampaign(params) { return await updateCampaign(params); }
+  async getAdGroups(params = {}) { return await getAdGroups(params); }
+  async createAdGroup(params) { return await createAdGroup(params); }
+  async updateAdGroup(params) { return await updateAdGroup(params); }
+  async getAds(params = {}) { return await getAds(params); }
+  async createAd(params) { return await createAd(params); }
+  async updateAd(params) { return await updateAd(params); }
+  async getAudiences(params = {}) { return await getAudiences(params); }
+  async createAudience(params) { return await createAudience(params); }
+  async getInsights(params = {}) { return await getInsights(params); }
+  async getAdAccounts(params = {}) { return await getAdAccounts(params); }
+  async getPins(params = {}) { return await getPins(params); }
+  async createPin(params) { return await createPin(params); }
+}
+
+module.exports = new PinterestAdsConnector();
