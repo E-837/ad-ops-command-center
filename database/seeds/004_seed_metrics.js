@@ -15,16 +15,16 @@ exports.seed = async function(knex) {
   
   // Campaign IDs to generate metrics for
   const campaignIds = [
-    'camp-meta-001',
-    'camp-meta-002',
-    'camp-meta-003',
-    'camp-google-001',
-    'camp-google-002',
-    'camp-google-003',
-    'camp-pinterest-001',
-    'camp-pinterest-002',
-    'camp-ttd-001',
-    'camp-ttd-002'
+    'camp-auto-google-001',
+    'camp-auto-meta-001',
+    'camp-ins-google-001',
+    'camp-ins-meta-001',
+    'camp-travel-dv360-001',
+    'camp-travel-meta-001',
+    'camp-fin-google-001',
+    'camp-fin-linkedin-001',
+    'camp-retail-google-001',
+    'camp-retail-meta-001'
   ];
   
   // Generate metrics for last 30 days for each campaign

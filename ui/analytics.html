@@ -251,7 +251,29 @@
     <header class="page-header">
       <h2>📈 Cross-Platform Analytics</h2>
       <p>Unified performance insights across all platforms</p>
+      <div style="margin-top: 12px; display: flex; gap: 10px; align-items: center;">
+        <label for="lob-filter" style="color: #999; font-size: 13px;">LOB Filter:</label>
+        <select id="lob-filter" style="background: rgba(20,20,30,0.9); color: #e0e0e0; border: 1px solid rgba(100,200,255,0.4); border-radius: 4px; padding: 8px 10px;">
+          <option value="">All LOBs</option>
+          <option value="auto">Auto</option>
+          <option value="insurance">Insurance</option>
+          <option value="travel">Travel</option>
+          <option value="finance">Finance</option>
+          <option value="retail">Retail</option>
+        </select>
+      </div>
     </header>
+
+    <!-- Filters -->
+    <section class="analytics-card" style="margin-bottom: 24px;">
+      <h3>🎛️ Filters</h3>
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <label for="lob-filter" style="color:#b0bec5; font-size: 13px;">Product Line (LOB)</label>
+        <select id="lob-filter" style="background:#1f2430; color:#e0e0e0; border:1px solid rgba(100,200,255,.35); border-radius:4px; padding:8px 10px; min-width:220px;">
+          <option value="">All Product Lines</option>
+        </select>
+      </div>
+    </section>
 
     <!-- Performance Summary -->
     <section class="analytics-grid analytics-grid--summary" id="summary-section">
@@ -310,6 +332,12 @@
           <p class="text-center text-muted-soft">Loading...</p>
         </div>
       </div>
+
+      <!-- LOB Spend Breakdown -->
+      <div class="analytics-card">
+        <h3>🧩 Spend by Product Line (LOB)</h3>
+        <canvas id="lob-breakdown-chart"></canvas>
+      </div>
     </div>
 
     <!-- Budget Pacing & Alerts -->
@@ -333,25 +361,47 @@
   <script src="assets/app.js"></script>
   <script>
     let budgetGaugeChart = null;
+    let lobBreakdownChart = null;
     
-    document.addEventListener('DOMContentLoaded', () => {
-      loadAnalytics();
+    document.addEventListener('DOMContentLoaded', async () => {
+      const lobFilter = document.getElementById('lob-filter');
+      lobFilter.addEventListener('change', loadAnalytics);
+
+      await loadLobOptions();
+      await loadAnalytics();
       // Refresh every 30 seconds
       setInterval(loadAnalytics, 30000);
     });
     
+    async function loadLobOptions() {
+      try {
+        const response = await fetch('/api/analytics/lob-options?days=30');
+        const result = await response.json();
+        const select = document.getElementById('lob-filter');
+
+        const options = (result.data || []).map(lob =>
+          `<option value="${lob}">${toTitleCase(lob)}</option>`
+        ).join('');
+
+        select.innerHTML = '<option value="">All Product Lines</option>' + options;
+      } catch (err) {
+        console.error('Error loading LOB options:', err);
+      }
+    }
+
     async function loadAnalytics() {
       await Promise.all([
         loadPlatformComparison(),
         loadTopPerformers(),
         loadBudgetPacing(),
+        loadLobBreakdown(),
         loadAlerts()
       ]);
     }
     
     async function loadPlatformComparison() {
       try {
-        const response = await fetch('/api/analytics/platform-comparison?days=30');
+        const response = await fetch(`/api/analytics/platform-comparison?days=30${getLobQueryParam()}`);
         const result = await response.json();
         
         // Update summary stats
@@ -409,7 +459,7 @@
     
     async function loadTopPerformers() {
       try {
-        const response = await fetch('/api/analytics/roas-by-campaign?days=30&limit=5');
+        const response = await fetch(`/api/analytics/roas-by-campaign?days=30&limit=5${getLobQueryParam()}`);
         const result = await response.json();
         
         const list = document.getElementById('top-performers-list');
@@ -429,7 +479,7 @@
               <div>
                 <div class="performer-name">${idx + 1}. ${campaign.campaignName}</div>
                 <div class="performer-details">
-                  ${campaign.platform.toUpperCase()} • Spend: ${formatCurrency(campaign.spend)} • Revenue: ${formatCurrency(campaign.revenue)}
+                  ${campaign.platform.toUpperCase()} • ${toTitleCase(campaign.lob || 'unknown')} • Spend: ${formatCurrency(campaign.spend)} • Revenue: ${formatCurrency(campaign.revenue)}
                 </div>
               </div>
               <div class="${campaign.roas >= 3 ? 'metric-positive' : campaign.roas >= 2 ? 'metric-neutral' : 'metric-negative'} performer-metric">
@@ -446,7 +496,7 @@
     
     async function loadBudgetPacing() {
       try {
-        const response = await fetch('/api/analytics/budget-utilization?days=30');
+        const response = await fetch(`/api/analytics/budget-utilization?days=30${getLobQueryParam()}`);
         const result = await response.json();
         
         const ctx = document.getElementById('budget-gauge-chart').getContext('2d');
@@ -521,11 +571,82 @@
       }
     }
     
+    async function loadLobBreakdown() {
+      try {
+        const response = await fetch(`/api/analytics/lob-breakdown?days=30${getLobQueryParam()}`);
+        const result = await response.json();
+
+        const ctx = document.getElementById('lob-breakdown-chart').getContext('2d');
+        if (lobBreakdownChart) lobBreakdownChart.destroy();
+
+        const labels = (result.data || []).map(d => toTitleCase(d.lob));
+        const spendData = (result.data || []).map(d => d.spend);
+        const roasData = (result.data || []).map(d => d.roas);
+
+        lobBreakdownChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Spend',
+                data: spendData,
+                backgroundColor: 'rgba(100, 181, 246, 0.6)',
+                borderColor: '#64b5f6',
+                borderWidth: 1,
+                yAxisID: 'y'
+              },
+              {
+                label: 'ROAS',
+                data: roasData,
+                type: 'line',
+                borderColor: '#4caf50',
+                backgroundColor: 'rgba(76, 175, 80, 0.15)',
+                borderWidth: 2,
+                yAxisID: 'y1',
+                tension: 0.3
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+              y: {
+                ticks: { color: '#e0e0e0' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              },
+              y1: {
+                position: 'right',
+                ticks: {
+                  color: '#4caf50',
+                  callback: (v) => `${v.toFixed(1)}x`
+                },
+                grid: { drawOnChartArea: false }
+              },
+              x: {
+                ticks: { color: '#e0e0e0' },
+                grid: { color: 'rgba(255, 255, 255, 0.1)' }
+              }
+            },
+            plugins: {
+              legend: {
+                labels: { color: '#e0e0e0' }
+              }
+            }
+          }
+        });
+
+      } catch (err) {
+        console.error('Error loading LOB breakdown:', err);
+      }
+    }
+
     async function loadAlerts() {
       try {
         const [budgetResponse, roasResponse] = await Promise.all([
-          fetch('/api/analytics/budget-utilization?days=30'),
-          fetch('/api/analytics/platform-comparison?days=30')
+          fetch(`/api/analytics/budget-utilization?days=30${getLobQueryParam()}`),
+          fetch(`/api/analytics/platform-comparison?days=30${getLobQueryParam()}`)
         ]);
         
         const budgetData = await budgetResponse.json();
@@ -584,6 +705,17 @@
       }
     }
     
+    function getLobQueryParam() {
+      const lob = document.getElementById('lob-filter')?.value;
+      return lob ? `&lob=${encodeURIComponent(lob)}` : '';
+    }
+
+    function toTitleCase(value) {
+      return (value || '')
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
     function formatCurrency(amount) {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',

@@ -6,25 +6,22 @@
 const knex = require('../database/db');
 const logger = require('../utils/logger');
 
-/**
- * Parse filter parameters
- */
 function parseFilters(filters = {}) {
   const result = {
-    days: filters.days || 30,
+    days: Number(filters.days) || 30,
     platforms: filters.platforms ? filters.platforms.split(',') : null,
+    lobs: filters.lobs ? filters.lobs.split(',') : (filters.lob ? [filters.lob] : null),
     startDate: filters.startDate || null,
     endDate: filters.endDate || null,
-    limit: filters.limit || 10,
+    limit: Number(filters.limit) || 10,
     campaignId: filters.campaignId || null
   };
 
-  // Calculate date range if not provided
   if (!result.startDate || !result.endDate) {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - result.days);
-    
+
     result.endDate = end.toISOString().split('T')[0];
     result.startDate = start.toISOString().split('T')[0];
   }
@@ -32,229 +29,175 @@ function parseFilters(filters = {}) {
   return result;
 }
 
-/**
- * Get spend trend over time
- * Returns daily spend aggregated by platform
- */
+function applyCampaignFilters(query, { platforms, lobs }) {
+  if (platforms) query.whereIn('campaigns.platform', platforms);
+  if (lobs) query.whereIn('campaigns.lob', lobs);
+  return query;
+}
+
 async function getSpendTrend(filters = {}) {
-  const { startDate, endDate, platforms } = parseFilters(filters);
+  const { startDate, endDate, platforms, lobs } = parseFilters(filters);
 
   try {
     let query = knex('metrics')
+      .join('campaigns', 'metrics.campaignId', 'campaigns.id')
       .select(
-        knex.raw('DATE(date) as date'),
-        'platform'
+        knex.raw('DATE(metrics.date) as date'),
+        'campaigns.platform as platform'
       )
-      .sum('spend as spend')
-      .whereBetween('date', [startDate, endDate])
-      .groupBy(knex.raw('DATE(date)'), 'platform')
+      .sum('metrics.spend as spend')
+      .whereBetween('metrics.date', [startDate, endDate])
+      .groupBy(knex.raw('DATE(metrics.date)'), 'campaigns.platform')
       .orderBy('date');
 
-    if (platforms) {
-      query = query.whereIn('platform', platforms);
-    }
+    query = applyCampaignFilters(query, { platforms, lobs });
 
     const data = await query;
-
-    // Calculate total and 7-day moving average
     const dateMap = {};
-    data.forEach(row => {
-      if (!dateMap[row.date]) {
-        dateMap[row.date] = { date: row.date, total: 0 };
-      }
+
+    data.forEach((row) => {
+      if (!dateMap[row.date]) dateMap[row.date] = { date: row.date, total: 0 };
       dateMap[row.date][row.platform] = row.spend;
       dateMap[row.date].total += row.spend;
     });
 
     const timeline = Object.values(dateMap);
-    
-    // Calculate 7-day moving average
     timeline.forEach((day, idx) => {
       if (idx >= 6) {
-        const sum = timeline.slice(idx - 6, idx + 1)
-          .reduce((acc, d) => acc + d.total, 0);
+        const sum = timeline.slice(idx - 6, idx + 1).reduce((acc, d) => acc + d.total, 0);
         day.movingAverage = sum / 7;
       }
     });
 
-    return {
-      data: timeline,
-      dateRange: { startDate, endDate }
-    };
-
+    return { data: timeline, dateRange: { startDate, endDate } };
   } catch (err) {
     logger.error('Error fetching spend trend', { error: err.message, stack: err.stack });
     throw err;
   }
 }
 
-/**
- * Get CTR comparison by platform
- * Returns average CTR for each platform with benchmarks
- */
 async function getCTRComparison(filters = {}) {
-  const { startDate, endDate, platforms } = parseFilters(filters);
+  const { startDate, endDate, platforms, lobs } = parseFilters(filters);
 
   try {
     let query = knex('metrics')
-      .select('platform')
-      .sum('clicks as totalClicks')
-      .sum('impressions as totalImpressions')
-      .whereBetween('date', [startDate, endDate])
-      .groupBy('platform');
+      .join('campaigns', 'metrics.campaignId', 'campaigns.id')
+      .select('campaigns.platform as platform')
+      .sum('metrics.clicks as totalClicks')
+      .sum('metrics.impressions as totalImpressions')
+      .whereBetween('metrics.date', [startDate, endDate])
+      .groupBy('campaigns.platform');
 
-    if (platforms) {
-      query = query.whereIn('platform', platforms);
-    }
+    query = applyCampaignFilters(query, { platforms, lobs });
 
     const data = await query;
 
-    // Calculate CTR
-    const results = data.map(row => ({
-      platform: row.platform,
-      ctr: row.totalImpressions > 0 
-        ? (row.totalClicks / row.totalImpressions * 100) 
-        : 0,
-      clicks: row.totalClicks,
-      impressions: row.totalImpressions
-    }));
-
     return {
-      data: results,
+      data: data.map((row) => ({
+        platform: row.platform,
+        ctr: row.totalImpressions > 0 ? (row.totalClicks / row.totalImpressions * 100) : 0,
+        clicks: row.totalClicks,
+        impressions: row.totalImpressions
+      })),
       dateRange: { startDate, endDate }
     };
-
   } catch (err) {
     logger.error('Error fetching CTR comparison', { error: err.message, stack: err.stack });
     throw err;
   }
 }
 
-/**
- * Get conversion funnel metrics
- * Returns multi-stage funnel with drop-off percentages
- */
 async function getConversionFunnel(filters = {}) {
-  const { startDate, endDate, platforms, campaignId } = parseFilters(filters);
+  const { startDate, endDate, platforms, lobs, campaignId } = parseFilters(filters);
 
   try {
     let query = knex('metrics')
-      .sum('impressions as impressions')
-      .sum('clicks as clicks')
-      .sum('conversions as conversions')
-      .sum('revenue as revenue')
-      .whereBetween('date', [startDate, endDate]);
+      .join('campaigns', 'metrics.campaignId', 'campaigns.id')
+      .sum('metrics.impressions as impressions')
+      .sum('metrics.clicks as clicks')
+      .sum('metrics.conversions as conversions')
+      .sum('metrics.revenue as revenue')
+      .whereBetween('metrics.date', [startDate, endDate]);
 
-    if (platforms) {
-      query = query.whereIn('platform', platforms);
-    }
-
-    if (campaignId) {
-      query = query.where('campaignId', campaignId);
-    }
+    query = applyCampaignFilters(query, { platforms, lobs });
+    if (campaignId) query.where('metrics.campaignId', campaignId);
 
     const result = await query.first();
 
     const funnel = [
-      { 
-        stage: 'Impressions', 
-        value: result.impressions || 0,
-        dropoff: 0
-      },
-      { 
-        stage: 'Clicks', 
+      { stage: 'Impressions', value: result.impressions || 0, dropoff: 0 },
+      {
+        stage: 'Clicks',
         value: result.clicks || 0,
-        dropoff: result.impressions > 0 
-          ? ((result.impressions - result.clicks) / result.impressions * 100) 
-          : 0
+        dropoff: result.impressions > 0 ? ((result.impressions - result.clicks) / result.impressions * 100) : 0
       },
-      { 
-        stage: 'Conversions', 
+      {
+        stage: 'Conversions',
         value: result.conversions || 0,
-        dropoff: result.clicks > 0 
-          ? ((result.clicks - result.conversions) / result.clicks * 100) 
-          : 0
+        dropoff: result.clicks > 0 ? ((result.clicks - result.conversions) / result.clicks * 100) : 0
       },
-      { 
-        stage: 'Revenue', 
+      {
+        stage: 'Revenue',
         value: result.revenue || 0,
-        dropoff: result.conversions > 0 
-          ? ((result.conversions - (result.revenue > 0 ? 1 : 0)) / result.conversions * 100) 
-          : 0
+        dropoff: result.conversions > 0 ? ((result.conversions - (result.revenue > 0 ? 1 : 0)) / result.conversions * 100) : 0
       }
     ];
 
     return {
       data: funnel,
       dateRange: { startDate, endDate },
-      overallConversionRate: result.impressions > 0 
-        ? (result.conversions / result.impressions * 100) 
-        : 0
+      overallConversionRate: result.impressions > 0 ? (result.conversions / result.impressions * 100) : 0
     };
-
   } catch (err) {
     logger.error('Error fetching conversion funnel', { error: err.message, stack: err.stack });
     throw err;
   }
 }
 
-/**
- * Get top campaigns by ROAS
- * Returns campaigns sorted by revenue/spend ratio
- */
 async function getROASByCampaign(filters = {}) {
-  const { startDate, endDate, platforms, limit } = parseFilters(filters);
+  const { startDate, endDate, platforms, lobs, limit } = parseFilters(filters);
 
   try {
     let query = knex('metrics')
       .join('campaigns', 'metrics.campaignId', 'campaigns.id')
-      .select('campaigns.id', 'campaigns.name', 'campaigns.platform')
+      .select('campaigns.id', 'campaigns.name', 'campaigns.platform', 'campaigns.lob')
       .sum('metrics.revenue as revenue')
       .sum('metrics.spend as spend')
       .whereBetween('metrics.date', [startDate, endDate])
       .where('metrics.spend', '>', 0)
-      .groupBy('campaigns.id', 'campaigns.name', 'campaigns.platform')
+      .groupBy('campaigns.id', 'campaigns.name', 'campaigns.platform', 'campaigns.lob')
       .orderBy(knex.raw('SUM(metrics.revenue) / SUM(metrics.spend)'), 'desc')
       .limit(limit);
 
-    if (platforms) {
-      query = query.whereIn('campaigns.platform', platforms);
-    }
+    query = applyCampaignFilters(query, { platforms, lobs });
 
     const data = await query;
 
-    const results = data.map(row => ({
-      campaignId: row.id,
-      campaignName: row.name,
-      platform: row.platform,
-      revenue: row.revenue || 0,
-      spend: row.spend || 0,
-      roas: row.spend > 0 ? (row.revenue / row.spend) : 0
-    }));
-
     return {
-      data: results,
+      data: data.map((row) => ({
+        campaignId: row.id,
+        campaignName: row.name,
+        platform: row.platform,
+        lob: row.lob,
+        revenue: row.revenue || 0,
+        spend: row.spend || 0,
+        roas: row.spend > 0 ? (row.revenue / row.spend) : 0
+      })),
       dateRange: { startDate, endDate }
     };
-
   } catch (err) {
     logger.error('Error fetching ROAS by campaign', { error: err.message, stack: err.stack });
     throw err;
   }
 }
 
-/**
- * Get budget utilization metrics
- * Returns allocated vs spent by platform/campaign
- */
 async function getBudgetUtilization(filters = {}) {
-  const { startDate, endDate, platforms } = parseFilters(filters);
+  const { startDate, endDate, platforms, lobs } = parseFilters(filters);
 
   try {
     let query = knex('campaigns')
       .leftJoin('metrics', function() {
-        this.on('campaigns.id', '=', 'metrics.campaignId')
-          .andOnBetween('metrics.date', [startDate, endDate]);
+        this.on('campaigns.id', '=', 'metrics.campaignId').andOnBetween('metrics.date', [startDate, endDate]);
       })
       .select(
         'campaigns.platform',
@@ -264,50 +207,40 @@ async function getBudgetUtilization(filters = {}) {
       .where('campaigns.status', 'active')
       .groupBy('campaigns.platform');
 
-    if (platforms) {
-      query = query.whereIn('campaigns.platform', platforms);
-    }
+    query = applyCampaignFilters(query, { platforms, lobs });
 
     const data = await query;
 
-    const results = data.map(row => ({
-      platform: row.platform,
-      allocated: row.allocated || 0,
-      spent: row.spent || 0,
-      utilization: row.allocated > 0 ? (row.spent / row.allocated * 100) : 0,
-      remaining: (row.allocated || 0) - (row.spent || 0)
-    }));
-
     return {
-      data: results,
+      data: data.map((row) => ({
+        platform: row.platform,
+        allocated: row.allocated || 0,
+        spent: row.spent || 0,
+        utilization: row.allocated > 0 ? (row.spent / row.allocated * 100) : 0,
+        remaining: (row.allocated || 0) - (row.spent || 0)
+      })),
       dateRange: { startDate, endDate }
     };
-
   } catch (err) {
     logger.error('Error fetching budget utilization', { error: err.message, stack: err.stack });
     throw err;
   }
 }
 
-/**
- * Get performance summary
- * Returns overall KPIs across all platforms
- */
 async function getPerformanceSummary(filters = {}) {
-  const { startDate, endDate, platforms } = parseFilters(filters);
+  const { startDate, endDate, platforms, lobs } = parseFilters(filters);
 
   try {
     let query = knex('metrics')
-      .sum('spend as totalSpend')
-      .sum('impressions as totalImpressions')
-      .sum('clicks as totalClicks')
-      .sum('conversions as totalConversions')
-      .sum('revenue as totalRevenue')
-      .whereBetween('date', [startDate, endDate]);
+      .join('campaigns', 'metrics.campaignId', 'campaigns.id')
+      .sum('metrics.spend as totalSpend')
+      .sum('metrics.impressions as totalImpressions')
+      .sum('metrics.clicks as totalClicks')
+      .sum('metrics.conversions as totalConversions')
+      .sum('metrics.revenue as totalRevenue')
+      .whereBetween('metrics.date', [startDate, endDate]);
 
-    if (platforms) {
-      query = query.whereIn('platform', platforms);
-    }
+    query = applyCampaignFilters(query, { platforms, lobs });
 
     const result = await query.first();
 
@@ -317,59 +250,40 @@ async function getPerformanceSummary(filters = {}) {
       clicks: result.totalClicks || 0,
       conversions: result.totalConversions || 0,
       revenue: result.totalRevenue || 0,
-      ctr: result.totalImpressions > 0 
-        ? (result.totalClicks / result.totalImpressions * 100) 
-        : 0,
-      cpc: result.totalClicks > 0 
-        ? (result.totalSpend / result.totalClicks) 
-        : 0,
-      cpa: result.totalConversions > 0 
-        ? (result.totalSpend / result.totalConversions) 
-        : 0,
-      roas: result.totalSpend > 0 
-        ? (result.totalRevenue / result.totalSpend) 
-        : 0,
-      conversionRate: result.totalClicks > 0 
-        ? (result.totalConversions / result.totalClicks * 100) 
-        : 0
+      ctr: result.totalImpressions > 0 ? (result.totalClicks / result.totalImpressions * 100) : 0,
+      cpc: result.totalClicks > 0 ? (result.totalSpend / result.totalClicks) : 0,
+      cpa: result.totalConversions > 0 ? (result.totalSpend / result.totalConversions) : 0,
+      roas: result.totalSpend > 0 ? (result.totalRevenue / result.totalSpend) : 0,
+      conversionRate: result.totalClicks > 0 ? (result.totalConversions / result.totalClicks * 100) : 0
     };
 
-    return {
-      data: summary,
-      dateRange: { startDate, endDate }
-    };
-
+    return { data: summary, dateRange: { startDate, endDate } };
   } catch (err) {
     logger.error('Error fetching performance summary', { error: err.message, stack: err.stack });
     throw err;
   }
 }
 
-/**
- * Get platform comparison
- * Returns comprehensive metrics for each platform
- */
 async function getPlatformComparison(filters = {}) {
-  const { startDate, endDate, platforms } = parseFilters(filters);
+  const { startDate, endDate, platforms, lobs } = parseFilters(filters);
 
   try {
     let query = knex('metrics')
-      .select('platform')
-      .sum('spend as spend')
-      .sum('impressions as impressions')
-      .sum('clicks as clicks')
-      .sum('conversions as conversions')
-      .sum('revenue as revenue')
-      .whereBetween('date', [startDate, endDate])
-      .groupBy('platform');
+      .join('campaigns', 'metrics.campaignId', 'campaigns.id')
+      .select('campaigns.platform as platform')
+      .sum('metrics.spend as spend')
+      .sum('metrics.impressions as impressions')
+      .sum('metrics.clicks as clicks')
+      .sum('metrics.conversions as conversions')
+      .sum('metrics.revenue as revenue')
+      .whereBetween('metrics.date', [startDate, endDate])
+      .groupBy('campaigns.platform');
 
-    if (platforms) {
-      query = query.whereIn('platform', platforms);
-    }
+    query = applyCampaignFilters(query, { platforms, lobs });
 
     const data = await query;
 
-    const platformData = data.map(row => ({
+    const platformData = data.map((row) => ({
       name: row.platform,
       spend: row.spend || 0,
       impressions: row.impressions || 0,
@@ -382,34 +296,63 @@ async function getPlatformComparison(filters = {}) {
       roas: row.spend > 0 ? (row.revenue / row.spend) : 0
     }));
 
-    // Calculate totals
-    const totals = platformData.reduce((acc, platform) => ({
-      spend: acc.spend + platform.spend,
-      impressions: acc.impressions + platform.impressions,
-      clicks: acc.clicks + platform.clicks,
-      conversions: acc.conversions + platform.conversions,
-      revenue: acc.revenue + platform.revenue
-    }), {
-      spend: 0,
-      impressions: 0,
-      clicks: 0,
-      conversions: 0,
-      revenue: 0
-    });
+    const totals = platformData.reduce((acc, p) => ({
+      spend: acc.spend + p.spend,
+      impressions: acc.impressions + p.impressions,
+      clicks: acc.clicks + p.clicks,
+      conversions: acc.conversions + p.conversions,
+      revenue: acc.revenue + p.revenue
+    }), { spend: 0, impressions: 0, clicks: 0, conversions: 0, revenue: 0 });
 
     totals.ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions * 100) : 0;
     totals.cpc = totals.clicks > 0 ? (totals.spend / totals.clicks) : 0;
     totals.cpa = totals.conversions > 0 ? (totals.spend / totals.conversions) : 0;
     totals.roas = totals.spend > 0 ? (totals.revenue / totals.spend) : 0;
 
-    return {
-      platforms: platformData,
-      totals,
-      dateRange: { startDate, endDate }
-    };
-
+    return { platforms: platformData, totals, dateRange: { startDate, endDate } };
   } catch (err) {
     logger.error('Error fetching platform comparison', { error: err.message, stack: err.stack });
+    throw err;
+  }
+}
+
+async function getLOBBreakdown(filters = {}) {
+  const { startDate, endDate, platforms, lobs } = parseFilters(filters);
+
+  try {
+    let query = knex('metrics')
+      .join('campaigns', 'metrics.campaignId', 'campaigns.id')
+      .select('campaigns.lob')
+      .sum('metrics.spend as spend')
+      .sum('metrics.impressions as impressions')
+      .sum('metrics.clicks as clicks')
+      .sum('metrics.conversions as conversions')
+      .sum('metrics.revenue as revenue')
+      .whereBetween('metrics.date', [startDate, endDate])
+      .whereNotNull('campaigns.lob')
+      .groupBy('campaigns.lob');
+
+    query = applyCampaignFilters(query, { platforms, lobs });
+
+    const data = await query;
+
+    return {
+      data: data.map((row) => ({
+        lob: row.lob,
+        spend: row.spend || 0,
+        impressions: row.impressions || 0,
+        clicks: row.clicks || 0,
+        conversions: row.conversions || 0,
+        revenue: row.revenue || 0,
+        ctr: row.impressions > 0 ? (row.clicks / row.impressions * 100) : 0,
+        cpc: row.clicks > 0 ? (row.spend / row.clicks) : 0,
+        cpa: row.conversions > 0 ? (row.spend / row.conversions) : 0,
+        roas: row.spend > 0 ? (row.revenue / row.spend) : 0
+      })),
+      dateRange: { startDate, endDate }
+    };
+  } catch (err) {
+    logger.error('Error fetching LOB breakdown', { error: err.message, stack: err.stack });
     throw err;
   }
 }
@@ -421,5 +364,6 @@ module.exports = {
   getROASByCampaign,
   getBudgetUtilization,
   getPerformanceSummary,
-  getPlatformComparison
+  getPlatformComparison,
+  getLOBBreakdown
 };

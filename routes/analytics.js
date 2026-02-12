@@ -139,6 +139,37 @@ router.get('/platform-comparison', async (req, res) => {
   }
 });
 
+// LOB breakdown
+router.get('/lob-breakdown', async (req, res) => {
+  try {
+    const result = await analytics.getLOBBreakdown(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// LOB breakdown analysis
+router.get('/lob-breakdown', async (req, res) => {
+  try {
+    const result = await analytics.getLOBBreakdown(req.query);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Available LOB filter values
+router.get('/lob-options', async (req, res) => {
+  try {
+    const result = await analytics.getLOBBreakdown(req.query);
+    const lobs = [...new Set((result.data || []).map(item => item.lob).filter(Boolean))].sort();
+    res.json({ data: lobs });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Industry benchmarks
 router.get('/benchmarks', (req, res) => {
   res.json(benchmarks);

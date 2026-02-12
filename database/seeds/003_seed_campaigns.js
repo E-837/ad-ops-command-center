@@ -1,337 +1,44 @@
 /**
- * Seed: Sample campaigns
+ * Seed: LOB-specific sample campaigns
  */
 
 exports.seed = async function(knex) {
-  // Clear existing data
   await knex('campaigns').del();
-  
+
   const now = new Date().toISOString();
-  
-  // Helper to generate dates
+
   const daysAgo = (days) => {
     const d = new Date();
     d.setDate(d.getDate() - days);
     return d.toISOString().split('T')[0];
   };
-  
+
   const daysFromNow = (days) => {
     const d = new Date();
     d.setDate(d.getDate() + days);
     return d.toISOString().split('T')[0];
   };
-  
-  // Insert seed entries
+
   await knex('campaigns').insert([
-    // Meta Ads campaigns
-    {
-      id: 'camp-meta-001',
-      projectId: 'proj-seed-001',
-      platform: 'meta-ads',
-      externalId: 'fb-123456789',
-      name: 'Q1 Brand Awareness - Facebook',
-      status: 'active',
-      budget: 25000,
-      startDate: daysAgo(30),
-      endDate: daysFromNow(60),
-      metadata: JSON.stringify({
-        adAccountId: 'act_123456',
-        objective: 'BRAND_AWARENESS',
-        bidStrategy: 'LOWEST_COST_WITH_BID_CAP'
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-meta-002',
-      projectId: 'proj-seed-001',
-      platform: 'meta-ads',
-      externalId: 'ig-987654321',
-      name: 'Q1 Brand Awareness - Instagram',
-      status: 'active',
-      budget: 25000,
-      startDate: daysAgo(30),
-      endDate: daysFromNow(60),
-      metadata: JSON.stringify({
-        adAccountId: 'act_123456',
-        objective: 'BRAND_AWARENESS',
-        bidStrategy: 'LOWEST_COST_WITH_BID_CAP',
-        placements: ['instagram_feed', 'instagram_stories']
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-meta-003',
-      projectId: null,
-      platform: 'meta-ads',
-      externalId: 'fb-555444333',
-      name: 'Retargeting - Web Visitors',
-      status: 'active',
-      budget: 15000,
-      startDate: daysAgo(15),
-      endDate: daysFromNow(15),
-      metadata: JSON.stringify({
-        adAccountId: 'act_123456',
-        objective: 'CONVERSIONS',
-        audienceType: 'custom',
-        customAudienceId: 'ca_123'
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    
-    // Google Ads campaigns
-    {
-      id: 'camp-google-001',
-      projectId: 'proj-seed-002',
-      platform: 'google-ads',
-      externalId: 'ggl-111222333',
-      name: 'Holiday Shopping - Search',
-      status: 'completed',
-      budget: 50000,
-      startDate: daysAgo(90),
-      endDate: daysAgo(45),
-      metadata: JSON.stringify({
-        customerId: '123-456-7890',
-        campaignType: 'SEARCH',
-        biddingStrategy: 'TARGET_ROAS',
-        targetRoas: 4.0
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-google-002',
-      projectId: 'proj-seed-002',
-      platform: 'google-ads',
-      externalId: 'ggl-444555666',
-      name: 'Holiday Shopping - Display',
-      status: 'completed',
-      budget: 50000,
-      startDate: daysAgo(90),
-      endDate: daysAgo(45),
-      metadata: JSON.stringify({
-        customerId: '123-456-7890',
-        campaignType: 'DISPLAY',
-        biddingStrategy: 'TARGET_CPA',
-        targetCpa: 25.0
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-google-003',
-      projectId: null,
-      platform: 'google-ads',
-      externalId: 'ggl-777888999',
-      name: 'Brand Protection - Search',
-      status: 'active',
-      budget: 10000,
-      startDate: daysAgo(60),
-      endDate: daysFromNow(30),
-      metadata: JSON.stringify({
-        customerId: '123-456-7890',
-        campaignType: 'SEARCH',
-        biddingStrategy: 'MANUAL_CPC',
-        keywords: ['brand name', 'company name']
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    
-    // Pinterest campaigns
-    {
-      id: 'camp-pinterest-001',
-      projectId: 'proj-seed-003',
-      platform: 'pinterest',
-      externalId: 'pin-123abc456',
-      name: 'Product Launch - Home Decor',
-      status: 'paused',
-      budget: 30000,
-      startDate: daysFromNow(15),
-      endDate: daysFromNow(75),
-      metadata: JSON.stringify({
-        adAccountId: 'pa_123456789',
-        objective: 'AWARENESS',
-        targetingType: 'interest',
-        interests: ['home decor', 'interior design']
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-pinterest-002',
-      projectId: null,
-      platform: 'pinterest',
-      externalId: 'pin-789def012',
-      name: 'Spring Collection - Catalog',
-      status: 'active',
-      budget: 20000,
-      startDate: daysAgo(10),
-      endDate: daysFromNow(50),
-      metadata: JSON.stringify({
-        adAccountId: 'pa_123456789',
-        objective: 'CATALOG_SALES',
-        catalogId: 'cat_abc123'
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    
-    // TTD campaigns
-    {
-      id: 'camp-ttd-001',
-      projectId: 'proj-seed-004',
-      platform: 'ttd',
-      externalId: 'ttd-aaa111bbb',
-      name: 'Programmatic Display - Auto',
-      status: 'active',
-      budget: 75000,
-      startDate: daysAgo(20),
-      endDate: daysFromNow(40),
-      metadata: JSON.stringify({
-        advertiserId: 'adv_123',
-        flightStart: daysAgo(20),
-        flightEnd: daysFromNow(40),
-        kpiType: 'CPA',
-        kpiGoal: 30.0
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-ttd-002',
-      projectId: 'proj-seed-004',
-      platform: 'ttd',
-      externalId: 'ttd-ccc222ddd',
-      name: 'Programmatic Video - Auto',
-      status: 'active',
-      budget: 50000,
-      startDate: daysAgo(20),
-      endDate: daysFromNow(40),
-      metadata: JSON.stringify({
-        advertiserId: 'adv_123',
-        flightStart: daysAgo(20),
-        flightEnd: daysFromNow(40),
-        kpiType: 'CPC',
-        kpiGoal: 2.5
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    
-    // DV360 campaigns
-    {
-      id: 'camp-dv360-001',
-      projectId: null,
-      platform: 'dv360',
-      externalId: 'dv-111aaa222',
-      name: 'Programmatic - Finance Vertical',
-      status: 'active',
-      budget: 100000,
-      startDate: daysAgo(45),
-      endDate: daysFromNow(15),
-      metadata: JSON.stringify({
-        advertiserId: 'adv_dv_456',
-        bidStrategy: 'MAXIMIZE_CONVERSIONS',
-        frequencyCap: { exposures: 3, period: 'DAY' }
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-dv360-002',
-      projectId: null,
-      platform: 'dv360',
-      externalId: 'dv-333bbb444',
-      name: 'YouTube - Brand Video',
-      status: 'paused',
-      budget: 40000,
-      startDate: daysAgo(10),
-      endDate: daysFromNow(20),
-      metadata: JSON.stringify({
-        advertiserId: 'adv_dv_456',
-        bidStrategy: 'TARGET_CPM',
-        targetCpm: 15.0,
-        inventory: 'youtube_video'
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    
-    // More campaigns for variety
-    {
-      id: 'camp-meta-004',
-      projectId: null,
-      platform: 'meta-ads',
-      externalId: 'fb-999888777',
-      name: 'Lead Gen - B2B',
-      status: 'active',
-      budget: 12000,
-      startDate: daysAgo(5),
-      endDate: daysFromNow(25),
-      metadata: JSON.stringify({
-        adAccountId: 'act_789012',
-        objective: 'LEAD_GENERATION',
-        leadFormId: 'form_abc'
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-google-004',
-      projectId: null,
-      platform: 'google-ads',
-      externalId: 'ggl-121314151',
-      name: 'YouTube - Pre-Roll',
-      status: 'active',
-      budget: 35000,
-      startDate: daysAgo(12),
-      endDate: daysFromNow(48),
-      metadata: JSON.stringify({
-        customerId: '123-456-7890',
-        campaignType: 'VIDEO',
-        biddingStrategy: 'MAXIMIZE_CONVERSIONS'
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    },
-    {
-      id: 'camp-pinterest-003',
-      projectId: null,
-      platform: 'pinterest',
-      externalId: 'pin-555zzz888',
-      name: 'Shopping - Fashion',
-      status: 'active',
-      budget: 18000,
-      startDate: daysAgo(8),
-      endDate: daysFromNow(22),
-      metadata: JSON.stringify({
-        adAccountId: 'pa_987654321',
-        objective: 'SHOPPING',
-        targetingType: 'keyword',
-        keywords: ['fashion', 'style', 'clothing']
-      }),
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now
-    }
+    { id: 'camp-auto-dv360-001', projectId: 'proj-seed-001', platform: 'dv360', lob: 'auto', externalId: 'dv-auto-001', name: 'Auto SUV Launch - Programmatic Display', status: 'active', budget: 85000, startDate: daysAgo(35), endDate: daysFromNow(55), metadata: JSON.stringify({ type: 'display', objective: 'consideration', avgDealSize: 42000, conversionWindowDays: 45, complianceRequirements: ['disclaimer_required', 'financing_terms_required'], benchmarkCpcRange: [3.2, 4.8] }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-auto-meta-001', projectId: 'proj-seed-001', platform: 'meta-ads', lob: 'auto', externalId: 'fb-auto-001', name: 'Auto Model Awareness - Video', status: 'active', budget: 60000, startDate: daysAgo(28), endDate: daysFromNow(42), metadata: JSON.stringify({ type: 'video', objective: 'brand_awareness', avgDealSize: 39000, conversionWindowDays: 30, complianceRequirements: ['regional_offer_disclaimer'], benchmarkCpcRange: [3.0, 4.5] }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-auto-google-001', projectId: 'proj-seed-001', platform: 'google-ads', lob: 'auto', externalId: 'ggl-auto-001', name: 'Auto Dealer Search - High Intent', status: 'active', budget: 40000, startDate: daysAgo(22), endDate: daysFromNow(38), metadata: JSON.stringify({ type: 'search', objective: 'lead_generation', avgDealSize: 35000, conversionWindowDays: 28, complianceRequirements: ['apr_disclosure'], benchmarkCpcRange: [3.5, 5.0] }), syncedAt: now, createdAt: now, updatedAt: now },
+
+    { id: 'camp-ins-google-001', projectId: 'proj-seed-002', platform: 'google-ads', lob: 'insurance', externalId: 'ggl-ins-001', name: 'Insurance Quotes - Search Acquisition', status: 'active', budget: 95000, startDate: daysAgo(40), endDate: daysFromNow(50), metadata: JSON.stringify({ type: 'search', objective: 'lead_generation', avgDealSize: 2400, conversionWindowDays: 60, complianceRequirements: ['state_filing_language', 'legal_disclaimer'], benchmarkCpcRange: [8.0, 12.0] }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-ins-meta-001', projectId: 'proj-seed-002', platform: 'meta-ads', lob: 'insurance', externalId: 'fb-ins-001', name: 'Life Insurance Lead Forms - Facebook', status: 'active', budget: 55000, startDate: daysAgo(25), endDate: daysFromNow(35), metadata: JSON.stringify({ type: 'social', objective: 'lead_generation', avgDealSize: 1800, conversionWindowDays: 45, complianceRequirements: ['regulated_ad_copy', 'privacy_disclosure'], benchmarkCpcRange: [8.5, 11.5] }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-ins-microsoft-001', projectId: 'proj-seed-002', platform: 'microsoft-ads', lob: 'insurance', externalId: 'ms-ins-001', name: 'Insurance Brand Defense - Bing', status: 'active', budget: 30000, startDate: daysAgo(18), endDate: daysFromNow(42), metadata: JSON.stringify({ type: 'search', objective: 'conversion', avgDealSize: 2200, conversionWindowDays: 50, complianceRequirements: ['state_compliance_review'], benchmarkCpcRange: [7.8, 10.8] }), syncedAt: now, createdAt: now, updatedAt: now },
+
+    { id: 'camp-travel-dv360-001', projectId: 'proj-seed-003', platform: 'dv360', lob: 'travel', externalId: 'dv-travel-001', name: 'Summer Destinations - Display Prospecting', status: 'active', budget: 70000, startDate: daysAgo(30), endDate: daysFromNow(60), metadata: JSON.stringify({ type: 'display', objective: 'bookings', avgDealSize: 1400, conversionWindowDays: 21, complianceRequirements: ['fare_terms_disclosure'], benchmarkCpcRange: [1.8, 2.8], seasonalPeak: 'summer' }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-travel-meta-001', projectId: 'proj-seed-003', platform: 'meta-ads', lob: 'travel', externalId: 'ig-travel-001', name: 'Weekend Getaways - Instagram Reels', status: 'active', budget: 45000, startDate: daysAgo(20), endDate: daysFromNow(50), metadata: JSON.stringify({ type: 'video', objective: 'traffic', avgDealSize: 900, conversionWindowDays: 14, complianceRequirements: ['dynamic_pricing_disclaimer'], benchmarkCpcRange: [1.6, 2.6], seasonalPeak: 'spring_summer' }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-travel-tiktok-001', projectId: 'proj-seed-003', platform: 'tiktok-ads', lob: 'travel', externalId: 'tt-travel-001', name: 'Adventure Travel - TikTok Video', status: 'active', budget: 38000, startDate: daysAgo(15), endDate: daysFromNow(45), metadata: JSON.stringify({ type: 'social_video', objective: 'awareness', avgDealSize: 1100, conversionWindowDays: 18, complianceRequirements: ['travel_offer_disclaimer'], benchmarkCpcRange: [1.4, 2.4], seasonalPeak: 'summer_holiday' }), syncedAt: now, createdAt: now, updatedAt: now },
+
+    { id: 'camp-fin-google-001', projectId: 'proj-seed-004', platform: 'google-ads', lob: 'finance', externalId: 'ggl-fin-001', name: 'Commercial Lending - Search', status: 'active', budget: 65000, startDate: daysAgo(32), endDate: daysFromNow(48), metadata: JSON.stringify({ type: 'search', objective: 'qualified_leads', avgDealSize: 75000, conversionWindowDays: 35, complianceRequirements: ['finra_review', 'apr_disclosure', 'risk_disclaimer'], benchmarkCpcRange: [6.5, 9.5] }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-fin-linkedin-001', projectId: 'proj-seed-004', platform: 'linkedin-ads', lob: 'finance', externalId: 'li-fin-001', name: 'Treasury Platform - LinkedIn Lead Gen', status: 'active', budget: 52000, startDate: daysAgo(21), endDate: daysFromNow(39), metadata: JSON.stringify({ type: 'b2b_social', objective: 'mql_generation', avgDealSize: 120000, conversionWindowDays: 42, complianceRequirements: ['compliance_approved_creatives', 'regulated_claim_review'], benchmarkCpcRange: [7.0, 10.5] }), syncedAt: now, createdAt: now, updatedAt: now },
+
+    { id: 'camp-retail-google-001', projectId: 'proj-seed-005', platform: 'google-ads', lob: 'retail', externalId: 'ggl-ret-001', name: 'Retail Catalog - Google Shopping', status: 'active', budget: 80000, startDate: daysAgo(27), endDate: daysFromNow(63), metadata: JSON.stringify({ type: 'shopping', objective: 'online_sales', avgDealSize: 95, conversionWindowDays: 7, complianceRequirements: ['promo_terms_disclosure'], benchmarkCpcRange: [0.6, 1.3] }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-retail-meta-001', projectId: 'proj-seed-005', platform: 'meta-ads', lob: 'retail', externalId: 'fb-ret-001', name: 'Always-On Dynamic Product Ads', status: 'active', budget: 50000, startDate: daysAgo(14), endDate: daysFromNow(46), metadata: JSON.stringify({ type: 'social', objective: 'catalog_sales', avgDealSize: 82, conversionWindowDays: 5, complianceRequirements: ['promo_terms_disclosure'], benchmarkCpcRange: [0.5, 1.2] }), syncedAt: now, createdAt: now, updatedAt: now },
+    { id: 'camp-retail-pinterest-001', projectId: 'proj-seed-005', platform: 'pinterest', lob: 'retail', externalId: 'pin-ret-001', name: 'Seasonal Retail Collections - Pinterest', status: 'active', budget: 26000, startDate: daysAgo(11), endDate: daysFromNow(34), metadata: JSON.stringify({ type: 'shopping', objective: 'ecommerce', avgDealSize: 88, conversionWindowDays: 10, complianceRequirements: ['promo_terms_disclosure'], benchmarkCpcRange: [0.7, 1.5] }), syncedAt: now, createdAt: now, updatedAt: now }
   ]);
-  
-  console.log('✅ Seeded 15 sample campaigns across 5 platforms');
+
+  console.log('✅ Seeded 14 LOB-specific campaigns across 5 verticals');
 };
