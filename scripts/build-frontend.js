@@ -15,6 +15,10 @@
 const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
+const { promisify } = require('util');
+
+const gzip = promisify(zlib.gzip);
 
 const UI_DIR = path.join(__dirname, '..', 'ui');
 const BUILD_DIR = path.join(__dirname, '..', 'build');
@@ -65,7 +69,7 @@ Promise.all(
       console.error(`❌ ${filename}: ${error.message}`);
     }
   })
-).then(() => {
+).then(async () => {
   console.log('\n✨ Build complete!\n');
   console.log('📦 Production files in build/');
   console.log('💡 Set NODE_ENV=production to serve from build/\n');
@@ -80,6 +84,24 @@ Promise.all(
   });
   
   console.log(`📄 Copied ${htmlFiles.length} HTML files to build/\n`);
+  
+  // Gzip compress JS files for faster serving
+  console.log('🗜️  Compressing assets with gzip...\n');
+  const jsBuiltFiles = fs.readdirSync(BUILD_DIR).filter(f => f.endsWith('.js'));
+  let totalCompressed = 0;
+  
+  for (const file of jsBuiltFiles) {
+    const filePath = path.join(BUILD_DIR, file);
+    const content = fs.readFileSync(filePath);
+    const compressed = await gzip(content);
+    fs.writeFileSync(filePath + '.gz', compressed);
+    
+    const savings = ((1 - compressed.length / content.length) * 100).toFixed(1);
+    totalCompressed++;
+    console.log(`✅ ${file}.gz (${savings}% smaller)`);
+  }
+  
+  console.log(`\n✨ Compressed ${totalCompressed} files for production\n`);
 }).catch(error => {
   console.error('❌ Build failed:', error);
   process.exit(1);
