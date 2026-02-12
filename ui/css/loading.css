@@ -1,0 +1,539 @@
+/* loading.css - Loading states, skeletons, and progress indicators */
+
+/* ===== SPINNER ===== */
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(59, 130, 246, 0.8);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+.spinner-lg {
+  width: 40px;
+  height: 40px;
+  border-width: 3px;
+}
+
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+/* Spinner in button */
+.btn.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.btn.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+/* ===== SKELETON SCREENS ===== */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Skeleton text */
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-text.wide {
+  width: 100%;
+}
+
+.skeleton-text.medium {
+  width: 80%;
+}
+
+.skeleton-text.narrow {
+  width: 60%;
+}
+
+.skeleton-text.short {
+  width: 40%;
+}
+
+/* Skeleton card */
+.skeleton-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.skeleton-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.skeleton-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Skeleton table */
+.skeleton-table {
+  width: 100%;
+  border-spacing: 0;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.skeleton-cell {
+  height: 1rem;
+}
+
+/* Skeleton chart */
+.skeleton-chart {
+  width: 100%;
+  height: 300px;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-chart-bars {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80%;
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.skeleton-chart-bar {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px 4px 0 0;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-chart-bar:nth-child(1) { height: 60%; }
+.skeleton-chart-bar:nth-child(2) { height: 80%; }
+.skeleton-chart-bar:nth-child(3) { height: 45%; }
+.skeleton-chart-bar:nth-child(4) { height: 70%; }
+.skeleton-chart-bar:nth-child(5) { height: 55%; }
+
+/* ===== PROGRESS BARS ===== */
+
+.progress-bar {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-lg {
+  height: 12px;
+}
+
+.progress-bar-sm {
+  height: 6px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated progress fill */
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: progress-shine 2s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Progress with text */
+.progress-wrapper {
+  width: 100%;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.progress-label {
+  font-weight: 500;
+  color: #fff;
+}
+
+.progress-percentage {
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+/* Indeterminate progress */
+.progress-bar.indeterminate .progress-fill {
+  width: 30% !important;
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(350%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Circular progress */
+.progress-circle {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.progress-circle-svg {
+  transform: rotate(-90deg);
+}
+
+.progress-circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 8;
+}
+
+.progress-circle-fill {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-circle-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ===== LOADING OVERLAYS ===== */
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.loading-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.loading-overlay-content {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.loading-overlay-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+}
+
+.loading-overlay-text {
+  color: #fff;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.loading-overlay-subtext {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+}
+
+/* Inline loading */
+.loading-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== LOADING STATES ===== */
+
+/* Card loading */
+.card.loading {
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.card.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: card-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes card-loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Dots loading */
+.loading-dots {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  background: rgba(59, 130, 246, 0.6);
+  border-radius: 50%;
+  animation: loading-dot-bounce 1.4s ease-in-out infinite;
+}
+
+.loading-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes loading-dot-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+/* Pulse loading */
+.loading-pulse {
+  animation: loading-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes loading-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===== WORKFLOW PROGRESS ===== */
+
+.workflow-progress {
+  width: 100%;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+.workflow-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.workflow-progress-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.workflow-progress-stage {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.workflow-progress-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.workflow-step {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.workflow-step.completed {
+  background: #10b981;
+}
+
+.workflow-step.active {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.workflow-step.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  animation: workflow-step-shine 1.5s ease-in-out infinite;
+}
+
+@keyframes workflow-step-shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.workflow-progress-details {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== LAZY LOADING PLACEHOLDER ===== */
+
+.lazy-placeholder {
+  width: 100%;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.875rem;
+}
+
+.lazy-placeholder.loading::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(59, 130, 246, 0.8);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+}

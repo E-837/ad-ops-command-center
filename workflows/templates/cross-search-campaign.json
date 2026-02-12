@@ -1,0 +1,292 @@
+{
+  "id": "cross-search-campaign-template",
+  "name": "Cross-Platform Search Campaign (Google + Bing)",
+  "description": "Launch coordinated search campaigns on both Google Ads and Microsoft Advertising (Bing) with optimized budget allocation and platform-specific keywords/ads",
+  "workflow": "search-campaign-workflow",
+  "icon": "🔍🔵",
+  "category": "campaign-ops",
+  "defaults": {
+    "platform": "cross-search",
+    "objective": "conversions",
+    "totalBudget": 1000,
+    "duration": 30,
+    "googlePercentage": 80,
+    "bingPercentage": 20
+  },
+  "fields": [
+    {
+      "name": "productName",
+      "label": "Product Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., Cloud Analytics Platform"
+    },
+    {
+      "name": "targetAudience",
+      "label": "Target Audience",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Describe your ideal customer (demographics, interests, pain points)",
+      "help": "AI will generate platform-specific targeting (Google: mobile+desktop, Bing: desktop-heavy B2B)"
+    },
+    {
+      "name": "totalBudget",
+      "label": "Total Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 100,
+      "min": 20,
+      "max": 50000,
+      "help": "Total daily budget to split between Google and Bing"
+    },
+    {
+      "name": "budgetAllocation",
+      "label": "Budget Allocation Strategy",
+      "type": "select",
+      "required": true,
+      "default": "standard",
+      "options": [
+        { 
+          "value": "standard", 
+          "label": "Standard (80% Google / 20% Bing)",
+          "description": "Industry standard split for initial testing"
+        },
+        { 
+          "value": "b2b-focused", 
+          "label": "B2B Focused (70% Google / 30% Bing)",
+          "description": "Higher Bing allocation for B2B/enterprise products"
+        },
+        { 
+          "value": "ecommerce", 
+          "label": "E-commerce (85% Google / 15% Bing)",
+          "description": "Google-heavy for consumer products"
+        },
+        { 
+          "value": "custom", 
+          "label": "Custom Split",
+          "description": "Specify exact percentages below"
+        }
+      ]
+    },
+    {
+      "name": "googlePercentage",
+      "label": "Google Budget %",
+      "type": "number",
+      "required": false,
+      "default": 80,
+      "min": 10,
+      "max": 90,
+      "help": "Only used if 'Custom Split' selected above",
+      "showIf": "budgetAllocation === 'custom'"
+    },
+    {
+      "name": "bingPercentage",
+      "label": "Bing Budget %",
+      "type": "number",
+      "required": false,
+      "default": 20,
+      "min": 10,
+      "max": 90,
+      "help": "Only used if 'Custom Split' selected above",
+      "showIf": "budgetAllocation === 'custom'"
+    },
+    {
+      "name": "duration",
+      "label": "Campaign Duration (days)",
+      "type": "number",
+      "required": true,
+      "default": 30,
+      "min": 14,
+      "max": 365,
+      "help": "Minimum 14 days recommended for cross-platform comparison"
+    },
+    {
+      "name": "landingUrl",
+      "label": "Landing Page URL",
+      "type": "url",
+      "required": true,
+      "placeholder": "https://example.com/product"
+    },
+    {
+      "name": "geoTargeting",
+      "label": "Geographic Targeting",
+      "type": "select",
+      "required": true,
+      "default": "us",
+      "options": [
+        { "value": "us", "label": "United States" },
+        { "value": "uk", "label": "United Kingdom" },
+        { "value": "ca", "label": "Canada" },
+        { "value": "au", "label": "Australia" },
+        { "value": "global", "label": "Global" }
+      ]
+    },
+    {
+      "name": "keywordCount",
+      "label": "Keywords per Platform",
+      "type": "number",
+      "required": true,
+      "default": 25,
+      "min": 10,
+      "max": 100,
+      "help": "AI will generate platform-specific variations"
+    },
+    {
+      "name": "sharedNegatives",
+      "label": "Shared Negative Keywords",
+      "type": "textarea",
+      "required": false,
+      "placeholder": "free, cheap, jobs, career (comma-separated)",
+      "help": "Negative keywords to apply to both platforms"
+    },
+    {
+      "name": "platformSpecificAds",
+      "label": "Platform-Specific Ad Copy",
+      "type": "boolean",
+      "default": true,
+      "help": "Generate different ad copy optimized for each platform's audience"
+    },
+    {
+      "name": "bingLinkedInTargeting",
+      "label": "Enable LinkedIn Targeting on Bing (B2B)",
+      "type": "boolean",
+      "default": false,
+      "help": "Target by company, job title, industry on Microsoft Advertising"
+    },
+    {
+      "name": "autoOptimize",
+      "label": "Auto Budget Reallocation",
+      "type": "boolean",
+      "default": true,
+      "help": "Automatically adjust budget split based on performance after 14 days"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Small Test Budget",
+      "description": "Test both platforms with minimal spend",
+      "values": {
+        "totalBudget": 50,
+        "budgetAllocation": "standard",
+        "duration": 14,
+        "keywordCount": 15,
+        "platformSpecificAds": false,
+        "autoOptimize": false
+      }
+    },
+    {
+      "name": "B2B Medium Budget",
+      "description": "Balanced B2B approach with LinkedIn targeting",
+      "values": {
+        "totalBudget": 200,
+        "budgetAllocation": "b2b-focused",
+        "duration": 30,
+        "keywordCount": 30,
+        "platformSpecificAds": true,
+        "bingLinkedInTargeting": true,
+        "autoOptimize": true
+      }
+    },
+    {
+      "name": "E-commerce Large Budget",
+      "description": "Google-heavy with Bing testing",
+      "values": {
+        "totalBudget": 1000,
+        "budgetAllocation": "ecommerce",
+        "duration": 45,
+        "keywordCount": 50,
+        "platformSpecificAds": true,
+        "bingLinkedInTargeting": false,
+        "autoOptimize": true
+      }
+    },
+    {
+      "name": "Enterprise Full Coverage",
+      "description": "Maximum reach with sophisticated targeting",
+      "values": {
+        "totalBudget": 5000,
+        "budgetAllocation": "custom",
+        "googlePercentage": 75,
+        "bingPercentage": 25,
+        "duration": 60,
+        "keywordCount": 75,
+        "platformSpecificAds": true,
+        "bingLinkedInTargeting": true,
+        "autoOptimize": true
+      }
+    }
+  ],
+  "workflow": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "Generate shared keyword list",
+        "agent": "search-marketer",
+        "description": "AI generates base keywords applicable to both platforms"
+      },
+      {
+        "step": 2,
+        "action": "Adapt keywords for each platform",
+        "agent": "search-marketer",
+        "description": "Optimize keywords and bids for Google vs Bing characteristics"
+      },
+      {
+        "step": 3,
+        "action": "Create platform-specific ad copy",
+        "agent": "search-marketer",
+        "description": "Generate RSAs optimized for each platform's audience"
+      },
+      {
+        "step": 4,
+        "action": "Launch Google Ads campaign",
+        "agent": "search-marketer",
+        "description": "Create campaign with allocated budget"
+      },
+      {
+        "step": 5,
+        "action": "Launch Microsoft Ads campaign",
+        "agent": "search-marketer",
+        "description": "Create campaign with allocated budget and optional LinkedIn targeting"
+      },
+      {
+        "step": 6,
+        "action": "Set up cross-platform tracking",
+        "agent": "analyst",
+        "description": "Compare performance metrics between platforms"
+      },
+      {
+        "step": 7,
+        "action": "Schedule optimization review",
+        "agent": "search-marketer",
+        "description": "After 14 days, compare ROAS and adjust budget allocation if auto-optimize enabled"
+      }
+    ]
+  },
+  "tips": [
+    "🎯 Cross-platform search maximizes reach (Google + Bing = 95%+ of US search)",
+    "💰 Bing typically delivers 30-50% lower CPCs than Google",
+    "📊 Run for minimum 14 days to collect statistically significant data",
+    "🔄 Use auto-optimization to shift budget to best-performing platform",
+    "💼 B2B products often see better ROAS on Bing (LinkedIn targeting)",
+    "📱 Google dominates mobile search, Bing is desktop-heavy",
+    "🎨 Platform-specific ads perform better (different audiences)",
+    "⚠️ Don't judge Bing too quickly - give it time to optimize"
+  ],
+  "expectedResults": {
+    "google": {
+      "share": "80-85% of total clicks",
+      "cpc": "Higher CPCs but larger volume",
+      "mobile": "50-60% mobile traffic"
+    },
+    "bing": {
+      "share": "15-20% of total clicks",
+      "cpc": "30-50% lower CPCs",
+      "mobile": "30-40% mobile traffic",
+      "b2b": "Often outperforms Google for B2B"
+    },
+    "combined": {
+      "reach": "95%+ of US search market",
+      "optimization": "Budget flows to better ROAS platform over time"
+    }
+  }
+}

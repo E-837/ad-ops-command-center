@@ -1,0 +1,146 @@
+{
+  "id": "ab-test-template",
+  "name": "A/B Creative Test",
+  "description": "Test multiple creative variants to find the best performing ads",
+  "workflow": "ab-test-workflow",
+  "icon": "🧪",
+  "category": "analytics",
+  "defaults": {
+    "variants": 3,
+    "splitType": "even",
+    "significance": 0.95
+  },
+  "fields": [
+    {
+      "name": "testName",
+      "label": "Test Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Headline Variations Test"
+    },
+    {
+      "name": "platform",
+      "label": "Platform",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "google-ads", "label": "Google Ads" },
+        { "value": "meta", "label": "Meta (Facebook/Instagram)" },
+        { "value": "pinterest", "label": "Pinterest" }
+      ]
+    },
+    {
+      "name": "variantCount",
+      "label": "Number of Variants",
+      "type": "number",
+      "required": true,
+      "default": 3,
+      "min": 2,
+      "max": 10,
+      "help": "How many different creatives to test"
+    },
+    {
+      "name": "testType",
+      "label": "Test Type",
+      "type": "select",
+      "required": true,
+      "default": "creative",
+      "options": [
+        { "value": "creative", "label": "Creative/Visual" },
+        { "value": "copy", "label": "Ad Copy" },
+        { "value": "headline", "label": "Headlines" },
+        { "value": "cta", "label": "Call-to-Action" },
+        { "value": "audience", "label": "Audience Targeting" }
+      ]
+    },
+    {
+      "name": "baseCreative",
+      "label": "Base Creative Description",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Describe the base creative or what variations to test",
+      "help": "AI will generate variants based on this"
+    },
+    {
+      "name": "budget",
+      "label": "Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 100,
+      "min": 20,
+      "max": 5000
+    },
+    {
+      "name": "testDuration",
+      "label": "Test Duration (days)",
+      "type": "number",
+      "required": true,
+      "default": 7,
+      "min": 3,
+      "max": 30,
+      "help": "How long to run the test before declaring a winner"
+    },
+    {
+      "name": "splitType",
+      "label": "Traffic Split",
+      "type": "select",
+      "required": true,
+      "default": "even",
+      "options": [
+        { "value": "even", "label": "Even Split" },
+        { "value": "weighted", "label": "Weighted (favor better performers)" },
+        { "value": "adaptive", "label": "Adaptive (AI adjusts in real-time)" }
+      ]
+    },
+    {
+      "name": "successMetric",
+      "label": "Success Metric",
+      "type": "select",
+      "required": true,
+      "default": "ctr",
+      "options": [
+        { "value": "ctr", "label": "Click-Through Rate" },
+        { "value": "conversions", "label": "Conversion Rate" },
+        { "value": "cpa", "label": "Cost per Acquisition" },
+        { "value": "roas", "label": "Return on Ad Spend" },
+        { "value": "engagement", "label": "Engagement Rate" }
+      ]
+    },
+    {
+      "name": "autoWinner",
+      "label": "Auto-select Winner",
+      "type": "checkbox",
+      "default": true,
+      "help": "Automatically scale the winning variant after test completes"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Quick Test",
+      "values": {
+        "variantCount": 2,
+        "testDuration": 3,
+        "budget": 50,
+        "splitType": "even"
+      }
+    },
+    {
+      "name": "Standard Test",
+      "values": {
+        "variantCount": 3,
+        "testDuration": 7,
+        "budget": 100,
+        "splitType": "adaptive"
+      }
+    },
+    {
+      "name": "Comprehensive Test",
+      "values": {
+        "variantCount": 5,
+        "testDuration": 14,
+        "budget": 200,
+        "splitType": "adaptive"
+      }
+    }
+  ]
+}

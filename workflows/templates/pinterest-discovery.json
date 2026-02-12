@@ -1,0 +1,114 @@
+{
+  "id": "pinterest-discovery-template",
+  "name": "Pinterest Discovery Campaign",
+  "description": "Launch a Pinterest campaign with AI-optimized pins and boards",
+  "workflow": "pinterest-campaign-workflow",
+  "icon": "📌",
+  "category": "campaign-ops",
+  "defaults": {
+    "platform": "pinterest",
+    "objective": "awareness"
+  },
+  "fields": [
+    {
+      "name": "campaignName",
+      "label": "Campaign Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Spring Collection Launch"
+    },
+    {
+      "name": "productCategory",
+      "label": "Product Category",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "fashion", "label": "Fashion & Style" },
+        { "value": "home", "label": "Home & Garden" },
+        { "value": "food", "label": "Food & Recipes" },
+        { "value": "beauty", "label": "Beauty & Wellness" },
+        { "value": "diy", "label": "DIY & Crafts" },
+        { "value": "travel", "label": "Travel & Places" }
+      ]
+    },
+    {
+      "name": "budget",
+      "label": "Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 75,
+      "min": 15,
+      "max": 5000
+    },
+    {
+      "name": "duration",
+      "label": "Duration (days)",
+      "type": "number",
+      "required": true,
+      "default": 30,
+      "min": 14,
+      "max": 180
+    },
+    {
+      "name": "pinCount",
+      "label": "Number of Pins",
+      "type": "number",
+      "required": true,
+      "default": 10,
+      "min": 3,
+      "max": 50,
+      "help": "AI will generate pin designs and descriptions"
+    },
+    {
+      "name": "targetKeywords",
+      "label": "Target Keywords",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "summer fashion, trendy outfits, beach style",
+      "help": "Keywords to optimize pins for Pinterest search"
+    },
+    {
+      "name": "landingUrl",
+      "label": "Landing Page URL",
+      "type": "url",
+      "required": true,
+      "placeholder": "https://example.com/collection"
+    },
+    {
+      "name": "audienceInterests",
+      "label": "Audience Interests",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Home décor, interior design, minimalism",
+      "help": "What interests should the AI target?"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Fashion Discovery",
+      "values": {
+        "productCategory": "fashion",
+        "budget": 100,
+        "duration": 30,
+        "pinCount": 15
+      }
+    },
+    {
+      "name": "Home & Garden",
+      "values": {
+        "productCategory": "home",
+        "budget": 75,
+        "duration": 45,
+        "pinCount": 20
+      }
+    },
+    {
+      "name": "Seasonal Campaign",
+      "values": {
+        "budget": 150,
+        "duration": 60,
+        "pinCount": 25
+      }
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "id": "prd-to-asana-template",
+  "name": "PRD to Asana Project",
+  "description": "Parse a Product Requirements Document and automatically create Asana tasks",
+  "workflow": "prd-to-asana-workflow",
+  "icon": "📋",
+  "category": "productivity",
+  "defaults": {
+    "assignees": [],
+    "dueDate": null
+  },
+  "fields": [
+    {
+      "name": "projectName",
+      "label": "Project Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Q2 Feature Launch"
+    },
+    {
+      "name": "prdUrl",
+      "label": "PRD Document URL",
+      "type": "url",
+      "required": false,
+      "placeholder": "https://docs.google.com/document/d/...",
+      "help": "Google Docs, Notion, or other accessible URL"
+    },
+    {
+      "name": "prdText",
+      "label": "Or Paste PRD Text",
+      "type": "textarea",
+      "required": false,
+      "placeholder": "Paste the full PRD content here...",
+      "help": "If no URL provided, paste the document text"
+    },
+    {
+      "name": "asanaWorkspace",
+      "label": "Asana Workspace",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "main", "label": "Main Workspace" },
+        { "value": "marketing", "label": "Marketing Team" },
+        { "value": "product", "label": "Product Team" }
+      ]
+    },
+    {
+      "name": "asanaProject",
+      "label": "Asana Project",
+      "type": "text",
+      "required": true,
+      "placeholder": "Q2 Initiatives",
+      "help": "Will be created if it doesn't exist"
+    },
+    {
+      "name": "breakdownLevel",
+      "label": "Task Breakdown Level",
+      "type": "select",
+      "required": true,
+      "default": "detailed",
+      "options": [
+        { "value": "high-level", "label": "High-level (fewer tasks)" },
+        { "value": "detailed", "label": "Detailed (more granular)" },
+        { "value": "comprehensive", "label": "Comprehensive (subtasks too)" }
+      ],
+      "help": "How granularly to break down the PRD"
+    },
+    {
+      "name": "projectDuration",
+      "label": "Project Duration (weeks)",
+      "type": "number",
+      "required": true,
+      "default": 8,
+      "min": 1,
+      "max": 52,
+      "help": "AI will estimate task timelines within this window"
+    },
+    {
+      "name": "defaultAssignee",
+      "label": "Default Assignee (email)",
+      "type": "email",
+      "required": false,
+      "placeholder": "pm@example.com",
+      "help": "Optional: assign all tasks to this person by default"
+    },
+    {
+      "name": "addDependencies",
+      "label": "Add Task Dependencies",
+      "type": "checkbox",
+      "default": true,
+      "help": "AI will identify and set up task dependencies"
+    },
+    {
+      "name": "addMilestones",
+      "label": "Create Milestones",
+      "type": "checkbox",
+      "default": true,
+      "help": "Create milestone markers for key deliverables"
+    },
+    {
+      "name": "estimateEffort",
+      "label": "Estimate Effort",
+      "type": "checkbox",
+      "default": true,
+      "help": "AI estimates time/effort for each task"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Quick Import",
+      "values": {
+        "breakdownLevel": "high-level",
+        "projectDuration": 4,
+        "addDependencies": false,
+        "addMilestones": false
+      }
+    },
+    {
+      "name": "Standard Project",
+      "values": {
+        "breakdownLevel": "detailed",
+        "projectDuration": 8,
+        "addDependencies": true,
+        "addMilestones": true
+      }
+    },
+    {
+      "name": "Comprehensive Breakdown",
+      "values": {
+        "breakdownLevel": "comprehensive",
+        "projectDuration": 12,
+        "addDependencies": true,
+        "addMilestones": true,
+        "estimateEffort": true
+      }
+    }
+  ]
+}

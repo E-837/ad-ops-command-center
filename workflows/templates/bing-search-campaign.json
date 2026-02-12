@@ -1,0 +1,164 @@
+{
+  "id": "bing-search-campaign-template",
+  "name": "Microsoft Ads (Bing) Search Campaign",
+  "description": "Launch a Microsoft Advertising (Bing) search campaign with AI-generated keywords and RSA copy. Typically 30-50% lower CPCs than Google.",
+  "workflow": "search-campaign-workflow",
+  "icon": "🔵",
+  "category": "campaign-ops",
+  "defaults": {
+    "platform": "microsoft-ads",
+    "objective": "conversions",
+    "budget": 750,
+    "duration": 30
+  },
+  "fields": [
+    {
+      "name": "productName",
+      "label": "Product Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., Enterprise CRM Software"
+    },
+    {
+      "name": "targetAudience",
+      "label": "Target Audience",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Describe your ideal customer (demographics, interests, pain points)",
+      "help": "Bing skews towards desktop users, older demographics (35-65), and B2B professionals"
+    },
+    {
+      "name": "budget",
+      "label": "Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 75,
+      "min": 10,
+      "max": 10000,
+      "help": "Budget per day in USD. Start 30-50% lower than Google due to lower CPCs on Bing"
+    },
+    {
+      "name": "duration",
+      "label": "Campaign Duration (days)",
+      "type": "number",
+      "required": true,
+      "default": 30,
+      "min": 7,
+      "max": 365
+    },
+    {
+      "name": "landingUrl",
+      "label": "Landing Page URL",
+      "type": "url",
+      "required": true,
+      "placeholder": "https://example.com/product",
+      "help": "Optimize for desktop (Bing is 60-70% desktop traffic)"
+    },
+    {
+      "name": "geoTargeting",
+      "label": "Geographic Targeting",
+      "type": "select",
+      "required": true,
+      "default": "us",
+      "options": [
+        { "value": "us", "label": "United States" },
+        { "value": "uk", "label": "United Kingdom" },
+        { "value": "ca", "label": "Canada" },
+        { "value": "au", "label": "Australia" },
+        { "value": "global", "label": "Global" }
+      ]
+    },
+    {
+      "name": "campaignType",
+      "label": "Campaign Type",
+      "type": "select",
+      "required": true,
+      "default": "Search",
+      "options": [
+        { "value": "Search", "label": "Search - Bing search network" },
+        { "value": "Audience", "label": "Audience - Microsoft Audience Network (native ads)" },
+        { "value": "PerformanceMax", "label": "Performance Max - Multi-channel automated" }
+      ]
+    },
+    {
+      "name": "keywordCount",
+      "label": "Number of Keywords",
+      "type": "number",
+      "required": true,
+      "default": 20,
+      "min": 5,
+      "max": 100,
+      "help": "How many AI-generated keywords to create. Consider phrase/exact match for Bing."
+    },
+    {
+      "name": "adVariants",
+      "label": "Ad Copy Variants (RSA)",
+      "type": "number",
+      "required": true,
+      "default": 3,
+      "min": 1,
+      "max": 10,
+      "help": "Number of Responsive Search Ad variations to test"
+    },
+    {
+      "name": "importFromGoogle",
+      "label": "Import from Google Ads?",
+      "type": "boolean",
+      "default": false,
+      "help": "If you have a Google Ads campaign, check this to import and adapt keywords/ads"
+    },
+    {
+      "name": "linkedInTargeting",
+      "label": "Enable LinkedIn Profile Targeting (B2B)",
+      "type": "boolean",
+      "default": false,
+      "help": "Target by company, job title, industry (requires B2B audience)"
+    }
+  ],
+  "presets": [
+    {
+      "name": "B2B Small Budget",
+      "description": "Ideal for testing Bing for B2B/enterprise products",
+      "values": {
+        "budget": 50,
+        "duration": 30,
+        "keywordCount": 15,
+        "adVariants": 2,
+        "campaignType": "Search",
+        "linkedInTargeting": true
+      }
+    },
+    {
+      "name": "E-commerce Medium Budget",
+      "description": "Complement Google with Bing for e-commerce",
+      "values": {
+        "budget": 150,
+        "duration": 45,
+        "keywordCount": 30,
+        "adVariants": 4,
+        "campaignType": "Search",
+        "linkedInTargeting": false
+      }
+    },
+    {
+      "name": "Enterprise Large Budget",
+      "description": "Full Bing expansion for high-ticket B2B",
+      "values": {
+        "budget": 500,
+        "duration": 60,
+        "keywordCount": 50,
+        "adVariants": 6,
+        "campaignType": "PerformanceMax",
+        "linkedInTargeting": true
+      }
+    }
+  ],
+  "tips": [
+    "💡 Bing CPCs are typically 30-50% lower than Google",
+    "🎯 Bing audience skews older (35-65), more affluent, desktop-heavy",
+    "💼 Excellent for B2B - LinkedIn profile targeting available",
+    "🖥️  Optimize landing pages for desktop (60-70% of Bing traffic)",
+    "📊 Start with 15-25% of your Google search budget",
+    "🔄 Import top Google campaigns and adjust bids down 35%"
+  ]
+}

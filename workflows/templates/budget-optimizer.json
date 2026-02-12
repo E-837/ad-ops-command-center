@@ -1,0 +1,153 @@
+{
+  "id": "budget-optimizer-template",
+  "name": "Budget Optimization",
+  "description": "Automatically reallocate budget across campaigns based on ROAS and performance",
+  "workflow": "budget-optimizer-workflow",
+  "icon": "💰",
+  "category": "analytics",
+  "defaults": {
+    "optimizationGoal": "roas",
+    "frequency": "daily"
+  },
+  "fields": [
+    {
+      "name": "optimizationName",
+      "label": "Optimization Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Q1 Budget Optimizer"
+    },
+    {
+      "name": "totalBudget",
+      "label": "Total Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 1000,
+      "min": 100,
+      "max": 100000,
+      "help": "Total budget to distribute across campaigns"
+    },
+    {
+      "name": "optimizationGoal",
+      "label": "Optimization Goal",
+      "type": "select",
+      "required": true,
+      "default": "roas",
+      "options": [
+        { "value": "roas", "label": "Maximize ROAS" },
+        { "value": "conversions", "label": "Maximize Conversions" },
+        { "value": "revenue", "label": "Maximize Revenue" },
+        { "value": "cpa", "label": "Minimize CPA" },
+        { "value": "balanced", "label": "Balanced (ROAS + Volume)" }
+      ]
+    },
+    {
+      "name": "minCampaignBudget",
+      "label": "Minimum Campaign Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 20,
+      "min": 5,
+      "max": 1000,
+      "help": "Minimum budget any campaign can receive"
+    },
+    {
+      "name": "maxCampaignBudget",
+      "label": "Maximum Campaign Budget ($)",
+      "type": "number",
+      "required": false,
+      "placeholder": "Leave blank for no maximum"
+    },
+    {
+      "name": "frequency",
+      "label": "Optimization Frequency",
+      "type": "select",
+      "required": true,
+      "default": "daily",
+      "options": [
+        { "value": "hourly", "label": "Hourly" },
+        { "value": "daily", "label": "Daily" },
+        { "value": "weekly", "label": "Weekly" }
+      ]
+    },
+    {
+      "name": "lookbackDays",
+      "label": "Performance Lookback (days)",
+      "type": "number",
+      "required": true,
+      "default": 7,
+      "min": 1,
+      "max": 90,
+      "help": "How many days of historical data to consider"
+    },
+    {
+      "name": "platforms",
+      "label": "Platforms to Include",
+      "type": "select",
+      "required": true,
+      "default": "all",
+      "options": [
+        { "value": "all", "label": "All Platforms" },
+        { "value": "google-ads", "label": "Google Ads Only" },
+        { "value": "meta", "label": "Meta Only" },
+        { "value": "pinterest", "label": "Pinterest Only" }
+      ]
+    },
+    {
+      "name": "aggressiveness",
+      "label": "Reallocation Aggressiveness",
+      "type": "select",
+      "required": true,
+      "default": "moderate",
+      "options": [
+        { "value": "conservative", "label": "Conservative (small adjustments)" },
+        { "value": "moderate", "label": "Moderate" },
+        { "value": "aggressive", "label": "Aggressive (large shifts)" }
+      ],
+      "help": "How quickly to shift budget to better performers"
+    },
+    {
+      "name": "pauseUnderperformers",
+      "label": "Auto-pause Underperformers",
+      "type": "checkbox",
+      "default": false,
+      "help": "Automatically pause campaigns that consistently underperform"
+    },
+    {
+      "name": "notifyChanges",
+      "label": "Notify on Budget Changes",
+      "type": "checkbox",
+      "default": true,
+      "help": "Send notification when significant budget reallocations occur"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Conservative Optimization",
+      "values": {
+        "optimizationGoal": "balanced",
+        "frequency": "daily",
+        "aggressiveness": "conservative",
+        "pauseUnderperformers": false
+      }
+    },
+    {
+      "name": "Aggressive ROAS Focus",
+      "values": {
+        "optimizationGoal": "roas",
+        "frequency": "hourly",
+        "aggressiveness": "aggressive",
+        "pauseUnderperformers": true
+      }
+    },
+    {
+      "name": "Volume Maximizer",
+      "values": {
+        "optimizationGoal": "conversions",
+        "frequency": "daily",
+        "aggressiveness": "moderate",
+        "pauseUnderperformers": false
+      }
+    }
+  ]
+}

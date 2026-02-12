@@ -1,0 +1,135 @@
+{
+  "id": "cross-platform-template",
+  "name": "Cross-Platform Launch",
+  "description": "Launch the same campaign across Google, Meta, and Pinterest simultaneously",
+  "workflow": "cross-platform-workflow",
+  "icon": "🌐",
+  "category": "cross-platform",
+  "defaults": {
+    "platforms": ["google", "meta", "pinterest"],
+    "syncBudget": true
+  },
+  "fields": [
+    {
+      "name": "campaignName",
+      "label": "Campaign Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Q2 Product Launch"
+    },
+    {
+      "name": "productName",
+      "label": "Product/Service Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "AI Marketing Platform"
+    },
+    {
+      "name": "productDescription",
+      "label": "Product Description",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Describe your product, key features, and value proposition",
+      "help": "AI will adapt this for each platform"
+    },
+    {
+      "name": "targetAudience",
+      "label": "Target Audience",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Marketing managers at B2B SaaS companies, 30-50 years old"
+    },
+    {
+      "name": "totalBudget",
+      "label": "Total Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 500,
+      "min": 100,
+      "max": 50000,
+      "help": "Will be split across platforms based on performance"
+    },
+    {
+      "name": "duration",
+      "label": "Duration (days)",
+      "type": "number",
+      "required": true,
+      "default": 30,
+      "min": 14,
+      "max": 180
+    },
+    {
+      "name": "platforms",
+      "label": "Platforms",
+      "type": "select",
+      "required": true,
+      "default": "all",
+      "options": [
+        { "value": "all", "label": "All Platforms (Google + Meta + Pinterest)" },
+        { "value": "google-meta", "label": "Google + Meta" },
+        { "value": "meta-pinterest", "label": "Meta + Pinterest" },
+        { "value": "google-pinterest", "label": "Google + Pinterest" }
+      ]
+    },
+    {
+      "name": "landingUrl",
+      "label": "Landing Page URL",
+      "type": "url",
+      "required": true,
+      "placeholder": "https://example.com/product"
+    },
+    {
+      "name": "objective",
+      "label": "Primary Objective",
+      "type": "select",
+      "required": true,
+      "default": "conversions",
+      "options": [
+        { "value": "awareness", "label": "Brand Awareness" },
+        { "value": "consideration", "label": "Consideration/Traffic" },
+        { "value": "conversions", "label": "Conversions/Sales" }
+      ]
+    },
+    {
+      "name": "budgetOptimization",
+      "label": "Budget Optimization",
+      "type": "select",
+      "required": true,
+      "default": "auto",
+      "options": [
+        { "value": "auto", "label": "Automatic (AI-driven)" },
+        { "value": "equal", "label": "Equal Split" },
+        { "value": "manual", "label": "Manual Allocation" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Small Launch",
+      "values": {
+        "totalBudget": 200,
+        "duration": 14,
+        "platforms": "google-meta",
+        "budgetOptimization": "equal"
+      }
+    },
+    {
+      "name": "Medium Launch",
+      "values": {
+        "totalBudget": 750,
+        "duration": 30,
+        "platforms": "all",
+        "budgetOptimization": "auto"
+      }
+    },
+    {
+      "name": "Large Launch",
+      "values": {
+        "totalBudget": 2000,
+        "duration": 60,
+        "platforms": "all",
+        "budgetOptimization": "auto"
+      }
+    }
+  ]
+}

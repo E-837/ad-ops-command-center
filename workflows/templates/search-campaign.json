@@ -1,0 +1,120 @@
+{
+  "id": "search-campaign-template",
+  "name": "Google Search Campaign",
+  "description": "Launch a Google Ads search campaign with AI-generated keywords and copy",
+  "workflow": "search-campaign-workflow",
+  "icon": "🔍",
+  "category": "campaign-ops",
+  "defaults": {
+    "platform": "google-ads",
+    "objective": "conversions",
+    "budget": 1000,
+    "duration": 30
+  },
+  "fields": [
+    {
+      "name": "productName",
+      "label": "Product Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "e.g., AI Productivity Tool"
+    },
+    {
+      "name": "targetAudience",
+      "label": "Target Audience",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Describe your ideal customer (demographics, interests, pain points)",
+      "help": "The AI will use this to generate relevant keywords and ad copy"
+    },
+    {
+      "name": "budget",
+      "label": "Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 100,
+      "min": 10,
+      "max": 10000,
+      "help": "Budget per day in USD"
+    },
+    {
+      "name": "duration",
+      "label": "Campaign Duration (days)",
+      "type": "number",
+      "required": true,
+      "default": 30,
+      "min": 7,
+      "max": 365
+    },
+    {
+      "name": "landingUrl",
+      "label": "Landing Page URL",
+      "type": "url",
+      "required": true,
+      "placeholder": "https://example.com/product"
+    },
+    {
+      "name": "geoTargeting",
+      "label": "Geographic Targeting",
+      "type": "select",
+      "required": true,
+      "default": "us",
+      "options": [
+        { "value": "us", "label": "United States" },
+        { "value": "uk", "label": "United Kingdom" },
+        { "value": "ca", "label": "Canada" },
+        { "value": "au", "label": "Australia" },
+        { "value": "global", "label": "Global" }
+      ]
+    },
+    {
+      "name": "keywordCount",
+      "label": "Number of Keywords",
+      "type": "number",
+      "required": true,
+      "default": 20,
+      "min": 5,
+      "max": 100,
+      "help": "How many AI-generated keywords to create"
+    },
+    {
+      "name": "adVariants",
+      "label": "Ad Copy Variants",
+      "type": "number",
+      "required": true,
+      "default": 3,
+      "min": 1,
+      "max": 10,
+      "help": "Number of different ad copy versions to test"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Small Budget",
+      "values": {
+        "budget": 50,
+        "duration": 14,
+        "keywordCount": 10,
+        "adVariants": 2
+      }
+    },
+    {
+      "name": "Medium Budget",
+      "values": {
+        "budget": 200,
+        "duration": 30,
+        "keywordCount": 30,
+        "adVariants": 4
+      }
+    },
+    {
+      "name": "Large Budget",
+      "values": {
+        "budget": 1000,
+        "duration": 60,
+        "keywordCount": 50,
+        "adVariants": 6
+      }
+    }
+  ]
+}

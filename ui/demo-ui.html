@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UI Components Demo - Ad Ops Command Center</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/loading.css">
+  <link rel="stylesheet" href="/css/animations.css">
+</head>
+<body>
+  <!-- Hamburger Menu (Mobile) -->
+  <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+    <div class="hamburger-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </button>
+  
+  <!-- Sidebar Overlay (Mobile) -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <h1>🎯 Ad Ops</h1>
+      <span class="subtitle">UI Demo</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard" class="nav-link">📊 Dashboard</a></li>
+      <li><a href="/demo-ui.html" class="nav-link active">🎨 UI Demo</a></li>
+      <li><a href="/workflows" class="nav-link">⚡ Workflows</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h2>🎨 UI Components Demo</h2>
+      <p>Showcase of all new Week 6 UI components</p>
+    </header>
+
+    <!-- Section: Toasts -->
+    <section style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 16px;">Toast Notifications</h3>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <button onclick="errorManager.success('Campaign created successfully!')" class="btn" style="background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4);">
+          Show Success
+        </button>
+        <button onclick="errorManager.error('Failed to connect to API')" class="btn" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4);">
+          Show Error
+        </button>
+        <button onclick="errorManager.warning('Budget exceeds recommendation')" class="btn" style="background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.4);">
+          Show Warning
+        </button>
+        <button onclick="errorManager.info('New data available')" class="btn" style="background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4);">
+          Show Info
+        </button>
+      </div>
+    </section>
+
+    <!-- Section: Loading States -->
+    <section style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 16px;">Loading States</h3>
+      
+      <h4 style="margin-bottom: 12px; font-size: 14px; color: rgba(255,255,255,0.7);">Spinners</h4>
+      <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 24px;">
+        <div><div class="spinner spinner-sm"></div><span style="font-size: 12px; margin-left: 8px;">Small</span></div>
+        <div><div class="spinner"></div><span style="font-size: 12px; margin-left: 8px;">Default</span></div>
+        <div><div class="spinner spinner-lg"></div><span style="font-size: 12px; margin-left: 8px;">Large</span></div>
+      </div>
+
+      <h4 style="margin-bottom: 12px; font-size: 14px; color: rgba(255,255,255,0.7);">Skeleton Screens</h4>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div class="skeleton skeleton-text wide"></div>
+        <div class="skeleton skeleton-text medium"></div>
+        <div class="skeleton skeleton-text narrow"></div>
+      </div>
+
+      <h4 style="margin-bottom: 12px; font-size: 14px; color: rgba(255,255,255,0.7);">Progress Bars</h4>
+      <div id="progress-demo" style="margin-bottom: 24px;"></div>
+
+      <h4 style="margin-bottom: 12px; font-size: 14px; color: rgba(255,255,255,0.7);">Buttons</h4>
+      <button id="loading-btn-demo" class="btn" onclick="demoLoadingButton()">
+        Click to See Loading
+      </button>
+    </section>
+
+    <!-- Section: Animations -->
+    <section style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 16px;">Animations</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+        <div class="fade-in" style="background: rgba(59,130,246,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+          Fade In
+        </div>
+        <div class="slide-in-left" style="background: rgba(16,185,129,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+          Slide Left
+        </div>
+        <div class="slide-in-right" style="background: rgba(245,158,11,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+          Slide Right
+        </div>
+        <div class="pulse" style="background: rgba(139,92,246,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+          Pulse
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Error Messages -->
+    <section style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 16px;">Error Messages</h3>
+      <div id="inline-error-demo"></div>
+      <button onclick="showInlineError()" class="btn" style="margin-top: 12px;">
+        Show Inline Error
+      </button>
+    </section>
+
+    <!-- Section: Form Validation -->
+    <section style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 16px;">Form Validation</h3>
+      <form id="demo-form" onsubmit="handleFormSubmit(event)" style="max-width: 500px;">
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input type="email" id="email" name="email" required placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+          <label for="budget">Budget ($) *</label>
+          <input type="number" id="budget" name="budget" required min="10" max="10000" placeholder="100">
+        </div>
+        <div class="form-group">
+          <label for="url">Landing Page URL *</label>
+          <input type="url" id="url" name="url" required placeholder="https://example.com">
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Validate & Submit
+        </button>
+      </form>
+    </section>
+
+    <!-- Section: Keyboard Shortcuts -->
+    <section style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 16px;">Keyboard Shortcuts</h3>
+      <p style="color: rgba(255,255,255,0.7); margin-bottom: 16px;">Try these keyboard shortcuts:</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+          <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">Cmd/Ctrl + K</kbd>
+          <span style="display: block; margin-top: 8px; font-size: 14px; color: rgba(255,255,255,0.6);">Command Palette</span>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+          <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">Cmd/Ctrl + /</kbd>
+          <span style="display: block; margin-top: 8px; font-size: 14px; color: rgba(255,255,255,0.6);">Show Shortcuts</span>
+        </div>
+        <div style="padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+          <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">Escape</kbd>
+          <span style="display: block; margin-top: 8px; font-size: 14px; color: rgba(255,255,255,0.6);">Close Modals</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Responsive Test -->
+    <section style="background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; margin-bottom: 24px;">
+      <h3 style="margin-bottom: 16px;">Responsive Design</h3>
+      <p style="color: rgba(255,255,255,0.7); margin-bottom: 16px;">Resize your browser to see:</p>
+      <ul style="color: rgba(255,255,255,0.7); list-style: none; padding-left: 0;">
+        <li style="margin-bottom: 8px;">✓ Hamburger menu appears on mobile (&lt; 768px)</li>
+        <li style="margin-bottom: 8px;">✓ Grid columns adjust (1/2/3/4 columns)</li>
+        <li style="margin-bottom: 8px;">✓ Sidebar becomes overlay on mobile</li>
+        <li style="margin-bottom: 8px;">✓ Touch targets increase to 44x44px</li>
+      </ul>
+      <div class="grid" style="margin-top: 16px;">
+        <div class="card" style="background: rgba(59,130,246,0.1); padding: 20px; border-radius: 8px; text-align: center;">
+          Card 1
+        </div>
+        <div class="card" style="background: rgba(16,185,129,0.1); padding: 20px; border-radius: 8px; text-align: center;">
+          Card 2
+        </div>
+        <div class="card" style="background: rgba(245,158,11,0.1); padding: 20px; border-radius: 8px; text-align: center;">
+          Card 3
+        </div>
+        <div class="card" style="background: rgba(139,92,246,0.1); padding: 20px; border-radius: 8px; text-align: center;">
+          Card 4
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/components/loading.js"></script>
+  <script src="/components/errors.js"></script>
+  <script src="/components/navigation.js"></script>
+  
+  <script>
+    // Sidebar toggle
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const hamburger = document.querySelector('.hamburger-btn');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      sidebar.classList.toggle('open');
+      hamburger.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+    
+    function closeSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const hamburger = document.querySelector('.hamburger-btn');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      sidebar.classList.remove('open');
+      hamburger.classList.remove('open');
+      overlay.classList.remove('active');
+    }
+
+    // Demo functions
+    function demoLoadingButton() {
+      const btn = document.getElementById('loading-btn-demo');
+      LoadingManager.buttonLoading(btn, true);
+      
+      setTimeout(() => {
+        LoadingManager.buttonLoading(btn, false);
+        errorManager.success('Done!');
+      }, 2000);
+    }
+
+    function showInlineError() {
+      const container = document.getElementById('inline-error-demo');
+      const error = ErrorManager.createInlineError(
+        'Failed to connect to Pinterest API. Check your API key.',
+        {
+          retry: () => {
+            container.innerHTML = '';
+            errorManager.info('Retrying...');
+            setTimeout(() => {
+              errorManager.success('Connected!');
+            }, 1000);
+          }
+        }
+      );
+      container.innerHTML = '';
+      container.appendChild(error);
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const form = e.target;
+      if (!ErrorManager.validateForm(form)) {
+        return;
+      }
+      
+      errorManager.success('Form is valid! ✓');
+    }
+
+    // Create progress bar demo
+    window.addEventListener('load', () => {
+      const progressContainer = document.getElementById('progress-demo');
+      
+      const progress = LoadingManager.createProgressBar(0, {
+        label: 'Processing campaign',
+        showPercentage: true
+      });
+      
+      progressContainer.appendChild(progress);
+      
+      let value = 0;
+      setInterval(() => {
+        value = (value + 5) % 105;
+        progress.update(value);
+      }, 500);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,586 @@
+/* animations.css - Smooth transitions and microinteractions */
+
+/* ===== SMOOTH TRANSITIONS ===== */
+
+/* Global transition (opt-in via class) */
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.transition-colors {
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+.transition-opacity {
+  transition: opacity 0.2s ease;
+}
+
+/* ===== FADE ANIMATIONS ===== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.fade-in-down {
+  animation: fadeInDown 0.4s ease forwards;
+}
+
+/* Staggered fade-in for lists */
+.stagger-fade-in > * {
+  opacity: 0;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.stagger-fade-in > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-fade-in > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-fade-in > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-fade-in > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-fade-in > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-fade-in > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-fade-in > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-fade-in > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* ===== SLIDE ANIMATIONS ===== */
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease forwards;
+}
+
+/* ===== SCALE ANIMATIONS ===== */
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.2s ease forwards;
+}
+
+.scale-out {
+  animation: scaleOut 0.2s ease forwards;
+}
+
+/* ===== BUTTON MICROINTERACTIONS ===== */
+
+button,
+.btn,
+a.btn {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+button:hover,
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+button:active,
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Ripple effect on click */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* ===== CARD MICROINTERACTIONS ===== */
+
+.card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.card-clickable {
+  cursor: pointer;
+}
+
+.card-clickable:active {
+  transform: translateY(-2px);
+}
+
+/* ===== INPUT MICROINTERACTIONS ===== */
+
+input,
+select,
+textarea {
+  transition: all 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  transform: scale(1.01);
+}
+
+/* Input glow effect */
+.input-glow {
+  position: relative;
+}
+
+.input-glow::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+  background-size: 300% 300%;
+  border-radius: 10px;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.input-glow:focus-within::before {
+  opacity: 0.5;
+  filter: blur(8px);
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ===== SUCCESS/ERROR ANIMATIONS ===== */
+
+/* Success checkmark */
+@keyframes checkmark {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.checkmark {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: checkmark 0.5s ease forwards;
+}
+
+/* Success bounce */
+@keyframes successBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.success-bounce {
+  animation: successBounce 0.6s ease;
+}
+
+/* Error shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shake 0.5s ease;
+}
+
+/* Error pulse */
+@keyframes errorPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.error-pulse {
+  animation: errorPulse 1s ease infinite;
+}
+
+/* ===== PULSE ANIMATION ===== */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+.pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Live indicator pulse */
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: live-pulse 2s ease infinite;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+}
+
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+/* ===== BOUNCE ANIMATION ===== */
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.bounce {
+  animation: bounce 1s ease infinite;
+}
+
+/* ===== SPIN ANIMATION ===== */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ===== WIGGLE ANIMATION ===== */
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+.wiggle {
+  animation: wiggle 0.5s ease;
+}
+
+/* ===== NOTIFICATION ANIMATIONS ===== */
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.notification-enter {
+  animation: slideInRight 0.3s ease forwards;
+}
+
+.notification-exit {
+  animation: slideOutRight 0.3s ease forwards;
+}
+
+/* ===== SKELETON SHIMMER ===== */
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ===== MODAL ANIMATIONS ===== */
+
+.modal-backdrop {
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== DROPDOWN ANIMATIONS ===== */
+
+.dropdown-menu {
+  animation: fadeInDown 0.2s ease;
+  transform-origin: top;
+}
+
+/* ===== TOOLTIP ANIMATIONS ===== */
+
+.tooltip {
+  animation: fadeIn 0.2s ease;
+}
+
+/* ===== PROGRESS ANIMATIONS ===== */
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+}
+
+.progress-fill-animated {
+  animation: progressFill 1s ease-out;
+}
+
+/* ===== BADGE ANIMATIONS ===== */
+
+.badge-new {
+  animation: pulse 2s ease infinite;
+}
+
+/* ===== CHART ANIMATIONS ===== */
+
+@keyframes chartFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chart-animated {
+  animation: chartFadeIn 0.6s ease;
+}
+
+/* ===== NUMBER COUNTER ANIMATION ===== */
+
+@keyframes countUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.count-up {
+  animation: countUp 0.5s ease;
+}
+
+/* ===== GLOW EFFECT ===== */
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  }
+}
+
+.glow {
+  animation: glow 2s ease infinite;
+}
+
+/* ===== FLOATING ANIMATION ===== */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ===== ATTENTION GRABBER ===== */
+
+@keyframes attention {
+  0% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.05);
+  }
+  20% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.05);
+  }
+  40%, 100% {
+    transform: scale(1);
+  }
+}
+
+.attention {
+  animation: attention 2s ease infinite;
+}

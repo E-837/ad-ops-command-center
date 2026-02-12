@@ -5,8 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Workflows - Ad Ops Command Center</title>
   <link rel="stylesheet" href="assets/styles.css">
+
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/loading.css">
+  <link rel="stylesheet" href="/css/animations.css">
 </head>
 <body>
+
+  <!-- Hamburger Menu (Mobile) -->
+  <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+    <div class="hamburger-icon">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </button>
+  
+  <!-- Sidebar Overlay (Mobile) -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
   <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-header">
@@ -38,28 +54,68 @@
       <p>Automated workflows for campaign ops, projects, and reporting</p>
     </header>
 
-    <!-- Category Tabs -->
-    <div class="category-tabs">
-      <button class="category-tab active" data-category="all" onclick="switchCategory('all')">
-        All Workflows
+    <!-- Main Tabs -->
+    <div class="main-tabs" style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 0;">
+      <button class="main-tab active" onclick="switchMainTab('workflows')" style="background: none; border: none; border-bottom: 2px solid #3b82f6; color: #fff; padding: 12px 24px; font-size: 16px; font-weight: 500; cursor: pointer; margin-bottom: -2px;">
+        Workflows
       </button>
-      <button class="category-tab" data-category="campaign-ops" onclick="switchCategory('campaign-ops')">
-        📊 Campaign Ops
-      </button>
-      <button class="category-tab" data-category="projects" onclick="switchCategory('projects')">
-        📋 Projects
-      </button>
-      <button class="category-tab" data-category="reporting" onclick="switchCategory('reporting')">
-        📈 Reporting
-      </button>
-      <button class="category-tab" data-category="orchestration" onclick="switchCategory('orchestration')">
-        🎯 Orchestration
+      <button class="main-tab" onclick="switchMainTab('templates')" style="background: none; border: none; border-bottom: 2px solid transparent; color: rgba(255,255,255,0.6); padding: 12px 24px; font-size: 16px; font-weight: 500; cursor: pointer; margin-bottom: -2px;">
+        Templates
       </button>
     </div>
 
-    <!-- Workflows Grid -->
-    <div id="workflows-container" class="workflows-grid">
-      <p class="loading">Loading workflows...</p>
+    <!-- Workflows View -->
+    <div id="workflows-view">
+      <!-- Category Tabs -->
+      <div class="category-tabs">
+        <button class="category-tab active" data-category="all" onclick="switchCategory('all')">
+          All Workflows
+        </button>
+        <button class="category-tab" data-category="campaign-ops" onclick="switchCategory('campaign-ops')">
+          📊 Campaign Ops
+        </button>
+        <button class="category-tab" data-category="projects" onclick="switchCategory('projects')">
+          📋 Projects
+        </button>
+        <button class="category-tab" data-category="reporting" onclick="switchCategory('reporting')">
+          📈 Reporting
+        </button>
+        <button class="category-tab" data-category="orchestration" onclick="switchCategory('orchestration')">
+          🎯 Orchestration
+        </button>
+      </div>
+
+      <!-- Workflows Grid -->
+      <div id="workflows-container" class="workflows-grid">
+        <p class="loading">Loading workflows...</p>
+      </div>
+    </div>
+
+    <!-- Templates View -->
+    <div id="templates-view" style="display: none;">
+      <!-- Template Categories -->
+      <div class="category-tabs">
+        <button class="template-category-tab active" data-category="all" onclick="switchTemplateCategory('all')">
+          All Templates
+        </button>
+        <button class="template-category-tab" data-category="campaign-ops" onclick="switchTemplateCategory('campaign-ops')">
+          📊 Campaign Ops
+        </button>
+        <button class="template-category-tab" data-category="analytics" onclick="switchTemplateCategory('analytics')">
+          📈 Analytics
+        </button>
+        <button class="template-category-tab" data-category="productivity" onclick="switchTemplateCategory('productivity')">
+          📋 Productivity
+        </button>
+        <button class="template-category-tab" data-category="cross-platform" onclick="switchTemplateCategory('cross-platform')">
+          🌐 Cross-Platform
+        </button>
+      </div>
+
+      <!-- Templates Grid -->
+      <div id="templates-container" class="workflows-grid">
+        <p class="loading">Loading templates...</p>
+      </div>
     </div>
   </main>
 
@@ -741,5 +797,132 @@
       color: var(--danger);
     }
   </style>
+
+  <script src="/components/templates.js"></script>
+  <script>
+    let allTemplates = [];
+    let currentTemplateCategory = 'all';
+
+    // Switch main tab
+    function switchMainTab(tab) {
+      // Update tab UI
+      document.querySelectorAll('.main-tab').forEach(t => {
+        t.classList.remove('active');
+        t.style.borderBottomColor = 'transparent';
+        t.style.color = 'rgba(255,255,255,0.6)';
+      });
+      event.target.classList.add('active');
+      event.target.style.borderBottomColor = '#3b82f6';
+      event.target.style.color = '#fff';
+
+      // Show/hide views
+      if (tab === 'workflows') {
+        document.getElementById('workflows-view').style.display = 'block';
+        document.getElementById('templates-view').style.display = 'none';
+      } else {
+        document.getElementById('workflows-view').style.display = 'none';
+        document.getElementById('templates-view').style.display = 'block';
+        if (allTemplates.length === 0) {
+          loadTemplates();
+        }
+      }
+    }
+
+    // Load templates
+    async function loadTemplates() {
+      try {
+        const response = await fetch('/api/templates');
+        const data = await response.json();
+        allTemplates = data || [];
+        renderTemplates();
+      } catch (error) {
+        console.error('Error loading templates:', error);
+        document.getElementById('templates-container').innerHTML = '<p class="error">Failed to load templates</p>';
+      }
+    }
+
+    // Switch template category
+    function switchTemplateCategory(category) {
+      currentTemplateCategory = category;
+
+      // Update tab UI
+      document.querySelectorAll('.template-category-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.category === category);
+      });
+
+      renderTemplates();
+    }
+
+    // Render templates
+    function renderTemplates() {
+      const container = document.getElementById('templates-container');
+      
+      const filtered = currentTemplateCategory === 'all'
+        ? allTemplates
+        : allTemplates.filter(t => t.category === currentTemplateCategory);
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="empty-state">No templates found</p>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(template => `
+        <div class="workflow-card" onclick="templateManager.showTemplateModal('${template.id}')">
+          <div class="workflow-icon">${template.icon}</div>
+          <div class="workflow-info">
+            <h3 class="workflow-name">${template.name}</h3>
+            <p class="workflow-desc">${template.description}</p>
+          </div>
+          <div class="workflow-meta">
+            <span class="workflow-tag">${getCategoryLabel(template.category)}</span>
+            ${template.presets ? `<span class="workflow-tag" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">${template.presets.length} presets</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Get category label
+    function getCategoryLabel(category) {
+      const labels = {
+        'campaign-ops': 'Campaign Ops',
+        'analytics': 'Analytics',
+        'productivity': 'Productivity',
+        'cross-platform': 'Cross-Platform'
+      };
+      return labels[category] || category;
+    }
+  </script>
+
+  <script src="/components/loading.js"></script>
+  <script src="/components/errors.js"></script>
+  <script src="/components/navigation.js"></script>
+
+  <script>
+    // Sidebar toggle for mobile
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const hamburger = document.querySelector('.hamburger-btn');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      sidebar.classList.toggle('open');
+      hamburger.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+    
+    function closeSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const hamburger = document.querySelector('.hamburger-btn');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      sidebar.classList.remove('open');
+      hamburger.classList.remove('open');
+      overlay.classList.remove('active');
+    }
+    
+    // Close sidebar on navigation
+    document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+      link.addEventListener('click', closeSidebar);
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,165 @@
+{
+  "id": "weekly-report-template",
+  "name": "Weekly Performance Report",
+  "description": "Automatically generate and distribute a weekly performance report with AI insights",
+  "workflow": "weekly-report-workflow",
+  "icon": "📊",
+  "category": "analytics",
+  "defaults": {
+    "frequency": "weekly",
+    "dayOfWeek": "monday"
+  },
+  "fields": [
+    {
+      "name": "reportName",
+      "label": "Report Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Weekly Ad Performance Summary"
+    },
+    {
+      "name": "platforms",
+      "label": "Platforms to Include",
+      "type": "select",
+      "required": true,
+      "default": "all",
+      "options": [
+        { "value": "all", "label": "All Platforms" },
+        { "value": "google-ads", "label": "Google Ads Only" },
+        { "value": "meta", "label": "Meta Only" },
+        { "value": "pinterest", "label": "Pinterest Only" },
+        { "value": "google-meta", "label": "Google + Meta" }
+      ]
+    },
+    {
+      "name": "metrics",
+      "label": "Key Metrics",
+      "type": "select",
+      "required": true,
+      "default": "standard",
+      "options": [
+        { "value": "standard", "label": "Standard (impressions, clicks, conversions, ROAS)" },
+        { "value": "detailed", "label": "Detailed (all available metrics)" },
+        { "value": "executive", "label": "Executive Summary (high-level only)" }
+      ]
+    },
+    {
+      "name": "compareWith",
+      "label": "Compare With",
+      "type": "select",
+      "required": true,
+      "default": "previous-week",
+      "options": [
+        { "value": "previous-week", "label": "Previous Week" },
+        { "value": "previous-month", "label": "Previous Month" },
+        { "value": "previous-year", "label": "Same Week Last Year" },
+        { "value": "none", "label": "No Comparison" }
+      ]
+    },
+    {
+      "name": "includeCharts",
+      "label": "Include Charts",
+      "type": "checkbox",
+      "default": true,
+      "help": "Add performance charts and visualizations"
+    },
+    {
+      "name": "includeInsights",
+      "label": "AI Insights",
+      "type": "checkbox",
+      "default": true,
+      "help": "Include AI-generated insights and recommendations"
+    },
+    {
+      "name": "includeAnomalies",
+      "label": "Highlight Anomalies",
+      "type": "checkbox",
+      "default": true,
+      "help": "Flag unusual performance patterns"
+    },
+    {
+      "name": "includeTopPerformers",
+      "label": "Top Performers",
+      "type": "checkbox",
+      "default": true,
+      "help": "Highlight best performing campaigns/ads"
+    },
+    {
+      "name": "format",
+      "label": "Report Format",
+      "type": "select",
+      "required": true,
+      "default": "pdf",
+      "options": [
+        { "value": "pdf", "label": "PDF Document" },
+        { "value": "html", "label": "HTML Email" },
+        { "value": "both", "label": "PDF + HTML Email" },
+        { "value": "google-sheets", "label": "Google Sheets" }
+      ]
+    },
+    {
+      "name": "recipients",
+      "label": "Email Recipients",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "team@example.com, manager@example.com",
+      "help": "Comma-separated email addresses"
+    },
+    {
+      "name": "schedule",
+      "label": "Delivery Schedule",
+      "type": "select",
+      "required": true,
+      "default": "monday-9am",
+      "options": [
+        { "value": "monday-9am", "label": "Monday 9:00 AM" },
+        { "value": "friday-5pm", "label": "Friday 5:00 PM" },
+        { "value": "custom", "label": "Custom Schedule" }
+      ]
+    },
+    {
+      "name": "customNote",
+      "label": "Custom Note (optional)",
+      "type": "textarea",
+      "required": false,
+      "placeholder": "Add a custom note to appear in the report",
+      "help": "Optional message to include in every report"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Quick Summary",
+      "values": {
+        "platforms": "all",
+        "metrics": "executive",
+        "compareWith": "previous-week",
+        "includeCharts": false,
+        "format": "html"
+      }
+    },
+    {
+      "name": "Standard Weekly",
+      "values": {
+        "platforms": "all",
+        "metrics": "standard",
+        "compareWith": "previous-week",
+        "includeCharts": true,
+        "includeInsights": true,
+        "format": "both"
+      }
+    },
+    {
+      "name": "Comprehensive Analysis",
+      "values": {
+        "platforms": "all",
+        "metrics": "detailed",
+        "compareWith": "previous-month",
+        "includeCharts": true,
+        "includeInsights": true,
+        "includeAnomalies": true,
+        "includeTopPerformers": true,
+        "format": "pdf"
+      }
+    }
+  ]
+}

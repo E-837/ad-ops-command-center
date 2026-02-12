@@ -1,0 +1,126 @@
+{
+  "id": "social-campaign-template",
+  "name": "Meta Social Campaign",
+  "description": "Launch a Meta (Facebook/Instagram) campaign with AI audience targeting and creative generation",
+  "workflow": "social-campaign-workflow",
+  "icon": "📱",
+  "category": "campaign-ops",
+  "defaults": {
+    "platform": "meta",
+    "objective": "conversions",
+    "placements": ["facebook", "instagram"]
+  },
+  "fields": [
+    {
+      "name": "campaignName",
+      "label": "Campaign Name",
+      "type": "text",
+      "required": true,
+      "placeholder": "Summer Product Launch"
+    },
+    {
+      "name": "objective",
+      "label": "Campaign Objective",
+      "type": "select",
+      "required": true,
+      "default": "conversions",
+      "options": [
+        { "value": "awareness", "label": "Brand Awareness" },
+        { "value": "traffic", "label": "Traffic" },
+        { "value": "engagement", "label": "Engagement" },
+        { "value": "conversions", "label": "Conversions" }
+      ]
+    },
+    {
+      "name": "budget",
+      "label": "Daily Budget ($)",
+      "type": "number",
+      "required": true,
+      "default": 150,
+      "min": 20,
+      "max": 10000
+    },
+    {
+      "name": "duration",
+      "label": "Duration (days)",
+      "type": "number",
+      "required": true,
+      "default": 30,
+      "min": 7,
+      "max": 365
+    },
+    {
+      "name": "targetAudience",
+      "label": "Target Audience Description",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "Women 25-45, interested in health and wellness, urban areas",
+      "help": "AI will generate detailed audience targeting based on this"
+    },
+    {
+      "name": "placements",
+      "label": "Ad Placements",
+      "type": "select",
+      "required": true,
+      "default": "both",
+      "options": [
+        { "value": "facebook", "label": "Facebook Only" },
+        { "value": "instagram", "label": "Instagram Only" },
+        { "value": "both", "label": "Facebook & Instagram" }
+      ]
+    },
+    {
+      "name": "creativeCount",
+      "label": "Number of Creative Variants",
+      "type": "number",
+      "required": true,
+      "default": 4,
+      "min": 1,
+      "max": 10,
+      "help": "AI will generate different ad creative concepts"
+    },
+    {
+      "name": "copyTone",
+      "label": "Ad Copy Tone",
+      "type": "select",
+      "required": true,
+      "default": "friendly",
+      "options": [
+        { "value": "professional", "label": "Professional" },
+        { "value": "friendly", "label": "Friendly & Casual" },
+        { "value": "urgent", "label": "Urgent & Action-oriented" },
+        { "value": "humorous", "label": "Light & Humorous" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Awareness Campaign",
+      "values": {
+        "objective": "awareness",
+        "budget": 100,
+        "duration": 14,
+        "creativeCount": 3
+      }
+    },
+    {
+      "name": "Conversion Campaign",
+      "values": {
+        "objective": "conversions",
+        "budget": 300,
+        "duration": 30,
+        "creativeCount": 6
+      }
+    },
+    {
+      "name": "Instagram Stories",
+      "values": {
+        "objective": "engagement",
+        "placements": "instagram",
+        "budget": 75,
+        "duration": 7,
+        "creativeCount": 5
+      }
+    }
+  ]
+}

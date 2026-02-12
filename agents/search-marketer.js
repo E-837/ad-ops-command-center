@@ -1,11 +1,12 @@
 /**
  * SearchMarketer Agent
  * Specialized agent for paid search campaign management and optimization
+ * Supports both Google Ads and Microsoft Advertising (Bing)
  */
 
 const name = 'SearchMarketer';
 const role = 'search-marketer';
-const description = 'Paid search specialist for Google Ads campaign management, keyword optimization, and search strategy';
+const description = 'Cross-platform paid search specialist for Google Ads and Microsoft Advertising (Bing) campaign management, keyword optimization, and search strategy';
 const model = 'claude-3-5-sonnet-20241022'; // Search strategy requires analytical thinking
 
 const capabilities = [
@@ -17,10 +18,14 @@ const capabilities = [
   'search_strategy',
   'rsa_testing',
   'negative_keyword_management',
-  'audience_optimization'
+  'audience_optimization',
+  'cross_platform_search',
+  'bing_specific_optimization',
+  'search_budget_allocation'
 ];
 
 const tools = [
+  // Google Ads tools
   'connectors.google-ads',
   'google_ads_create_campaign',
   'google_ads_create_ad_group',
@@ -30,13 +35,32 @@ const tools = [
   'google_ads_get_ad_groups',
   'google_ads_get_keywords',
   'google_ads_pause_campaign',
-  'google_ads_update_budget'
+  'google_ads_update_budget',
+  // Microsoft Ads tools
+  'connectors.microsoft-ads',
+  'microsoft_ads_get_accounts',
+  'microsoft_ads_get_campaigns',
+  'microsoft_ads_create_campaign',
+  'microsoft_ads_update_campaign',
+  'microsoft_ads_get_ad_groups',
+  'microsoft_ads_create_ad_group',
+  'microsoft_ads_update_ad_group',
+  'microsoft_ads_get_keywords',
+  'microsoft_ads_create_keyword',
+  'microsoft_ads_update_keyword',
+  'microsoft_ads_get_negative_keywords',
+  'microsoft_ads_add_negative_keyword',
+  'microsoft_ads_get_ads',
+  'microsoft_ads_create_ad',
+  'microsoft_ads_update_ad',
+  'microsoft_ads_get_extensions',
+  'microsoft_ads_get_performance_report'
 ];
 
 const systemPrompt = `You are the SearchMarketer agent for Ad Ops Command Center.
 
-Your role is to manage and optimize paid search campaigns:
-- Develop search campaign strategies and structures
+Your role is to manage and optimize paid search campaigns across BOTH Google Ads and Microsoft Advertising (Bing):
+- Develop cross-platform search campaign strategies and structures
 - Conduct keyword research and match type optimization
 - Create and test responsive search ads (RSAs)
 - Optimize for Quality Score and ad rank
@@ -44,6 +68,7 @@ Your role is to manage and optimize paid search campaigns:
 - Monitor search impression share and competitive positioning
 - Implement negative keyword strategies
 - Optimize audience targeting for search campaigns
+- Allocate budgets strategically between Google and Bing
 
 Key metrics you optimize for:
 - Quality Score (keyword relevance, ad relevance, landing page experience)
@@ -54,21 +79,67 @@ Key metrics you optimize for:
 - Cost-per-acquisition (CPA) management
 - Return on ad spend (ROAS)
 
-Search Campaign Types:
-- Brand Defense: Protect brand keywords, high impression share
-- Generic Keywords: Product/service terms, balanced reach and efficiency
-- Competitor: Strategic competitor keyword bidding
-- Dynamic Search Ads: Auto-generated ads from website content
-- Performance Max: Google's automated campaign type
+CROSS-PLATFORM SEARCH STRATEGY:
 
-Bidding Strategies:
-- Target CPA: Focus on cost-per-acquisition goals
-- Target ROAS: Optimize for return on ad spend
-- Maximize Clicks: Drive traffic within budget constraints
-- Maximize Conversions: Get most conversions for budget
-- Manual CPC: Full control over individual keyword bids
+Google Ads:
+- 85-90% of search volume in most markets
+- Higher CPCs due to competition
+- More sophisticated automation (Smart Bidding, Performance Max)
+- Strong display and video network integration
 
-You provide actionable recommendations in search marketing language and always consider the full search funnel from awareness to conversion.`;
+Microsoft Advertising (Bing):
+- 10-15% of US search volume (higher for B2B, enterprise)
+- 30-50% lower CPCs than Google on average
+- Strong LinkedIn profile targeting (B2B advantage)
+- Desktop-heavy traffic (higher engagement, B2B)
+- Older, more affluent demographic
+- Import Google campaigns for quick setup
+
+Budget Allocation Guidelines:
+- Start: 80% Google / 20% Bing (test Bing performance)
+- Optimize: Adjust based on ROAS comparison
+- B2B: Consider 70% Google / 30% Bing (Bing performs well)
+- E-commerce: Usually 85% Google / 15% Bing
+- Always test both platforms - results vary by industry
+
+Platform-Specific Optimizations:
+
+Google Ads:
+- Use Performance Max for full-funnel campaigns
+- Leverage broad match + Smart Bidding
+- Focus on mobile optimization
+- Test YouTube for awareness + retargeting
+
+Microsoft Ads (Bing):
+- Import Google campaigns as starting point
+- Adjust bids down 30-40% initially (lower CPCs)
+- Add Bing-specific negative keywords (different search behavior)
+- Use LinkedIn profile targeting for B2B
+- Focus on desktop-optimized landing pages
+- Test Microsoft Audience Network for broader reach
+
+Match Type Strategy:
+- Exact: [keyword] - Highest control, best for brand/high-intent
+- Phrase: "keyword" - Balanced reach and relevance
+- Broad: keyword - Maximum reach (pair with Smart Bidding on Google)
+
+Keyword Migration (Google → Bing):
+1. Export top-performing Google keywords
+2. Reduce bids 30-50% for Bing (lower CPCs)
+3. Monitor quality score differences
+4. Adjust match types based on Bing search volume
+5. Add Bing-specific negative keywords
+
+Ad Copy Differences:
+- Google: Shorter, punchier (mobile-first)
+- Bing: Can be slightly longer (desktop-heavy)
+- Both: Test multiple RSA variations, include main keyword
+
+You provide actionable recommendations in search marketing language and always consider:
+- Cross-platform performance comparison
+- Budget allocation between Google and Bing
+- Platform-specific optimization opportunities
+- Total search impression share across both platforms`;
 
 /**
  * Get agent info
@@ -557,6 +628,234 @@ function addToGroup(groups, theme, keyword, tips) {
   group.keywords.push(keyword);
 }
 
+/**
+ * Adapt Google Ads keywords for Microsoft Advertising (Bing)
+ */
+function adaptKeywordsForBing(googleKeywords) {
+  return googleKeywords.map(keyword => {
+    const bingKeyword = {
+      text: keyword.text,
+      matchType: keyword.matchType,
+      // Reduce bid by 30-40% for Bing (typically lower CPCs)
+      bid: keyword.bid * 0.65,
+      // Flag for review
+      needsReview: false,
+      notes: []
+    };
+
+    // Bing-specific adjustments
+    const text = keyword.text.toLowerCase();
+    
+    // Mobile-specific terms perform differently on Bing (desktop-heavy)
+    if (text.includes('app') || text.includes('mobile')) {
+      bingKeyword.bid *= 0.8; // Further reduce mobile-related keywords
+      bingKeyword.notes.push('Bing is desktop-heavy, reduced bid for mobile terms');
+    }
+
+    // B2B terms often perform better on Bing
+    if (text.includes('enterprise') || text.includes('business') || text.includes('professional')) {
+      bingKeyword.bid *= 1.2; // Increase B2B keywords
+      bingKeyword.notes.push('B2B term - Bing audience skews professional, increased bid');
+    }
+
+    // Location-based terms (Bing's "near me" search is different)
+    if (text.includes('near me') || text.includes('nearby')) {
+      bingKeyword.needsReview = true;
+      bingKeyword.notes.push('Review "near me" performance on Bing vs Google');
+    }
+
+    return bingKeyword;
+  });
+}
+
+/**
+ * Estimate Bing CPC based on Google CPC
+ */
+function estimateBingCPC(googleCPC, industry = 'general') {
+  // Industry-specific Bing vs Google CPC ratios
+  const ratios = {
+    general: 0.65,      // 35% lower
+    b2b: 0.60,          // 40% lower (but good quality)
+    ecommerce: 0.70,    // 30% lower
+    finance: 0.75,      // 25% lower (competitive on Bing too)
+    healthcare: 0.65,   // 35% lower
+    legal: 0.70,        // 30% lower
+    technology: 0.60    // 40% lower
+  };
+
+  const ratio = ratios[industry] || ratios.general;
+  const estimatedCPC = googleCPC * ratio;
+
+  return {
+    estimatedCPC: estimatedCPC.toFixed(2),
+    ratio: ratio,
+    savings: ((googleCPC - estimatedCPC) / googleCPC * 100).toFixed(0) + '%',
+    recommendation: estimatedCPC < googleCPC * 0.5 
+      ? 'Excellent opportunity - test Bing aggressively'
+      : 'Good savings - allocate 15-25% of search budget to Bing'
+  };
+}
+
+/**
+ * Compare search platform performance
+ */
+function compareSearchPlatforms(googlePerf, bingPerf) {
+  const comparison = {
+    summary: {},
+    recommendations: [],
+    budgetAllocation: {}
+  };
+
+  // Calculate platform metrics
+  const googleROAS = googlePerf.revenue / googlePerf.spend;
+  const bingROAS = bingPerf.revenue / bingPerf.spend;
+  const googleCPA = googlePerf.spend / googlePerf.conversions;
+  const bingCPA = bingPerf.spend / bingPerf.conversions;
+
+  comparison.summary = {
+    google: {
+      spend: googlePerf.spend,
+      revenue: googlePerf.revenue,
+      ROAS: googleROAS.toFixed(2),
+      CPA: googleCPA.toFixed(2),
+      conversions: googlePerf.conversions
+    },
+    bing: {
+      spend: bingPerf.spend,
+      revenue: bingPerf.revenue,
+      ROAS: bingROAS.toFixed(2),
+      CPA: bingCPA.toFixed(2),
+      conversions: bingPerf.conversions
+    },
+    winner: bingROAS > googleROAS ? 'Bing' : 'Google'
+  };
+
+  // Generate recommendations
+  if (bingROAS > googleROAS * 1.2) {
+    comparison.recommendations.push('🚀 Bing significantly outperforming! Increase Bing budget allocation.');
+  }
+
+  if (bingCPA < googleCPA * 0.7) {
+    comparison.recommendations.push('💰 Bing has much lower CPA. Shift budget to maximize conversions.');
+  }
+
+  if (bingPerf.conversions < 50) {
+    comparison.recommendations.push('⚠️  Bing has limited conversion data. Continue testing for statistically significant results.');
+  }
+
+  return comparison;
+}
+
+/**
+ * Allocate search budget between Google and Bing
+ */
+function allocateSearchBudget(totalBudget, googleROAS, bingROAS, bingConversions = 0) {
+  const allocation = {
+    google: {},
+    bing: {},
+    rationale: []
+  };
+
+  // Default allocation (if no performance data)
+  if (!googleROAS && !bingROAS) {
+    allocation.google = { budget: totalBudget * 0.80, percentage: '80%' };
+    allocation.bing = { budget: totalBudget * 0.20, percentage: '20%' };
+    allocation.rationale.push('Starting allocation: 80% Google / 20% Bing (industry standard)');
+    return allocation;
+  }
+
+  // If Bing has insufficient data (< 50 conversions), maintain conservative allocation
+  if (bingConversions < 50) {
+    allocation.google = { budget: totalBudget * 0.80, percentage: '80%' };
+    allocation.bing = { budget: totalBudget * 0.20, percentage: '20%' };
+    allocation.rationale.push('Insufficient Bing data (< 50 conversions). Maintaining 80/20 split for testing.');
+    return allocation;
+  }
+
+  // Calculate optimal allocation based on ROAS
+  const totalROASWeighted = googleROAS + bingROAS;
+  const googleShare = googleROAS / totalROASWeighted;
+  const bingShare = bingROAS / totalROASWeighted;
+
+  // Apply constraints (don't go below 10% or above 90% for either platform)
+  const googlePercentage = Math.max(0.10, Math.min(0.90, googleShare));
+  const bingPercentage = 1 - googlePercentage;
+
+  allocation.google = {
+    budget: (totalBudget * googlePercentage).toFixed(2),
+    percentage: (googlePercentage * 100).toFixed(0) + '%',
+    ROAS: googleROAS.toFixed(2)
+  };
+
+  allocation.bing = {
+    budget: (totalBudget * bingPercentage).toFixed(2),
+    percentage: (bingPercentage * 100).toFixed(0) + '%',
+    ROAS: bingROAS.toFixed(2)
+  };
+
+  // Rationale
+  if (bingROAS > googleROAS * 1.2) {
+    allocation.rationale.push(`Bing ROAS (${bingROAS.toFixed(2)}) significantly outperforms Google (${googleROAS.toFixed(2)}). Increased Bing allocation.`);
+  } else if (googleROAS > bingROAS * 1.2) {
+    allocation.rationale.push(`Google ROAS (${googleROAS.toFixed(2)}) significantly outperforms Bing (${bingROAS.toFixed(2)}). Maintained Google dominance.`);
+  } else {
+    allocation.rationale.push(`Similar ROAS across platforms. Allocation based on proportional performance.`);
+  }
+
+  return allocation;
+}
+
+/**
+ * Generate Bing-specific optimization recommendations
+ */
+function generateBingOptimizations(bingCampaignData) {
+  const optimizations = {
+    linkedInTargeting: [],
+    deviceAdjustments: [],
+    partnerNetwork: [],
+    importSuggestions: []
+  };
+
+  // LinkedIn profile targeting (unique to Bing)
+  if (bingCampaignData.industry === 'B2B' || bingCampaignData.avgOrderValue > 500) {
+    optimizations.linkedInTargeting.push({
+      recommendation: 'Enable LinkedIn profile targeting',
+      reason: 'B2B audience - target by company, job function, industry',
+      expectedImpact: '+15-25% conversion rate for professional audiences'
+    });
+  }
+
+  // Device bid adjustments (Bing is desktop-heavy)
+  const mobileShare = bingCampaignData.metrics?.mobileShare || 0.3;
+  if (mobileShare < 0.4) {
+    optimizations.deviceAdjustments.push({
+      recommendation: 'Increase desktop bids by +20%, reduce mobile bids by -20%',
+      reason: 'Bing traffic is 60-70% desktop, adjust bids accordingly',
+      currentMobileShare: (mobileShare * 100).toFixed(0) + '%'
+    });
+  }
+
+  // Microsoft Audience Network expansion
+  if (bingCampaignData.searchImpressionShare > 0.8) {
+    optimizations.partnerNetwork.push({
+      recommendation: 'Test Microsoft Audience Network (MAN)',
+      reason: 'High search impression share - expand to native placements',
+      setup: 'Create separate Audience campaign with 15-20% of search budget'
+    });
+  }
+
+  // Google campaign import suggestions
+  optimizations.importSuggestions = [
+    'Import top-performing Google campaigns to Bing',
+    'Reduce imported bids by 35% as starting point',
+    'Review automated rules before import (Bing has different options)',
+    'Update negative keyword lists for Bing search behavior',
+    'Test different ad copy (Bing users respond to different messaging)'
+  ];
+
+  return optimizations;
+}
+
 module.exports = {
   name,
   role,
@@ -571,5 +870,11 @@ module.exports = {
   generateRSAVariations,
   recommendBiddingStrategy,
   generateCampaignRecommendations,
-  processQuery
+  processQuery,
+  // Microsoft Ads (Bing) specific functions
+  adaptKeywordsForBing,
+  estimateBingCPC,
+  compareSearchPlatforms,
+  allocateSearchBudget,
+  generateBingOptimizations
 };
