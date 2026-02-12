@@ -31,6 +31,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const BaseConnector = require('./base-connector');
 
 const name = 'LinkedIn Ads';
 const shortName = 'LinkedIn';
@@ -1711,15 +1712,33 @@ function setStatus(newStatus) {
   lastSync = new Date().toISOString();
 }
 
-// Exports
-module.exports = {
-  name,
-  shortName,
-  version,
-  getInfo,
-  testConnection,
-  handleToolCall,
-  getTools,
-  setStatus,
-  oauth
-};
+class LinkedInAdsConnector extends BaseConnector {
+  constructor() {
+    super({
+      name: 'LinkedIn Ads',
+      shortName: 'LinkedIn',
+      version: '1.0.0',
+      oauth: {
+        provider: 'linkedin',
+        scopes: ['r_ads', 'rw_ads', 'r_ads_reporting', 'r_organization_social'],
+        apiEndpoint: 'https://api.linkedin.com/v2',
+        tokenType: 'oauth2_access_token',
+        accountIdKey: 'LINKEDIN_AD_ACCOUNT_ID'
+      },
+      envVars: ['LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET', 'LINKEDIN_ACCESS_TOKEN', 'LINKEDIN_AD_ACCOUNT_ID'],
+      connectionCheck: (creds) => !!(creds.LINKEDIN_ACCESS_TOKEN && creds.LINKEDIN_AD_ACCOUNT_ID)
+    });
+    this.tools = tools;
+  }
+
+  async performConnectionTest() { return await testConnection(); }
+  async executeLiveCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async executeSandboxCall(toolName, params) { return await handleToolCall(toolName, params); }
+  async handleToolCall(toolName, params = {}) { return await handleToolCall(toolName, params); }
+  getInfo() { return getInfo(); }
+  getTools() { return getTools(); }
+  async testConnection() { return await testConnection(); }
+  setStatus(newStatus) { return setStatus(newStatus); }
+}
+
+module.exports = new LinkedInAdsConnector();
