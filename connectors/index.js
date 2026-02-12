@@ -6,6 +6,8 @@
 const ttd = require('./ttd');
 const dv360 = require('./dv360');
 const amazonDsp = require('./amazon-dsp');
+const googleAds = require('./google-ads');
+const metaAds = require('./meta-ads');
 const asana = require('./asana');
 const notion = require('./notion');
 const figma = require('./figma');
@@ -15,7 +17,9 @@ const canva = require('./canva');
 const DSP_CONNECTORS = {
   ttd,
   dv360,
-  'amazon-dsp': amazonDsp
+  'amazon-dsp': amazonDsp,
+  'google-ads': googleAds,
+  'meta-ads': metaAds
 };
 
 // Productivity/Creative Tool Connectors

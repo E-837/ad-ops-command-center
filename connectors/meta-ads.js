@@ -1849,8 +1849,37 @@ class MetaAdsConnector extends BaseConnector {
   getTools() { return tools; }
   async testConnection() { return await testConnection(); }
 
-  async getCampaigns(params = {}) { return await getCampaigns(params); }
-  async createCampaign(params) { return await createCampaign(params); }
+  async getCampaigns(params = {}) {
+    const response = await getCampaigns(params);
+    return response?.data || [];
+  }
+
+  async createCampaign(params) {
+    const mappedObjective = (params.funnel || '').toLowerCase() === 'conversion'
+      ? 'OUTCOME_SALES'
+      : (params.funnel || '').toLowerCase() === 'consideration'
+      ? 'OUTCOME_TRAFFIC'
+      : 'OUTCOME_AWARENESS';
+
+    const response = await createCampaign({
+      name: params.name,
+      objective: params.objective || mappedObjective,
+      status: 'PAUSED'
+    });
+
+    const campaign = response?.data || {};
+    const id = campaign.id || `meta-${Date.now()}`;
+
+    return {
+      id,
+      name: campaign.name || params.name,
+      status: campaign.status || 'PAUSED',
+      platform: 'meta-ads',
+      mode: hasMetaAds ? 'live' : 'sandbox',
+      url: hasMetaAds ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${(adAccountId || '').replace('act_', '')}&selected_campaign_ids=${id}` : null,
+      raw: response
+    };
+  }
   async updateCampaign(params) { return await updateCampaign(params); }
   async getAdSets(params = {}) { return await getAdSets(params); }
   async createAdSet(params) { return await createAdSet(params); }

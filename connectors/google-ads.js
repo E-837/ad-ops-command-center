@@ -508,6 +508,39 @@ class GoogleAdsConnector extends BaseConnector {
         return this.errorResponse(`Unknown tool: ${toolName}`);
     }
   }
+
+  // Compatibility helpers used by existing workflows
+  async createCampaign(params) {
+    const response = await this.handleToolCall('google_ads_create_campaign', {
+      name: params.name,
+      budget_micros: Math.round((params.budget || 0) * 1000000),
+      campaign_type: (params.channel || '').toLowerCase() === 'search' ? 'SEARCH' :
+                     (params.channel || '').toLowerCase() === 'video' ? 'VIDEO' :
+                     (params.channel || '').toLowerCase() === 'display' ? 'DISPLAY' : 'SEARCH',
+      bidding_strategy: 'MAXIMIZE_CLICKS',
+      start_date: params.startDate,
+      end_date: params.endDate
+    });
+
+    const data = response?.data || {};
+    const resourceName = data.resourceName || '';
+    const id = resourceName.split('/').pop() || `gads-${Date.now()}`;
+
+    return {
+      id,
+      name: data.name || params.name,
+      status: data.status || 'PAUSED',
+      platform: 'google-ads',
+      mode: response?.metadata?.mode || (this.isConnected ? 'live' : 'sandbox'),
+      url: this.isConnected ? `https://ads.google.com/aw/campaigns?ocid=${id}` : null,
+      raw: response
+    };
+  }
+
+  async getCampaigns() {
+    const response = await this.handleToolCall('google_ads_get_campaigns', { limit: 50 });
+    return response?.data?.campaigns || [];
+  }
 }
 
 // Export singleton instance

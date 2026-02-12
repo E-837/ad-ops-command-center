@@ -54,6 +54,16 @@
       <p>Automated workflows for campaign ops, projects, and reporting</p>
     </header>
 
+    <section class="glass brief-section">
+      <h3>📝 Campaign from Brief</h3>
+      <p class="workflow-description">Paste a natural language brief and launch real campaigns in Google Ads / Meta Ads.</p>
+      <textarea id="brief-input" rows="6" placeholder="Launch a new AI Audio campaign for our flagship AirPod AI product. Budget is $75,000 for Q1 2026 (Jan 15 - Mar 31). Target tech enthusiasts and audiophiles aged 25-45. Focus on YouTube video ads and Meta social (both Facebook and Instagram). Emphasize AI noise-canceling and adaptive listening. We want awareness + consideration."></textarea>
+      <div class="workflow-actions" style="margin-top: 12px;">
+        <button class="btn btn--primary" onclick="submitBriefToCampaign()">🚀 Create Campaign from Brief</button>
+      </div>
+      <div id="brief-results" class="brief-results" style="display:none;"></div>
+    </section>
+
     <!-- Main Tabs -->
     <div class="main-tabs tabs">
       <button class="main-tab tabs__item active" onclick="switchMainTab('workflows')">
@@ -449,6 +459,67 @@
       }
     }
 
+    async function submitBriefToCampaign() {
+      const input = document.getElementById('brief-input');
+      const resultsEl = document.getElementById('brief-results');
+      const brief = (input.value || '').trim();
+
+      if (!brief) {
+        alert('Please enter a campaign brief.');
+        return;
+      }
+
+      resultsEl.style.display = 'block';
+      resultsEl.innerHTML = '<p class="loading">Parsing brief and launching campaigns...</p>';
+
+      try {
+        const response = await fetch('/api/workflows/brief-to-campaign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ brief })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          resultsEl.innerHTML = `<p class="error">${data.error || 'Failed to run workflow'}</p>`;
+          return;
+        }
+
+        const parsed = data?.parsed?.parsed || {};
+        const warnings = data?.parsed?.warnings || [];
+        const launches = data?.launches || [];
+
+        resultsEl.innerHTML = `
+          <div class="detail-section">
+            <h4>Parsed Parameters</h4>
+            <pre>${JSON.stringify(parsed, null, 2)}</pre>
+          </div>
+          <div class="detail-section">
+            <h4>Campaign Creation Status</h4>
+            <ul class="output-list">
+              ${launches.map(l => `<li><strong>${l.dsp}</strong>: ${l.result?.status || 'unknown'} ${l.localCampaign?.id ? `(saved as ${l.localCampaign.id})` : ''}</li>`).join('') || '<li>No launch results</li>'}
+            </ul>
+          </div>
+          <div class="detail-section">
+            <h4>Platform Links</h4>
+            <ul class="output-list">
+              ${launches.filter(l => l.platformCampaignLink).map(l => `<li><a href="${l.platformCampaignLink}" target="_blank" rel="noopener">${l.dsp} campaign</a></li>`).join('') || '<li>No direct links returned (platform may still have created campaign).</li>'}
+            </ul>
+          </div>
+          <div class="detail-section">
+            <h4>Warnings / Errors</h4>
+            <ul class="output-list">
+              ${warnings.map(w => `<li>${w}</li>`).join('') || '<li>None</li>'}
+              ${data.error ? `<li>${data.error}</li>` : ''}
+            </ul>
+          </div>
+        `;
+      } catch (err) {
+        resultsEl.innerHTML = `<p class="error">${err.message}</p>`;
+      }
+    }
+
     // Modal functions
     function hideWorkflowModal() {
       document.getElementById('workflow-modal').style.display = 'none';
@@ -460,6 +531,29 @@
   </script>
 
   <style>
+    .brief-section {
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .brief-section textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+
+    .brief-results pre {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 12px;
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 0.82rem;
+    }
+
     .category-tabs {
       display: flex;
       gap: 10px;

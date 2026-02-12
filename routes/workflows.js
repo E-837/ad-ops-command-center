@@ -46,6 +46,21 @@ router.post('/:name/run', async (req, res) => {
   }
 });
 
+// Brief-to-campaign shortcut endpoint
+router.post('/brief-to-campaign', async (req, res) => {
+  try {
+    const brief = String(req.body?.brief || '').trim();
+    if (!brief) {
+      return res.status(400).json({ error: 'brief is required' });
+    }
+
+    const result = await workflows.runWorkflow('brief-to-campaign', { brief });
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // Get workflow execution history
 router.get('/:name/history', (req, res) => {
   try {
