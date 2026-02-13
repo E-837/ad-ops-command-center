@@ -61,65 +61,356 @@ function uniqueList(values = []) {
   return [...new Set(values.filter(Boolean).map(v => String(v).trim()).filter(Boolean))];
 }
 
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function monthIndexFromText(text = '') {
+  const months = {
+    jan: 0, january: 0,
+    feb: 1, february: 1,
+    mar: 2, march: 2,
+    apr: 3, april: 3,
+    may: 4,
+    jun: 5, june: 5,
+    jul: 6, july: 6,
+    aug: 7, august: 7,
+    sep: 8, sept: 8, september: 8,
+    oct: 9, october: 9,
+    nov: 10, november: 10,
+    dec: 11, december: 11
+  };
+  return months[String(text).toLowerCase()] ?? null;
+}
+
+function quarterDates(q, year) {
+  const quarter = Number(q);
+  const y = Number(year);
+  if (!quarter || !y || quarter < 1 || quarter > 4) return null;
+  const startMonth = (quarter - 1) * 3;
+  return {
+    startDate: toISODate(new Date(y, startMonth, 1)),
+    endDate: toISODate(new Date(y, startMonth + 3, 0))
+  };
+}
+
+function nthWeekdayOfMonth(year, monthIndex, weekday, n) {
+  const first = new Date(year, monthIndex, 1);
+  const offset = (weekday - first.getDay() + 7) % 7;
+  return new Date(year, monthIndex, 1 + offset + (n - 1) * 7);
+}
+
+function thanksgivingDate(year) {
+  return nthWeekdayOfMonth(year, 10, 4, 4); // fourth Thursday of November
+}
+
+function parseBudgetFromBrief(brief = '') {
+  const contexts = [
+    /(?:budget(?:\s+of)?|allocating|total\s+spend|spend\s+of)\s*[:\-]?\s*\$?\s*([\d,.]+)\s*(k|m|thousand|million)?\b/i,
+    /\$\s*([\d,.]+)\s*(k|m)?\s*(?:budget|total|spend)?\b/i,
+    /\b([\d,.]+)\s*(k|m|thousand|million)\s*(?:budget|dollars|usd|total|spend)?\b/i,
+    /\b([\d]{4,9})\s*(?:dollars|usd)\b/i
+  ];
+
+  for (const re of contexts) {
+    const m = brief.match(re);
+    if (!m) continue;
+    let amount = Number(String(m[1]).replace(/,/g, ''));
+    if (!Number.isFinite(amount) || amount <= 0) continue;
+    const unit = String(m[2] || '').toLowerCase();
+    if (unit === 'k' || unit === 'thousand') amount *= 1000;
+    if (unit === 'm' || unit === 'million') amount *= 1000000;
+    return Math.round(amount);
+  }
+
+  return 0;
+}
+
+function inferDatesFromBrief(brief = '', now = new Date()) {
+  const lower = brief.toLowerCase();
+  const currentYear = now.getFullYear();
+
+  const explicitRange = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(\d{1,2})\s*(?:-|to|through)\s*(\d{1,2})(?:,?\s*(\d{4}))?/i.exec(brief);
+  if (explicitRange) {
+    const month = monthIndexFromText(explicitRange[1]);
+    const day1 = Number(explicitRange[2]);
+    const day2 = Number(explicitRange[3]);
+    const year = Number(explicitRange[4] || currentYear);
+    if (month != null && day1 > 0 && day2 > 0) {
+      return {
+        startDate: toISODate(new Date(year, month, day1)),
+        endDate: toISODate(new Date(year, month, day2)),
+        reason: `Based on explicit date range '${explicitRange[0]}'.`,
+        confidence: 'High confidence'
+      };
+    }
+  }
+
+  const monthThroughMonth = /\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+(?:to|through|-)\s+(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?:\s+(\d{4}))?/i.exec(brief);
+  if (monthThroughMonth) {
+    const m1 = monthIndexFromText(monthThroughMonth[1]);
+    const m2 = monthIndexFromText(monthThroughMonth[2]);
+    const year = Number(monthThroughMonth[3] || currentYear);
+    if (m1 != null && m2 != null) {
+      return {
+        startDate: toISODate(new Date(year, m1, 1)),
+        endDate: toISODate(new Date(year, m2 + 1, 0)),
+        reason: `Based on explicit monthly range '${monthThroughMonth[0]}'.`,
+        confidence: 'High confidence'
+      };
+    }
+  }
+
+  const quarter = /\bq([1-4])(?:\s*(\d{4}))?\b/i.exec(brief);
+  if (quarter) {
+    const qDates = quarterDates(quarter[1], quarter[2] || currentYear);
+    if (qDates) return { ...qDates, reason: `Based on explicit quarter '${quarter[0]}'.`, confidence: 'High confidence' };
+  }
+
+  const fiscalYear = /\bfy\s*(\d{4})\b/i.exec(brief);
+  if (fiscalYear) {
+    const y = Number(fiscalYear[1]);
+    return {
+      startDate: toISODate(new Date(y, 0, 1)),
+      endDate: toISODate(new Date(y, 11, 31)),
+      reason: `Based on explicit fiscal year '${fiscalYear[0]}'.`,
+      confidence: 'Medium confidence'
+    };
+  }
+
+  if (lower.includes('starting tomorrow') || lower.includes('start tomorrow')) {
+    const s = addDays(now, 1);
+    return { startDate: toISODate(s), endDate: toISODate(addDays(s, 30)), reason: 'Inferred from relative timing "starting tomorrow".', confidence: 'Medium confidence' };
+  }
+  if (lower.includes('next week')) {
+    const s = addDays(now, 7);
+    return { startDate: toISODate(s), endDate: toISODate(addDays(s, 14)), reason: 'Inferred from relative timing "next week".', confidence: 'Medium confidence' };
+  }
+
+  const inWeeks = /\bin\s+(\d{1,2})\s+weeks?\b/i.exec(brief);
+  if (inWeeks) {
+    const offset = Number(inWeeks[1]) * 7;
+    const s = addDays(now, offset);
+    return { startDate: toISODate(s), endDate: toISODate(addDays(s, 30)), reason: `Inferred from relative timing '${inWeeks[0]}'.`, confidence: 'Medium confidence' };
+  }
+
+  if (lower.includes('next month')) {
+    const y = now.getFullYear() + (now.getMonth() === 11 ? 1 : 0);
+    const m = (now.getMonth() + 1) % 12;
+    return {
+      startDate: toISODate(new Date(y, m, 1)),
+      endDate: toISODate(new Date(y, m + 1, 0)),
+      reason: 'Inferred from relative timing "next month".',
+      confidence: 'Medium confidence'
+    };
+  }
+
+  const season = /\b(spring|summer|fall|autumn|winter)\s+(\d{4})\b/i.exec(brief);
+  if (season) {
+    const y = Number(season[2]);
+    const map = {
+      spring: [2, 4],
+      summer: [5, 7],
+      fall: [8, 10],
+      autumn: [8, 10],
+      winter: [11, 1]
+    };
+    const [startM, endM] = map[season[1].toLowerCase()];
+    const endYear = endM < startM ? y + 1 : y;
+    return {
+      startDate: toISODate(new Date(y, startM, 1)),
+      endDate: toISODate(new Date(endYear, endM + 1, 0)),
+      reason: `Inferred from seasonal timing '${season[0]}'.`,
+      confidence: 'Medium confidence'
+    };
+  }
+
+  const yearMention = Number((/\b(20\d{2})\b/.exec(brief) || [])[1] || currentYear);
+
+  if (lower.includes('presidents day')) {
+    const pd = nthWeekdayOfMonth(yearMention, 1, 1, 3); // third Monday in Feb
+    return {
+      startDate: toISODate(addDays(pd, -7)),
+      endDate: toISODate(addDays(pd, 7)),
+      reason: 'No exact dates provided; inferred around Presidents Day.',
+      confidence: 'Medium confidence'
+    };
+  }
+
+  if (lower.includes('black friday')) {
+    const bf = addDays(thanksgivingDate(yearMention), 1);
+    return {
+      startDate: toISODate(addDays(bf, -7)),
+      endDate: toISODate(addDays(bf, 7)),
+      reason: 'No exact dates provided; inferred around Black Friday.',
+      confidence: 'Medium confidence'
+    };
+  }
+
+  if (lower.includes('holiday season')) {
+    return {
+      startDate: toISODate(new Date(yearMention, 10, 15)),
+      endDate: toISODate(new Date(yearMention, 11, 31)),
+      reason: 'No exact dates provided; inferred holiday season window.',
+      confidence: 'Low confidence'
+    };
+  }
+
+  return null;
+}
+
 function inferAndNormalize(parsed = {}, brief = '') {
   const warnings = [];
   const lower = brief.toLowerCase();
 
-  const inferredLob =
-    parsed.lob ||
-    (lower.includes('audio') || lower.includes('airpod') ? 'ai_audio' : null) ||
-    (lower.includes('wearable') || lower.includes('watch') ? 'ai_wearables' : null) ||
-    (lower.includes('home') ? 'ai_home' : null) ||
-    (lower.includes('vision') ? 'ai_vision' : null) ||
-    'ai_productivity';
+  const lobSignals = {
+    ai_audio: ['airpod', 'airpods', 'audio', 'earbud', 'earbuds', 'headphone', 'audio products', 'translation earbuds'],
+    ai_wearables: ['wearable', 'wearables', 'smartwatch', 'smartwatches', 'smart watch', 'smart watches', 'ar glasses', 'wearable tech'],
+    ai_home: ['smart home', 'home device', 'home devices', 'security camera', 'smart home devices'],
+    ai_vision: ['vision', 'computer vision', 'camera analytics', 'image recognition'],
+    ai_productivity: ['productivity', 'productivity tools', 'assistant', 'workflow automation']
+  };
+
+  let inferredLob = parsed.lob;
+  if (!VALID.lobs.includes(inferredLob)) {
+    let best = { lob: 'ai_productivity', score: 0, firstIdx: Number.POSITIVE_INFINITY };
+    for (const [lob, keys] of Object.entries(lobSignals)) {
+      let score = 0;
+      let firstIdx = Number.POSITIVE_INFINITY;
+      keys.forEach(k => {
+        const re = new RegExp(`\\b${k.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}\\b`, 'gi');
+        let m;
+        while ((m = re.exec(lower))) {
+          score += 1;
+          firstIdx = Math.min(firstIdx, m.index);
+        }
+      });
+      if (score > best.score || (score === best.score && firstIdx < best.firstIdx)) best = { lob, score, firstIdx };
+    }
+    inferredLob = best.lob;
+    if (best.score > 0) warnings.push(`Medium confidence: LOB inferred as '${inferredLob}' from product/category mentions in brief.`);
+    else warnings.push(`Low confidence: No clear LOB found; using default '${inferredLob}'.`);
+  }
 
   let channels = Array.isArray(parsed.channel) ? parsed.channel : String(parsed.channel || '').split(',');
   channels = uniqueList(channels.map(c => c.toLowerCase())).filter(c => VALID.channels.includes(c));
+
+  const dspHints = [];
+  const dspReasons = [];
+  const addDsp = (id, reason) => {
+    if (!VALID.dsps.includes(id)) return;
+    if (!dspHints.includes(id)) {
+      dspHints.push(id);
+      dspReasons.push(reason);
+    }
+  };
+
+  if (/(\bbing\b|microsoft advertising)/i.test(brief)) addDsp('microsoft-ads', "'Bing/Microsoft Advertising' mention");
+  if (/(\blinkedin\b|b2b social|linkedin sponsored content)/i.test(brief)) addDsp('linkedin-ads', "'LinkedIn/B2B social' mention");
+  if (/(\btiktok\b|short form video)/i.test(brief)) addDsp('tiktok-ads', "'TikTok/short form video' mention");
+  if (/(\bpinterest\b|visual discovery)/i.test(brief)) addDsp('pinterest', "'Pinterest/visual discovery' mention");
+  if (/(\bttd\b|trade desk|programmatic display)/i.test(brief)) addDsp('ttd', "'TTD/Trade Desk/programmatic display' mention");
+  if (/(\bdv360\b|google display|youtube pre-roll)/i.test(brief)) addDsp('dv360', "'DV360/Google Display/YouTube pre-roll' mention");
+  if (/(amazon dsp|amazon advertising)/i.test(brief)) addDsp('amazon-dsp', "'Amazon DSP/Amazon advertising' mention");
+  if (/(\byoutube\b|pre-roll|youtube ads)/i.test(brief)) { channels.push('video'); addDsp('google-ads', "'YouTube/pre-roll' tactic mention"); }
+  if (/(stories|reels|linkedin|meta|facebook|instagram|tiktok|pinterest|b2b social)/i.test(brief)) channels.push('social');
+  if (/(stories|reels)/i.test(brief)) addDsp('meta-ads', "'Stories/Reels' tactic mention");
+  if (/(display banners|programmatic)/i.test(brief)) channels.push('display');
+  if (/(shopping ads|product listing ads|\bpla\b|\bbing\b|microsoft advertising|search)/i.test(brief)) channels.push('search');
+  if (/(shopping ads|product listing ads|\bpla\b)/i.test(brief)) addDsp('google-ads', "'Shopping ads/PLA' tactic mention");
+
+  channels = uniqueList(channels).filter(c => VALID.channels.includes(c));
   if (channels.length === 0) {
-    if (lower.includes('youtube') || lower.includes('video')) channels.push('video');
-    if (lower.includes('meta') || lower.includes('facebook') || lower.includes('instagram') || lower.includes('social')) channels.push('social');
+    if (/(youtube|video)/i.test(brief)) channels.push('video');
+    if (/(meta|facebook|instagram|social|linkedin|tiktok|pinterest)/i.test(brief)) channels.push('social');
+    if (/(search|shopping ads|pla|bing|google ads)/i.test(brief)) channels.push('search');
     if (channels.length === 0) channels.push('display');
-    warnings.push('Channel was missing/ambiguous; inferred based on brief context.');
+    warnings.push(`Medium confidence: No channel explicitly provided; inferred '${channels.join(', ')}' from tactics/platform mentions.`);
   }
 
   let funnel = Array.isArray(parsed.funnel) ? parsed.funnel : String(parsed.funnel || '').split(',');
   funnel = uniqueList(funnel.map(f => f.toLowerCase())).filter(f => VALID.funnels.includes(f));
   if (funnel.length === 0) {
     funnel = lower.includes('consideration') ? ['consideration'] : (lower.includes('conversion') ? ['conversion'] : ['awareness']);
-    warnings.push('Funnel stage was missing/ambiguous; inferred default stage.');
+    warnings.push(`Medium confidence: Funnel stage inferred as '${funnel[0]}' from brief language.`);
   }
 
   let dsp = Array.isArray(parsed.dsp) ? parsed.dsp : String(parsed.dsp || '').split(',');
   dsp = uniqueList(dsp.map(d => d.toLowerCase())).filter(d => VALID.dsps.includes(d));
   if (dsp.length === 0) {
-    if (lower.includes('google') || lower.includes('youtube') || channels.includes('search') || channels.includes('video')) dsp.push('google-ads');
-    if (lower.includes('meta') || lower.includes('facebook') || lower.includes('instagram') || channels.includes('social')) dsp.push('meta-ads');
+    dsp = uniqueList(dspHints);
+    if (dsp.length === 0) {
+      if (channels.includes('search') || channels.includes('video')) dsp.push('google-ads');
+      if (channels.includes('social')) dsp.push('meta-ads');
+      if (channels.includes('display') && !dsp.includes('google-ads')) dsp.push('dv360');
+    }
     if (dsp.length === 0) dsp.push('google-ads');
-    warnings.push('DSP platforms were missing/ambiguous; inferred from channel and platform hints.');
+
+    if (dspReasons.length) {
+      warnings.push(`High confidence: No DSP explicitly provided; inferred ${dsp.join(', ')} based on ${dspReasons.join(', ')}.`);
+    } else {
+      warnings.push(`Low confidence: No DSP specified; using default DSP mix '${dsp.join(', ')}' based on inferred channels.`);
+    }
   }
 
   const parsedBudget = Number(parsed.budget);
   let budget = Number.isFinite(parsedBudget) && parsedBudget > 0 ? parsedBudget : 0;
+  if (!budget) budget = parseBudgetFromBrief(brief);
   if (!budget) {
-    const m = brief.match(/\$?([\d,]+)\s*(k|m)?/i);
-    if (m) {
-      budget = Number(m[1].replace(/,/g, ''));
-      if (m[2]?.toLowerCase() === 'k') budget *= 1000;
-      if (m[2]?.toLowerCase() === 'm') budget *= 1000000;
-    }
-  }
-  if (!budget) {
-    const benchmarkByChannel = { display: 20000, video: 35000, search: 25000, social: 30000 };
-    budget = channels.reduce((s, c) => s + (benchmarkByChannel[c] || 15000), 0);
-    warnings.push('Budget missing; estimated using baseline channel benchmarks.');
+    const benchmarkByLob = {
+      ai_audio: 40000,
+      ai_wearables: 35000,
+      ai_home: 45000,
+      ai_vision: 50000,
+      ai_productivity: 30000
+    };
+    budget = benchmarkByLob[inferredLob] || 30000;
+    warnings.push(`Low confidence: Budget missing; applied ${inferredLob} benchmark default of $${budget.toLocaleString()}.`);
   }
 
   const now = new Date();
-  const startDate = toISODate(parsed.startDate) || toISODate(parsed.start_date) || now.toISOString().slice(0, 10);
-  const endDate = toISODate(parsed.endDate) || toISODate(parsed.end_date) || new Date(now.getTime() + 90 * 24 * 3600 * 1000).toISOString().slice(0, 10);
-  if (!parsed.startDate || !parsed.endDate) warnings.push('Dates were partially missing; defaulted to a 90-day flight.');
+  const parsedStart = toISODate(parsed.startDate) || toISODate(parsed.start_date);
+  const parsedEnd = toISODate(parsed.endDate) || toISODate(parsed.end_date);
 
-  const nameOut = parsed.name || `${inferredLob.replace('ai_', 'AI ').replace('_', ' ')} Campaign ${startDate}`;
+  let startDate = parsedStart;
+  let endDate = parsedEnd;
+  if (!startDate || !endDate) {
+    const inferredDates = inferDatesFromBrief(brief, now);
+    if (inferredDates) {
+      startDate = startDate || inferredDates.startDate;
+      endDate = endDate || inferredDates.endDate;
+      warnings.push(`${inferredDates.confidence}: ${inferredDates.reason}`);
+    }
+  }
+
+  if (!startDate) startDate = now.toISOString().slice(0, 10);
+  if (!endDate) endDate = addDays(new Date(startDate), 90).toISOString().slice(0, 10);
+  if (!parsedStart || !parsedEnd) {
+    warnings.push(`Low confidence: Dates incomplete; final schedule set to ${startDate} through ${endDate}.`);
+  }
+
+  const firstLine = String(brief || '').split(/\n|\./).map(s => s.trim()).filter(Boolean)[0] || '';
+  const event =
+    (/presidents day|black friday|holiday season|spring|summer|fall|autumn|winter|q[1-4]\s*\d{4}/i.exec(brief) || [])[0] ||
+    '';
+  const tactic =
+    channels.includes('video') ? 'Video' :
+    channels.includes('social') ? 'Social' :
+    channels.includes('search') ? 'Search' :
+    'Display';
+
+  const lobLabel = inferredLob.replace('ai_', 'AI ').replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase());
+  let nameOut = parsed.name;
+  if (!nameOut) {
+    if (firstLine && firstLine.length <= 70) {
+      nameOut = firstLine;
+    } else {
+      nameOut = `${lobLabel} - ${tactic}${event ? ` - ${event.replace(/\b\w/g, c => c.toUpperCase())}` : ''}`;
+    }
+    warnings.push(`Medium confidence: Campaign name inferred as '${nameOut}'.`);
+  }
 
   return {
     parsed: {
@@ -134,7 +425,7 @@ function inferAndNormalize(parsed = {}, brief = '') {
       targetAudience: parsed.targetAudience || parsed.target_audience || [],
       creativeRequirements: parsed.creativeRequirements || parsed.creative_requirements || [],
       objective: parsed.objective || (funnel.includes('conversion') ? 'performance' : 'brand awareness'),
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.78
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8
     },
     warnings
   };
