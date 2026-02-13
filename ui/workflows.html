@@ -58,6 +58,10 @@
       <h3>📝 Campaign from Brief</h3>
       <p class="workflow-description">Paste a natural language brief and launch real campaigns in Google Ads / Meta Ads.</p>
       <textarea id="brief-input" rows="16" placeholder="Campaign Name: Presidents Day Sale - AI Audio&#10;Product Line: ai_audio&#10;Campaign Type: Promotion&#10;Budget: $50,000&#10;Flight Dates: Feb 13 - Feb 20, 2026&#10;Platforms: google-ads, meta-ads&#10;Target Audience: Tech enthusiasts, audiophiles, 25-45&#10;Primary Objective: conversion&#10;KPI Targets:&#10;  - Primary: ROAS 4.0&#10;  - Secondary: CPA $75&#10;Offer: 20% off AirPod AI + free shipping&#10;Creative Notes: Emphasize AI noise-canceling, limited-time urgency&#10;Channel Strategy:&#10;  - Search: Brand + category keywords&#10;  - Social: Prospecting + retargeting with dynamic ads&#10;  - Programmatic: Contextual prospecting on premium tech content&#10;Flighting: Front-loaded&#10;Frequency Cap: 3/day&#10;Brand Safety: Standard"></textarea>
+      <div style="margin-top: 10px; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="full-lifecycle-toggle" />
+        <label for="full-lifecycle-toggle">Run full lifecycle demo (includes Google Docs, Asana, Creatives)</label>
+      </div>
       <div class="workflow-actions" style="margin-top: 12px;">
         <button class="btn btn--primary" onclick="submitBriefToCampaign()">🚀 Create Campaign from Brief</button>
       </div>
@@ -460,6 +464,7 @@
       const input = document.getElementById('brief-input');
       const resultsEl = document.getElementById('brief-results');
       const brief = (input.value || '').trim();
+      const fullLifecycle = document.getElementById('full-lifecycle-toggle')?.checked === true;
 
       if (!brief) {
         alert('Please enter a campaign brief.');
@@ -467,13 +472,13 @@
       }
 
       resultsEl.style.display = 'block';
-      resultsEl.innerHTML = '<p class="loading">Parsing brief and launching campaigns...</p>';
+      resultsEl.innerHTML = `<p class="loading">${fullLifecycle ? 'Parsing brief and running full lifecycle demo...' : 'Parsing brief and launching campaigns...'}</p>`;
 
       try {
         const response = await fetch('/api/workflows/brief-to-campaign', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ brief })
+          body: JSON.stringify({ brief, fullLifecycle })
         });
 
         const data = await response.json();
@@ -486,6 +491,7 @@
         const parsed = data?.parsed?.parsed || {};
         const warnings = data?.parsed?.warnings || [];
         const launches = data?.launches || [];
+        const lifecycle = data?.lifecycle || null;
 
         resultsEl.innerHTML = `
           <div class="detail-section">
@@ -504,6 +510,15 @@
               ${launches.filter(l => l.platformCampaignLink).map(l => `<li><a href="${l.platformCampaignLink}" target="_blank" rel="noopener">${l.dsp} campaign</a></li>`).join('') || '<li>No direct links returned (platform may still have created campaign).</li>'}
             </ul>
           </div>
+          ${lifecycle ? `
+          <div class="detail-section">
+            <h4>Full Lifecycle Demo</h4>
+            <ul class="output-list">
+              <li>Status: <strong>${lifecycle.status || 'unknown'}</strong></li>
+              <li>Stages: ${lifecycle.stages?.length || 0}</li>
+              <li>Artifacts: ${Object.keys(lifecycle.artifacts || {}).length}</li>
+            </ul>
+          </div>` : ''}
           <div class="detail-section">
             <h4>Warnings / Errors</h4>
             <ul class="output-list">

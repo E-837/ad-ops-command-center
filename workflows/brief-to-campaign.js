@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const mediaPlanner = require('../agents/media-planner');
 const campaignLaunch = require('./campaign-launch');
+const campaignLifecycleDemo = require('./campaign-lifecycle-demo');
 const campaignsDb = require('../database/campaigns');
 
 const name = 'Brief to Campaign';
@@ -784,6 +785,33 @@ async function run(params = {}) {
       output: parsed
     });
 
+    if (params.fullLifecycle === true) {
+      results.progress.push('Running full lifecycle demo workflow...');
+      const lifecycleStart = new Date().toISOString();
+      const lifecycleResult = await campaignLifecycleDemo.run({
+        campaign: params.campaign || 'locke-airpod-ai',
+        includeSearch: Boolean(params.includeSearch),
+        log: params.log
+      });
+      const stageStatus = lifecycleResult?.status === 'completed' ? 'completed' : (lifecycleResult?.status || 'failed');
+
+      results.stages.push({
+        id: 'launch',
+        name: 'Campaign Lifecycle Demo',
+        status: stageStatus,
+        startedAt: lifecycleStart,
+        completedAt: new Date().toISOString(),
+        output: lifecycleResult
+      });
+
+      results.parsed = parsed;
+      results.lifecycle = lifecycleResult;
+      results.status = stageStatus === 'completed' ? 'completed' : stageStatus;
+      results.completedAt = new Date().toISOString();
+      results.progress.push('Workflow complete (full lifecycle).');
+      return results;
+    }
+
     results.progress.push(`Launching campaigns on: ${parsed.parsed.dsp.join(', ')}`);
     const launchStart = new Date().toISOString();
     const launches = await launchAcrossDsps(parsed.parsed);
@@ -824,13 +852,16 @@ const meta = {
   requiredConnectors: ['google-ads', 'meta-ads'],
   optionalConnectors: ['pinterest', 'microsoft-ads', 'linkedin-ads', 'tiktok-ads', 'ttd', 'dv360', 'amazon-dsp'],
   inputs: {
-    brief: { type: 'string', required: true, description: 'Free-form natural language campaign brief' }
+    brief: { type: 'string', required: true, description: 'Free-form natural language campaign brief' },
+    fullLifecycle: { type: 'boolean', required: false, description: 'Run full lifecycle demo (includes Google Docs, Asana, Creatives)' },
+    campaign: { type: 'string', required: false, description: 'Campaign slug for lifecycle demo (default: locke-airpod-ai)' },
+    includeSearch: { type: 'boolean', required: false, description: 'When fullLifecycle is enabled, include the optional search campaign stage' }
   },
-  outputs: ['workflowId', 'parsed', 'launches', 'status', 'stages', 'progress'],
+  outputs: ['workflowId', 'parsed', 'launches', 'lifecycle', 'status', 'stages', 'progress'],
   stages: STAGES,
   estimatedDuration: '2-5 minutes',
   isOrchestrator: true,
-  subWorkflows: ['campaign-launch']
+  subWorkflows: ['campaign-launch', 'campaign-lifecycle-demo']
 };
 
 module.exports = { name, description, STAGES, getInfo, run, meta };

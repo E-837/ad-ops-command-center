@@ -100,7 +100,12 @@ router.post('/brief-to-campaign', async (req, res, next) => {
       throw new ValidationError('brief is required');
     }
 
-    const result = await workflows.runWorkflow('brief-to-campaign', { brief });
+    const result = await workflows.runWorkflow('brief-to-campaign', {
+      brief,
+      fullLifecycle: req.body?.fullLifecycle === true,
+      campaign: req.body?.campaign,
+      includeSearch: req.body?.includeSearch === true
+    });
     res.json(result);
   } catch (err) {
     next(err);

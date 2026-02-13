@@ -796,4 +796,24 @@ async function runSearchCampaignStage(results, log, CAMPAIGN_DATA) {
   return stage;
 }
 
-module.exports = { name, description, STAGES, getInfo, run, loadCampaign, DEFAULT_CAMPAIGN_DATA };
+const meta = {
+  id: 'campaign-lifecycle-demo',
+  name,
+  category: 'orchestration',
+  description,
+  version: '1.0.0',
+  triggers: { manual: true, scheduled: null, events: [] },
+  requiredConnectors: [],
+  optionalConnectors: ['google-docs', 'asana-v2', 'canva', 'image-gen', 'ttd', 'dv360', 'amazon-dsp'],
+  inputs: {
+    campaign: { type: 'string', required: false, description: 'Campaign slug from config/campaigns/*.json (default: locke-airpod-ai)' },
+    includeSearch: { type: 'boolean', required: false, description: 'Run optional search-campaign stage' }
+  },
+  outputs: ['workflowId', 'campaignName', 'artifacts', 'status', 'stages', 'startedAt', 'completedAt'],
+  stages: STAGES,
+  estimatedDuration: '5-15 minutes',
+  isOrchestrator: true,
+  subWorkflows: ['search-campaign-workflow']
+};
+
+module.exports = { name, description, STAGES, getInfo, run, loadCampaign, DEFAULT_CAMPAIGN_DATA, meta };

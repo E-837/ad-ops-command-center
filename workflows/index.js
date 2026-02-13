@@ -28,6 +28,7 @@ const crossChannelReport = require('./reporting/cross-channel-report');
 const mediaPlanExecute = require('./orchestration/media-plan-execute');
 const crossChannelLaunch = require('./orchestration/cross-channel-launch');
 const briefToCampaign = require('./brief-to-campaign');
+const campaignLifecycleDemo = require('./campaign-lifecycle-demo');
 
 // Register all workflows
 registry.register('campaign-launch', campaignLaunch);
@@ -46,6 +47,7 @@ registry.register('cross-channel-report', crossChannelReport);
 registry.register('media-plan-execute', mediaPlanExecute);
 registry.register('cross-channel-launch', crossChannelLaunch);
 registry.register('brief-to-campaign', briefToCampaign);
+registry.register('campaign-lifecycle-demo', campaignLifecycleDemo);
 
 // Backward compatible WORKFLOWS map
 const WORKFLOWS = {
@@ -63,7 +65,8 @@ const WORKFLOWS = {
   'cross-channel-report': crossChannelReport,
   'media-plan-execute': mediaPlanExecute,
   'cross-channel-launch': crossChannelLaunch,
-  'brief-to-campaign': briefToCampaign
+  'brief-to-campaign': briefToCampaign,
+  'campaign-lifecycle-demo': campaignLifecycleDemo
 };
 
 /**
