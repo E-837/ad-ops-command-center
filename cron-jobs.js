@@ -21,7 +21,7 @@ function initializeCronJobs() {
     console.log('⏰ Running scheduled pacing check...');
     
     try {
-      const result = await executor.executeWorkflow('pacing-check', {
+      const result = await executor.runImmediate('pacing-check', {
         dsp: 'all',
         alertThreshold: 10
       });
@@ -37,7 +37,7 @@ function initializeCronJobs() {
     console.log('⏰ Running weekly review workflow...');
     
     try {
-      const result = await executor.executeWorkflow('wow-report', {
+      const result = await executor.runImmediate('wow-report', {
         includeAllPlatforms: true,
         sendNotification: true
       });
@@ -58,7 +58,7 @@ function initializeCronJobs() {
     const month = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
 
     try {
-      const result = await executor.executeWorkflow('monthly-report', {
+      const result = await executor.runImmediate('monthly-report', {
         month,
         platforms: ['google-ads', 'meta', 'dv360'],
         includeYoY: true,
@@ -100,7 +100,7 @@ function initializeCronJobs() {
     console.log('⏰ Running daily optimization check...');
     
     try {
-      const result = await executor.executeWorkflow('optimization', {
+      const result = await executor.runImmediate('optimization', {
         scope: 'all-campaigns',
         autoApply: false, // Just generate recommendations
         notifyTeam: true
@@ -138,7 +138,7 @@ function initializeCronJobs() {
     const formatDate = (date) => date.toISOString().split('T')[0];
 
     try {
-      const result = await executor.executeWorkflow('cross-channel-report', {
+      const result = await executor.runImmediate('cross-channel-report', {
         startDate: formatDate(startDate),
         endDate: formatDate(endDate),
         platforms: ['google-ads', 'meta', 'dv360'],
@@ -233,7 +233,7 @@ function autoRegisterWorkflowCrons() {
             // For scheduled workflows, use default params or empty params
             const params = workflow.inputs ? {} : {};
             
-            const result = await executor.executeWorkflow(workflow.id, params);
+            const result = await executor.runImmediate(workflow.id, params);
             console.log(`✅ Workflow ${workflow.id} executed: ${result.executionId}`);
           } catch (error) {
             console.error(`❌ Failed to execute ${workflow.id}:`, error.message);
@@ -286,3 +286,4 @@ module.exports = {
   cleanup,
   triggerCronJob
 };
+
