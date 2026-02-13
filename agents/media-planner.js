@@ -8,7 +8,7 @@ const domain = require('../domain');
 const name = 'Media Planner';
 const role = 'media-planner';
 const description = 'Strategic planning agent for media budgets, channel allocation, and campaign strategy';
-const model = 'claude-3-5-sonnet-20241022'; // Complex reasoning required
+const model = 'claude-opus-4-6'; // Strategic planning and architecture decisions require Opus
 
 const capabilities = [
   'budget_planning',

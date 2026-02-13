@@ -8,7 +8,7 @@ const domain = require('../domain');
 const name = 'Trader';
 const role = 'trader';
 const description = 'Execution agent for DSP operations, bidding strategies, and pacing management';
-const model = 'claude-3-5-haiku-20241022'; // Fast execution tasks
+const model = 'gpt-5.3-codex'; // Campaign execution and API integrations (all coding)
 
 const capabilities = [
   'campaign_activation',
