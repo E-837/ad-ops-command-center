@@ -61,6 +61,211 @@ function uniqueList(values = []) {
   return [...new Set(values.filter(Boolean).map(v => String(v).trim()).filter(Boolean))];
 }
 
+function normalizeDspName(value = '') {
+  const v = String(value || '').trim().toLowerCase();
+  if (!v) return null;
+  const compact = v.replace(/[_\s]+/g, '-');
+
+  const map = {
+    'google': 'google-ads',
+    'google-ads': 'google-ads',
+    'google-adwords': 'google-ads',
+    'adwords': 'google-ads',
+    'meta': 'meta-ads',
+    'meta-ads': 'meta-ads',
+    'facebook': 'meta-ads',
+    'facebook-ads': 'meta-ads',
+    'instagram': 'meta-ads',
+    'instagram-ads': 'meta-ads',
+    'pinterest': 'pinterest',
+    'microsoft': 'microsoft-ads',
+    'microsoft-ads': 'microsoft-ads',
+    'bing': 'microsoft-ads',
+    'bing-ads': 'microsoft-ads',
+    'linkedin': 'linkedin-ads',
+    'linkedin-ads': 'linkedin-ads',
+    'tiktok': 'tiktok-ads',
+    'tiktok-ads': 'tiktok-ads',
+    'ttd': 'ttd',
+    'the-trade-desk': 'ttd',
+    'trade-desk': 'ttd',
+    'dv360': 'dv360',
+    'display-video-360': 'dv360',
+    'amazon-dsp': 'amazon-dsp',
+    'amazon': 'amazon-dsp'
+  };
+
+  return map[compact] || (VALID.dsps.includes(compact) ? compact : null);
+}
+
+function parseNumericBudget(value = '') {
+  const m = String(value || '').match(/\$?\s*([\d,.]+)\s*(k|m|thousand|million)?\b/i);
+  if (!m) return 0;
+  let amount = Number(String(m[1]).replace(/,/g, ''));
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  const unit = String(m[2] || '').toLowerCase();
+  if (unit === 'k' || unit === 'thousand') amount *= 1000;
+  if (unit === 'm' || unit === 'million') amount *= 1000000;
+  return Math.round(amount);
+}
+
+function parseTemplateDateRange(value = '') {
+  const text = String(value || '').trim();
+  if (!text) return { startDate: null, endDate: null };
+
+  const iso = text.match(/(\d{4}-\d{2}-\d{2})\s*(?:-|to|through)\s*(\d{4}-\d{2}-\d{2})/i);
+  if (iso) {
+    return { startDate: toISODate(iso[1]), endDate: toISODate(iso[2]) };
+  }
+
+  const inferred = inferDatesFromBrief(text, new Date());
+  if (inferred?.startDate && inferred?.endDate) {
+    return { startDate: inferred.startDate, endDate: inferred.endDate };
+  }
+
+  const pieces = text.split(/\s*(?:-|to|through)\s*/i);
+  if (pieces.length >= 2) {
+    const start = toISODate(pieces[0]);
+    let end = toISODate(pieces.slice(1).join(' - '));
+    if (start && !end) {
+      const startYear = Number(start.slice(0, 4));
+      end = toISODate(`${pieces[1]}, ${startYear}`) || toISODate(`${startYear}-${pieces[1]}`);
+    }
+    return { startDate: start, endDate: end };
+  }
+
+  return { startDate: null, endDate: null };
+}
+
+function isTemplatedBrief(brief = '') {
+  const markers = [
+    'Campaign Name', 'Product Line', 'Campaign Type', 'Budget', 'Flight Dates', 'Platforms',
+    'Target Audience', 'Primary Objective', 'KPI Targets', 'Offer', 'Creative Notes',
+    'Channel Strategy', 'Flighting', 'Frequency Cap', 'Brand Safety'
+  ];
+  const count = markers.filter(marker => new RegExp(`^\\s*${marker}\\s*:{1,2}`, 'im').test(String(brief))).length;
+  return count >= 3;
+}
+
+function parseTemplateFields(brief = '') {
+  const labels = [
+    'Campaign Name', 'Product Line', 'Campaign Type', 'Budget', 'Flight Dates', 'Platforms',
+    'Target Audience', 'Primary Objective', 'KPI Targets', 'Offer', 'Creative Notes',
+    'Channel Strategy', 'Flighting', 'Frequency Cap', 'Brand Safety'
+  ];
+
+  const lines = String(brief || '').replace(/\r\n/g, '\n').split('\n');
+  const out = {};
+  let currentLabel = null;
+
+  for (const line of lines) {
+    const matchedLabel = labels.find(label => new RegExp(`^\\s*${label}\\s*:{1,2}`, 'i').test(line));
+    if (matchedLabel) {
+      const firstValue = line.replace(new RegExp(`^\\s*${matchedLabel}\\s*:{1,2}\\s*`, 'i'), '').trim();
+      out[matchedLabel] = firstValue;
+      currentLabel = matchedLabel;
+      continue;
+    }
+
+    if (currentLabel) {
+      out[currentLabel] = `${out[currentLabel]}\n${line}`.trim();
+    }
+  }
+
+  return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, String(v || '').trim()]));
+}
+
+function parseTemplatedBrief(brief = '') {
+  const fields = parseTemplateFields(brief);
+
+  const rawLob = String(fields['Product Line'] || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const lob = VALID.lobs.includes(rawLob) ? rawLob : undefined;
+
+  const objective = String(fields['Primary Objective'] || '').trim().toLowerCase();
+  const funnel = VALID.funnels.includes(objective) ? [objective] : [];
+
+  const dsp = uniqueList(
+    String(fields.Platforms || '')
+      .split(/[\n,]+/)
+      .map(v => normalizeDspName(v))
+      .filter(Boolean)
+  );
+
+  const targetAudience = uniqueList(String(fields['Target Audience'] || '').split(/[\n,;]+/));
+  const creativeRequirements = uniqueList(String(fields['Creative Notes'] || '').split(/[\n,;]+/));
+  const { startDate, endDate } = parseTemplateDateRange(fields['Flight Dates']);
+  const budget = parseNumericBudget(fields.Budget);
+
+  const kpiRaw = String(fields['KPI Targets'] || '');
+  const primaryKpi = (kpiRaw.match(/(?:^|\n)\s*-?\s*Primary\s*:{1,2}\s*([^\n]+)/i) || [])[1]?.trim();
+  const secondaryKpi = (kpiRaw.match(/(?:^|\n)\s*-?\s*Secondary\s*:{1,2}\s*([^\n]+)/i) || [])[1]?.trim();
+
+  const channelStrategyRaw = String(fields['Channel Strategy'] || '');
+  const channelStrategy = {};
+  const strategyRe = /^\s*-?\s*(Search|Social|Programmatic|Display|Video)\s*:{1,2}\s*(.+)$/gmi;
+  let sm;
+  while ((sm = strategyRe.exec(channelStrategyRaw))) {
+    channelStrategy[sm[1].toLowerCase()] = sm[2].trim();
+  }
+
+  const channel = uniqueList(Object.keys(channelStrategy)).filter(c => VALID.channels.includes(c));
+
+  const roasMatch = kpiRaw.match(/\bROAS\s*([\d.]+)/i);
+  const cpaMatch = kpiRaw.match(/\bCPA\s*\$?\s*([\d,.]+)/i);
+  const revenueMatch = kpiRaw.match(/\bRevenue\s*\$?\s*([\d,.]+)\s*(k|m)?/i);
+  let revenue;
+  if (revenueMatch) {
+    revenue = Number(revenueMatch[1].replace(/,/g, ''));
+    const unit = String(revenueMatch[2] || '').toLowerCase();
+    if (unit === 'k') revenue *= 1000;
+    if (unit === 'm') revenue *= 1000000;
+  }
+
+  const metadata = {
+    campaignType: String(fields['Campaign Type'] || '').trim() || undefined,
+    offer: String(fields.Offer || '').trim() || undefined,
+    kpiTargets: {
+      primary: primaryKpi || undefined,
+      secondary: secondaryKpi || undefined,
+      roas: roasMatch ? Number(roasMatch[1]) : undefined,
+      cpa: cpaMatch ? Number(cpaMatch[1].replace(/,/g, '')) : undefined,
+      revenue: revenue || undefined
+    },
+    channelStrategy: Object.keys(channelStrategy).length ? channelStrategy : undefined,
+    flighting: String(fields.Flighting || '').trim() || undefined,
+    frequencyCap: String(fields['Frequency Cap'] || '').trim() || undefined,
+    brandSafety: String(fields['Brand Safety'] || '').trim() || undefined
+  };
+
+  const cleanMetadata = Object.fromEntries(Object.entries(metadata).filter(([, v]) => v !== undefined));
+  if (cleanMetadata.kpiTargets) {
+    cleanMetadata.kpiTargets = Object.fromEntries(Object.entries(cleanMetadata.kpiTargets).filter(([, v]) => v !== undefined));
+  }
+
+  return {
+    parsed: {
+      name: String(fields['Campaign Name'] || '').trim(),
+      lob,
+      budget,
+      startDate,
+      endDate,
+      dsp,
+      channel,
+      funnel,
+      targetAudience,
+      objective: VALID.funnels.includes(objective) ? objective : objective || undefined,
+      creativeRequirements,
+      confidence: 1.0,
+      parser: 'template',
+      warnings: [],
+      metadata: cleanMetadata
+    },
+    warnings: [],
+    parser: 'template',
+    confidence: 1.0
+  };
+}
+
 function addDays(date, days) {
   const d = new Date(date);
   d.setDate(d.getDate() + days);
@@ -432,6 +637,10 @@ function inferAndNormalize(parsed = {}, brief = '') {
 }
 
 async function parseBriefWithMediaPlanner(brief) {
+  if (isTemplatedBrief(brief)) {
+    return parseTemplatedBrief(brief);
+  }
+
   const env = loadEnv();
   const apiKey = env.OPENROUTER_API_KEY || process.env.OPENROUTER_API_KEY;
 
