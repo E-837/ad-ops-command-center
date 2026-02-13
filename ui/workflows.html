@@ -448,9 +448,10 @@
         
         if (response.ok) {
           hideWorkflowModal();
-          alert(`Workflow started! Execution ID: ${result.executionId}`);
+          const execId = result.executionId || result.workflowId || result.id;
+          alert(`Workflow started! Execution ID: ${execId}`);
           // Redirect to execution detail page
-          window.location.href = `/workflow-detail.html?executionId=${result.executionId}`;
+          window.location.href = `/workflow-detail.html?executionId=${execId}`;
         } else {
           alert(`Failed to start workflow: ${result.error || 'Unknown error'}`);
         }

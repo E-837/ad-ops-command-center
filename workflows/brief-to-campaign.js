@@ -730,9 +730,23 @@ async function launchAcrossDsps(parsedParams) {
 
     const launchResult = await campaignLaunch.run(launchInput);
     const createStage = launchResult.stages?.find(s => s.id === 'create');
+    const externalCampaignId = createStage?.campaignId || createStage?.output?.id || null;
+
+    console.log('[brief-to-campaign] DSP launch result', {
+      dsp,
+      workflowStatus: launchResult?.status,
+      createStageStatus: createStage?.status,
+      externalCampaignId
+    });
 
     let localCampaign = null;
-    if (launchResult.status === 'completed' || createStage?.status === 'completed') {
+    const shouldPersistCampaign = Boolean(
+      externalCampaignId ||
+      launchResult.status === 'completed' ||
+      createStage?.status === 'completed'
+    );
+
+    if (shouldPersistCampaign) {
       localCampaign = campaignsDb.create({
         name: parsedParams.name,
         budget: launchInput.budget,
@@ -743,8 +757,20 @@ async function launchAcrossDsps(parsedParams) {
         startDate: parsedParams.startDate,
         endDate: parsedParams.endDate,
         status: 'draft',
-        externalCampaignId: createStage?.campaignId || createStage?.output?.id || null,
+        externalCampaignId,
         source: 'brief-to-campaign'
+      });
+
+      console.log('[brief-to-campaign] Saved local campaign record', {
+        dsp,
+        localCampaignId: localCampaign?.id,
+        externalCampaignId
+      });
+    } else {
+      console.warn('[brief-to-campaign] Skipped local campaign save due to unsuccessful launch', {
+        dsp,
+        workflowStatus: launchResult?.status,
+        createStageStatus: createStage?.status
       });
     }
 

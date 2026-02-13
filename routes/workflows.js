@@ -85,8 +85,28 @@ router.get('/:name', (req, res, next) => {
 // Run workflow
 router.post('/:name/run', validateWorkflowInputs, async (req, res, next) => {
   try {
+    const execution = executions.create({
+      workflowId: req.params.name,
+      status: 'running',
+      params: req.body
+    });
+
+    executions.update(execution.id, {
+      status: 'running',
+      startedAt: new Date().toISOString()
+    });
+
     const result = await workflows.runWorkflow(req.params.name, req.body);
-    res.json(result);
+
+    executions.update(execution.id, {
+      status: result.status || 'completed',
+      stages: result.stages || [],
+      result,
+      error: result.error || null,
+      completedAt: new Date().toISOString()
+    });
+
+    res.json({ ...result, executionId: execution.id });
   } catch (err) {
     next(err);
   }
