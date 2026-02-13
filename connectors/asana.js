@@ -11,19 +11,24 @@
  * - Team workload management
  */
 
+const mcpBridge = require('./mcp-bridge');
+
 const name = 'Asana';
 const shortName = 'Asana';
 const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
-// OAuth placeholder - would connect to real Asana MCP
+// Check if real MCP is available
+const useMCP = mcpBridge.asana.isAvailable();
+
+// OAuth placeholder - connected via MCP if available
 const oauth = {
   provider: 'asana',
   scopes: ['default'],
   mcpEndpoint: 'https://mcp.asana.com/v2/mcp',
-  connected: false,
-  accessToken: null
+  connected: useMCP,
+  accessToken: useMCP ? 'via-mcp' : null
 };
 
 // Tool definitions for MCP integration
@@ -328,7 +333,38 @@ function getInfo() {
 async function handleToolCall(toolName, params) {
   lastSync = new Date().toISOString();
   
-  // Try real API first, fall back to mock
+  // Try MCP first (real Asana API via mcporter)
+  if (useMCP) {
+    try {
+      let result;
+      switch (toolName) {
+        case 'asana_create_task':
+          result = await mcpBridge.asana.createTask(params);
+          break;
+        case 'asana_list_tasks':
+        case 'asana_get_tasks':
+          result = await mcpBridge.asana.getTasks(params);
+          break;
+        case 'asana_update_task':
+          result = await mcpBridge.asana.updateTask(params);
+          break;
+        case 'asana_create_project':
+          result = await mcpBridge.asana.createProject(params);
+          break;
+        default:
+          // Fall through to mock for unsupported tools
+          break;
+      }
+      
+      if (result && result.success) {
+        return { success: true, data: result.data, mode: 'mcp' };
+      }
+    } catch (err) {
+      console.error(`[Asana] MCP error, falling back to mock: ${err.message}`);
+    }
+  }
+  
+  // Try API client second
   const apiClient = require('./api-client');
   
   if (apiClient.hasAsana) {
