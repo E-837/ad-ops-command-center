@@ -19,16 +19,21 @@ const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
-// Check if real MCP is available
-const useMCP = mcpBridge.asana.isAvailable();
+// Lazy-check MCP availability to avoid blocking startup on mcporter list
+let useMCP;
+function isMCPAvailable() {
+  if (typeof useMCP === 'boolean') return useMCP;
+  useMCP = mcpBridge.asana.isAvailable();
+  return useMCP;
+}
 
 // OAuth placeholder - connected via MCP if available
 const oauth = {
   provider: 'asana',
   scopes: ['default'],
   mcpEndpoint: 'https://mcp.asana.com/v2/mcp',
-  connected: useMCP,
-  accessToken: useMCP ? 'via-mcp' : null
+  connected: false,
+  accessToken: null
 };
 
 // Tool definitions for MCP integration
@@ -321,7 +326,7 @@ function getInfo() {
     status,
     lastSync,
     mcpEndpoint: oauth.mcpEndpoint,
-    connected: oauth.connected,
+    connected: isMCPAvailable(),
     features: ['Task Management', 'Projects', 'Sections', 'Comments', 'Custom Fields'],
     useCases: ['Campaign Briefs', 'Creative Approval', 'Pacing Alerts']
   };
@@ -334,7 +339,7 @@ async function handleToolCall(toolName, params) {
   lastSync = new Date().toISOString();
   
   // Try MCP first (real Asana API via mcporter)
-  if (useMCP) {
+  if (isMCPAvailable()) {
     try {
       let result;
       switch (toolName) {

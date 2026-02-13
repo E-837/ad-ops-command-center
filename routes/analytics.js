@@ -5,7 +5,11 @@
 
 const express = require('express');
 const router = express.Router();
-const analytics = require('../services/analytics');
+let analytics;
+function getAnalyticsService() {
+  if (!analytics) analytics = require('../services/analytics');
+  return analytics;
+}
 const benchmarks = require('../domain/benchmarks.json');
 const connectors = require('../connectors');
 const agents = require('../agents');
@@ -53,7 +57,7 @@ router.get('/insights', async (req, res, next) => {
 // Spend trend analysis
 router.get('/spend-trend', async (req, res, next) => {
   try {
-    const result = await analytics.getSpendTrend(req.query);
+    const result = await getAnalyticsService().getSpendTrend(req.query);
     res.json(success(result));
   } catch (err) {
     next(err);
@@ -63,7 +67,7 @@ router.get('/spend-trend', async (req, res, next) => {
 // CTR comparison across platforms
 router.get('/ctr-comparison', async (req, res, next) => {
   try {
-    const result = await analytics.getCTRComparison(req.query);
+    const result = await getAnalyticsService().getCTRComparison(req.query);
 
     // Add benchmarks to the response
     const dataWithBenchmarks = result.data.map(platform => ({
@@ -83,7 +87,7 @@ router.get('/ctr-comparison', async (req, res, next) => {
 // Conversion funnel analysis
 router.get('/conversion-funnel', async (req, res, next) => {
   try {
-    const result = await analytics.getConversionFunnel(req.query);
+    const result = await getAnalyticsService().getConversionFunnel(req.query);
     res.json(success(result));
   } catch (err) {
     next(err);
@@ -93,7 +97,7 @@ router.get('/conversion-funnel', async (req, res, next) => {
 // ROAS by campaign
 router.get('/roas-by-campaign', async (req, res, next) => {
   try {
-    const result = await analytics.getROASByCampaign(req.query);
+    const result = await getAnalyticsService().getROASByCampaign(req.query);
     res.json(success(result));
   } catch (err) {
     next(err);
@@ -103,7 +107,7 @@ router.get('/roas-by-campaign', async (req, res, next) => {
 // Budget utilization metrics
 router.get('/budget-utilization', async (req, res, next) => {
   try {
-    const result = await analytics.getBudgetUtilization(req.query);
+    const result = await getAnalyticsService().getBudgetUtilization(req.query);
     res.json(success(result));
   } catch (err) {
     next(err);
@@ -113,7 +117,7 @@ router.get('/budget-utilization', async (req, res, next) => {
 // Performance summary dashboard
 router.get('/performance-summary', async (req, res, next) => {
   try {
-    const result = await analytics.getPerformanceSummary(req.query);
+    const result = await getAnalyticsService().getPerformanceSummary(req.query);
     res.json(success(result));
   } catch (err) {
     next(err);
@@ -123,7 +127,7 @@ router.get('/performance-summary', async (req, res, next) => {
 // Platform comparison with benchmarks
 router.get('/platform-comparison', async (req, res, next) => {
   try {
-    const result = await analytics.getPlatformComparison(req.query);
+    const result = await getAnalyticsService().getPlatformComparison(req.query);
 
     // Add benchmarks to platform data
     const platformsWithBenchmarks = result.platforms.map(platform => ({
@@ -143,7 +147,7 @@ router.get('/platform-comparison', async (req, res, next) => {
 // LOB breakdown analysis
 router.get('/lob-breakdown', async (req, res, next) => {
   try {
-    const result = await analytics.getLOBBreakdown(req.query);
+    const result = await getAnalyticsService().getLOBBreakdown(req.query);
     res.json(success(result));
   } catch (err) {
     next(err);
@@ -153,7 +157,7 @@ router.get('/lob-breakdown', async (req, res, next) => {
 // Available LOB filter values
 router.get('/lob-options', async (req, res, next) => {
   try {
-    const result = await analytics.getLOBBreakdown(req.query);
+    const result = await getAnalyticsService().getLOBBreakdown(req.query);
     const lobs = [...new Set((result.data || []).map((item) => item.lob).filter(Boolean))].sort();
     res.json(success(lobs));
   } catch (err) {
@@ -167,3 +171,4 @@ router.get('/benchmarks', (req, res) => {
 });
 
 module.exports = router;
+

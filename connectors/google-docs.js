@@ -11,14 +11,19 @@ const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
-const useMCP = mcpBridge.googleDocs.isAvailable();
+let useMCP;
+function isMCPAvailable() {
+  if (typeof useMCP === 'boolean') return useMCP;
+  useMCP = mcpBridge.googleDocs.isAvailable();
+  return useMCP;
+}
 
 const oauth = {
   provider: 'google-docs',
   scopes: ['documents', 'spreadsheets', 'drive'],
   mcpEndpoint: 'google-docs',
-  connected: useMCP,
-  accessToken: useMCP ? 'via-mcp' : null
+  connected: false,
+  accessToken: null
 };
 
 const tools = [
@@ -37,9 +42,9 @@ function getInfo() {
     status,
     lastSync,
     mcpEndpoint: oauth.mcpEndpoint,
-    connected: oauth.connected,
-    connectionType: useMCP ? 'mcp' : 'mock',
-    statusLabel: useMCP ? 'Connected via MCP' : 'Mock data',
+    connected: isMCPAvailable(),
+    connectionType: isMCPAvailable() ? 'mcp' : 'mock',
+    statusLabel: isMCPAvailable() ? 'Connected via MCP' : 'Mock data',
     features: ['Google Docs', 'Google Sheets', 'Drive Files'],
     useCases: ['Report Drafting', 'Media Plans', 'Budget Tracking']
   };
@@ -48,7 +53,7 @@ function getInfo() {
 async function handleToolCall(toolName, params = {}) {
   lastSync = new Date().toISOString();
 
-  if (useMCP) {
+  if (isMCPAvailable()) {
     try {
       let result;
       switch (toolName) {

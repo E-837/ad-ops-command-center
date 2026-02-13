@@ -21,16 +21,21 @@ const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
-// Check if real MCP is available (requires mcporter auth figma)
-const useMCP = mcpBridge.figma.isAvailable();
+// Lazy-check MCP availability to avoid blocking startup on mcporter list
+let useMCP;
+function isMCPAvailable() {
+  if (typeof useMCP === 'boolean') return useMCP;
+  useMCP = mcpBridge.figma.isAvailable();
+  return useMCP;
+}
 
 // OAuth placeholder - connected via MCP if available
 const oauth = {
   provider: 'figma',
   scopes: ['file_read', 'file_comments:read'],
   mcpEndpoint: 'https://api.figma.com/v1',
-  connected: useMCP,
-  accessToken: useMCP ? 'via-mcp' : null
+  connected: false,
+  accessToken: null
 };
 
 // Tool definitions for MCP integration
@@ -462,10 +467,10 @@ function getInfo() {
     status,
     lastSync,
     mcpEndpoint: oauth.mcpEndpoint,
-    connected: oauth.connected,
-    connectionType: useMCP ? 'mcp' : 'mock',
-    statusLabel: useMCP ? 'Connected via MCP' : 'Mock data',
-    authHint: useMCP ? null : 'Run `mcporter auth figma` to enable live MCP access',
+    connected: isMCPAvailable(),
+    connectionType: isMCPAvailable() ? 'mcp' : 'mock',
+    statusLabel: isMCPAvailable() ? 'Connected via MCP' : 'Mock data',
+    authHint: isMCPAvailable() ? null : 'Run `mcporter auth figma` to enable live MCP access',
     features: ['Files', 'Nodes', 'Image Export', 'Comments', 'Styles'],
     useCases: ['Creative Specs', 'Asset Export', 'Brand Guidelines', 'Design Review']
   };
@@ -478,7 +483,7 @@ async function handleToolCall(toolName, params) {
   lastSync = new Date().toISOString();
 
   // Try MCP first (real Figma API via mcporter)
-  if (useMCP) {
+  if (isMCPAvailable()) {
     try {
       let result;
       switch (toolName) {

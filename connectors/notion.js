@@ -20,16 +20,21 @@ const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
-// Check if real MCP is available
-const useMCP = mcpBridge.notion.isAvailable();
+// Lazy-check MCP availability to avoid blocking startup on mcporter list
+let useMCP;
+function isMCPAvailable() {
+  if (typeof useMCP === 'boolean') return useMCP;
+  useMCP = mcpBridge.notion.isAvailable();
+  return useMCP;
+}
 
 // OAuth placeholder - connected via MCP if available
 const oauth = {
   provider: 'notion',
   scopes: ['read_content', 'update_content', 'insert_content'],
   mcpEndpoint: 'https://mcp.notion.com',
-  connected: useMCP,
-  accessToken: useMCP ? 'via-mcp' : null
+  connected: false,
+  accessToken: null
 };
 
 // Tool definitions for MCP integration
@@ -409,9 +414,9 @@ function getInfo() {
     status,
     lastSync,
     mcpEndpoint: oauth.mcpEndpoint,
-    connected: oauth.connected,
-    connectionType: useMCP ? 'mcp' : 'mock',
-    statusLabel: useMCP ? 'Connected via MCP' : 'Mock data',
+    connected: isMCPAvailable(),
+    connectionType: isMCPAvailable() ? 'mcp' : 'mock',
+    statusLabel: isMCPAvailable() ? 'Connected via MCP' : 'Mock data',
     features: ['Pages', 'Databases', 'Search', 'Blocks', 'Rich Text'],
     useCases: ['Playbooks/SOPs', 'Campaign Tracker', 'Meeting Notes', 'Knowledge Base']
   };
@@ -424,7 +429,7 @@ async function handleToolCall(toolName, params) {
   lastSync = new Date().toISOString();
 
   // Try MCP first (real Notion API via mcporter)
-  if (useMCP) {
+  if (isMCPAvailable()) {
     try {
       let result;
       switch (toolName) {
