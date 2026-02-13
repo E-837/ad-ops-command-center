@@ -12,6 +12,7 @@ const asana = require('./asana');
 const notion = require('./notion');
 const figma = require('./figma');
 const canva = require('./canva');
+const googleDocs = require('./google-docs');
 
 // DSP Connectors
 const DSP_CONNECTORS = {
@@ -27,7 +28,8 @@ const PRODUCTIVITY_CONNECTORS = {
   asana,
   notion,
   figma,
-  canva
+  canva,
+  'google-docs': googleDocs
 };
 
 // All connectors combined
@@ -77,13 +79,21 @@ function getProductivityConnectors() {
  * Get connector status
  */
 function getConnectorStatus() {
-  return Object.entries(CONNECTORS).map(([id, connector]) => ({
-    id,
-    name: connector.name,
-    status: connector.status || 'ready',
-    lastSync: connector.lastSync || null,
-    category: DSP_CONNECTORS[id] ? 'dsp' : 'productivity'
-  }));
+  return Object.entries(CONNECTORS).map(([id, connector]) => {
+    const info = connector.getInfo ? connector.getInfo() : {};
+    const isMCP = info.connectionType === 'mcp';
+
+    return {
+      id,
+      name: connector.name,
+      status: connector.status || 'ready',
+      connected: !!info.connected,
+      connectionType: info.connectionType || (info.connected ? 'live' : 'mock'),
+      statusLabel: info.statusLabel || (isMCP ? 'Connected via MCP' : info.connected ? 'Connected' : 'Mock data'),
+      lastSync: connector.lastSync || null,
+      category: DSP_CONNECTORS[id] ? 'dsp' : 'productivity'
+    };
+  });
 }
 
 /**

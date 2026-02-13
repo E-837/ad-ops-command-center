@@ -1871,11 +1871,13 @@ class MetaAdsConnector extends BaseConnector {
     const id = campaign.id || `meta-${Date.now()}`;
 
     return {
+      success: true,
       id,
       name: campaign.name || params.name,
-      status: campaign.status || 'PAUSED',
+      status: campaign.status || campaign.configured_status || 'PAUSED',
       platform: 'meta-ads',
       mode: hasMetaAds ? 'live' : 'sandbox',
+      error: null,
       url: hasMetaAds ? `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${(adAccountId || '').replace('act_', '')}&selected_campaign_ids=${id}` : null,
       raw: response
     };

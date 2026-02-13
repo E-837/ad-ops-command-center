@@ -394,7 +394,8 @@
       'asana': { icon: '✅' },
       'notion': { icon: '📝' },
       'figma': { icon: '🎨' },
-      'canva': { icon: '🖼️' }
+      'canva': { icon: '🖼️' },
+      'google-docs': { icon: '📄' }
     };
     
     async function loadArchitecture() {
@@ -409,7 +410,7 @@
         // Build status map
         const statusMap = {};
         connectorStatus.forEach(c => {
-          statusMap[c.id] = c.status === 'connected' ? 'live' : 'mock';
+          statusMap[c.id] = (c.connectionType === 'mcp' || c.connected) ? 'live' : 'mock';
         });
         
         // Separate DSPs and productivity
@@ -469,7 +470,7 @@
         document.getElementById('connector-count').textContent = productivity.length;
         
         // Count live APIs
-        const liveCount = productivity.filter(c => c.connected).length;
+        const liveCount = productivity.filter(c => c.connected || c.connectionType === 'mcp').length;
         document.getElementById('live-count').textContent = liveCount;
         
       } catch (err) {

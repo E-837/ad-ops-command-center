@@ -39,7 +39,9 @@ router.get('/test/:name', async (req, res) => {
     
     if (info.connected !== undefined) {
       return res.json({ 
-        connected: info.connected, 
+        connected: info.connected,
+        connectionType: info.connectionType || (info.connected ? 'live' : 'mock'),
+        statusLabel: info.statusLabel || (info.connected ? 'Connected' : 'Mock data'),
         lastSync: connector.lastSync || null,
         name: info.name
       });

@@ -122,33 +122,64 @@ const asana = {
  */
 const notion = {
   async createPage(params) {
-    return callMCP('notion', 'create_page', {
-      parent_page_id: params.parent_id,
-      title: params.title,
-      content: params.content
+    return callMCP('notion', 'API-post-page', {
+      parent: params.parent_id
+        ? { [params.parent_type || 'page_id']: params.parent_id }
+        : undefined,
+      properties: params.properties || {
+        title: {
+          title: [{ text: { content: params.title || 'Untitled' } }]
+        }
+      },
+      children: params.content || []
     });
   },
-  
+
   async search(params) {
-    return callMCP('notion', 'search', {
+    return callMCP('notion', 'API-post-search', {
       query: params.query,
-      filter: params.filter
+      filter: params.filter,
+      sort: params.sort
     });
   },
-  
+
   async getPage(params) {
-    return callMCP('notion', 'get_page', {
+    return callMCP('notion', 'API-retrieve-a-page', {
       page_id: params.page_id
     });
   },
-  
+
   async updatePage(params) {
-    return callMCP('notion', 'update_page', {
+    return callMCP('notion', 'API-patch-page', {
       page_id: params.page_id,
-      properties: params.properties
+      properties: params.properties,
+      archived: params.archived
     });
   },
-  
+
+  async queryDatabase(params) {
+    return callMCP('notion', 'API-query-data-source', {
+      data_source_id: params.database_id,
+      filter: params.filter,
+      sorts: params.sorts,
+      page_size: params.page_size
+    });
+  },
+
+  async addBlock(params) {
+    return callMCP('notion', 'API-patch-block-children', {
+      block_id: params.page_id,
+      children: [{
+        object: 'block',
+        type: params.block_type || 'paragraph',
+        [params.block_type || 'paragraph']: {
+          rich_text: [{ type: 'text', text: { content: params.content || '' } }]
+        }
+      }],
+      after: params.after
+    });
+  },
+
   isAvailable() {
     return checkMCPServer('notion');
   }
@@ -160,18 +191,96 @@ const notion = {
 const figma = {
   async getFile(params) {
     return callMCP('figma', 'get_file', {
-      file_key: params.file_key
+      file_key: params.file_key,
+      depth: params.depth
     });
   },
-  
+
+  async getNode(params) {
+    return callMCP('figma', 'get_node', {
+      file_key: params.file_key,
+      node_id: params.node_id
+    });
+  },
+
+  async getImages(params) {
+    return callMCP('figma', 'get_images', {
+      file_key: params.file_key,
+      node_ids: params.node_ids,
+      format: params.format,
+      scale: params.scale
+    });
+  },
+
   async getComments(params) {
     return callMCP('figma', 'get_comments', {
       file_key: params.file_key
     });
   },
-  
+
+  async listProjects(params) {
+    return callMCP('figma', 'list_projects', {
+      team_id: params.team_id
+    });
+  },
+
+  async getStyles(params) {
+    return callMCP('figma', 'get_styles', {
+      file_key: params.file_key
+    });
+  },
+
   isAvailable() {
     return checkMCPServer('figma');
+  }
+};
+
+/**
+ * Google Docs MCP Bridge
+ */
+const googleDocs = {
+  async createDoc(params) {
+    return callMCP('google-docs', 'createDocument', {
+      title: params.title,
+      parentFolderId: params.parentFolderId,
+      initialContent: params.content
+    });
+  },
+
+  async getDoc(params) {
+    return callMCP('google-docs', 'readGoogleDoc', {
+      documentId: params.documentId,
+      format: params.format || 'text',
+      maxLength: params.maxLength
+    });
+  },
+
+  async updateDoc(params) {
+    return callMCP('google-docs', 'appendToGoogleDoc', {
+      documentId: params.documentId,
+      textToAppend: params.text,
+      addNewlineIfNeeded: params.addNewlineIfNeeded !== false
+    });
+  },
+
+  async createSheet(params) {
+    return callMCP('google-docs', 'createSpreadsheet', {
+      title: params.title,
+      parentFolderId: params.parentFolderId,
+      initialData: params.initialData
+    });
+  },
+
+  async getSheet(params) {
+    return callMCP('google-docs', 'readSpreadsheet', {
+      spreadsheetId: params.spreadsheetId,
+      range: params.range || 'A1:Z1000',
+      valueRenderOption: params.valueRenderOption || 'FORMATTED_VALUE'
+    });
+  },
+
+  isAvailable() {
+    return checkMCPServer('google-docs');
   }
 };
 
@@ -180,5 +289,6 @@ module.exports = {
   checkMCPServer,
   asana,
   notion,
-  figma
+  figma,
+  googleDocs
 };

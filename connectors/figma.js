@@ -13,19 +13,24 @@
  * - Export assets for campaigns
  */
 
+const mcpBridge = require('./mcp-bridge');
+
 const name = 'Figma';
 const shortName = 'Figma';
 const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
-// OAuth placeholder - would connect to real Figma MCP
+// Check if real MCP is available (requires mcporter auth figma)
+const useMCP = mcpBridge.figma.isAvailable();
+
+// OAuth placeholder - connected via MCP if available
 const oauth = {
   provider: 'figma',
   scopes: ['file_read', 'file_comments:read'],
   mcpEndpoint: 'https://api.figma.com/v1',
-  connected: false,
-  accessToken: null
+  connected: useMCP,
+  accessToken: useMCP ? 'via-mcp' : null
 };
 
 // Tool definitions for MCP integration
@@ -458,6 +463,9 @@ function getInfo() {
     lastSync,
     mcpEndpoint: oauth.mcpEndpoint,
     connected: oauth.connected,
+    connectionType: useMCP ? 'mcp' : 'mock',
+    statusLabel: useMCP ? 'Connected via MCP' : 'Mock data',
+    authHint: useMCP ? null : 'Run `mcporter auth figma` to enable live MCP access',
     features: ['Files', 'Nodes', 'Image Export', 'Comments', 'Styles'],
     useCases: ['Creative Specs', 'Asset Export', 'Brand Guidelines', 'Design Review']
   };
@@ -468,13 +476,50 @@ function getInfo() {
  */
 async function handleToolCall(toolName, params) {
   lastSync = new Date().toISOString();
+
+  // Try MCP first (real Figma API via mcporter)
+  if (useMCP) {
+    try {
+      let result;
+      switch (toolName) {
+        case 'figma_get_file':
+          result = await mcpBridge.figma.getFile(params);
+          break;
+        case 'figma_get_node':
+          result = await mcpBridge.figma.getNode(params);
+          break;
+        case 'figma_get_images':
+          result = await mcpBridge.figma.getImages(params);
+          break;
+        case 'figma_get_comments':
+          result = await mcpBridge.figma.getComments(params);
+          break;
+        case 'figma_list_projects':
+          result = await mcpBridge.figma.listProjects(params);
+          break;
+        case 'figma_get_styles':
+          result = await mcpBridge.figma.getStyles(params);
+          break;
+        default:
+          break;
+      }
+
+      if (result && result.success) {
+        return { success: true, data: result.data, mode: 'mcp' };
+      }
+    } catch (err) {
+      const isAuthIssue = /auth|required|unauthorized|forbidden|token/i.test(err.message || '');
+      console.error(`[Figma] MCP ${isAuthIssue ? 'auth issue' : 'error'}, falling back to API/mock: ${err.message}`);
+    }
+  }
   
-  // Try real API first, fall back to mock
+  // Try real API second, fall back to mock
   const apiClient = require('./api-client');
   
   if (apiClient.hasFigma) {
     try {
-      return await handleRealApiCall(apiClient.figma, toolName, params);
+      const response = await handleRealApiCall(apiClient.figma, toolName, params);
+      return { success: true, data: response, mode: 'api' };
     } catch (err) {
       console.error(`[Figma] Real API error, falling back to mock: ${err.message}`);
     }

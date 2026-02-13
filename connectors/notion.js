@@ -12,19 +12,24 @@
  * - Campaign tracking databases
  */
 
+const mcpBridge = require('./mcp-bridge');
+
 const name = 'Notion';
 const shortName = 'Notion';
 const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
-// OAuth placeholder - would connect to real Notion MCP
+// Check if real MCP is available
+const useMCP = mcpBridge.notion.isAvailable();
+
+// OAuth placeholder - connected via MCP if available
 const oauth = {
   provider: 'notion',
   scopes: ['read_content', 'update_content', 'insert_content'],
   mcpEndpoint: 'https://mcp.notion.com',
-  connected: false,
-  accessToken: null
+  connected: useMCP,
+  accessToken: useMCP ? 'via-mcp' : null
 };
 
 // Tool definitions for MCP integration
@@ -405,6 +410,8 @@ function getInfo() {
     lastSync,
     mcpEndpoint: oauth.mcpEndpoint,
     connected: oauth.connected,
+    connectionType: useMCP ? 'mcp' : 'mock',
+    statusLabel: useMCP ? 'Connected via MCP' : 'Mock data',
     features: ['Pages', 'Databases', 'Search', 'Blocks', 'Rich Text'],
     useCases: ['Playbooks/SOPs', 'Campaign Tracker', 'Meeting Notes', 'Knowledge Base']
   };
@@ -415,13 +422,49 @@ function getInfo() {
  */
 async function handleToolCall(toolName, params) {
   lastSync = new Date().toISOString();
+
+  // Try MCP first (real Notion API via mcporter)
+  if (useMCP) {
+    try {
+      let result;
+      switch (toolName) {
+        case 'notion_search':
+          result = await mcpBridge.notion.search(params);
+          break;
+        case 'notion_get_page':
+          result = await mcpBridge.notion.getPage(params);
+          break;
+        case 'notion_create_page':
+          result = await mcpBridge.notion.createPage(params);
+          break;
+        case 'notion_update_page':
+          result = await mcpBridge.notion.updatePage(params);
+          break;
+        case 'notion_query_database':
+          result = await mcpBridge.notion.queryDatabase(params);
+          break;
+        case 'notion_add_block':
+          result = await mcpBridge.notion.addBlock(params);
+          break;
+        default:
+          break;
+      }
+
+      if (result && result.success) {
+        return { success: true, data: result.data, mode: 'mcp' };
+      }
+    } catch (err) {
+      console.error(`[Notion] MCP error, falling back to API/mock: ${err.message}`);
+    }
+  }
   
-  // Try real API first, fall back to mock
+  // Try real API second, fall back to mock
   const apiClient = require('./api-client');
   
   if (apiClient.hasNotion) {
     try {
-      return await handleRealApiCall(apiClient.notion, toolName, params);
+      const response = await handleRealApiCall(apiClient.notion, toolName, params);
+      return { success: true, data: response, mode: 'api' };
     } catch (err) {
       console.error(`[Notion] Real API error, falling back to mock: ${err.message}`);
     }

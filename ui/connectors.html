@@ -341,7 +341,8 @@
       'asana': '✅',
       'notion': '📝',
       'figma': '🎨',
-      'canva': '🖼️'
+      'canva': '🖼️',
+      'google-docs': '📄'
     };
     
     const DSP_IDS = ['ttd', 'dv360', 'amazon-dsp'];
@@ -380,7 +381,7 @@
         let toolCount = 0;
         
         connectors.forEach(c => {
-          if (c.connected) liveCount++;
+          if (c.connectionType === 'mcp' || c.connected) liveCount++;
           else mockCount++;
           if (c.toolCount) toolCount += c.toolCount;
           else if (c.tools) toolCount += c.tools.length;
@@ -399,9 +400,11 @@
     
     function renderConnectorCard(connector, status, type) {
       const icon = ICONS[connector.id] || '🔌';
-      const isConnected = connector.connected;
+      const statusLabel = connector.statusLabel || status?.statusLabel;
+      const useMCP = connector.connectionType === 'mcp' || status?.connectionType === 'mcp';
+      const isConnected = connector.connected || useMCP;
       const statusClass = isConnected ? 'connected' : 'mock';
-      const statusText = isConnected ? '✅ Connected' : '⚠️ Mock';
+      const statusText = statusLabel || (useMCP ? '✅ Connected via MCP' : isConnected ? '✅ Connected' : '⚠️ Mock data');
       
       const features = connector.features || [];
       const useCases = connector.useCases || [];
