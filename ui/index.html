@@ -129,7 +129,8 @@
     // Load quick stats
     async function loadQuickStats() {
       try {
-        const campaigns = await fetch('/api/campaigns').then(r => r.json());
+        const response = await fetch('/api/campaigns').then(r => r.json());
+        const campaigns = response.data || [];
         const liveCampaigns = campaigns.filter(c => c.status === 'live');
         
         document.getElementById('totalCampaigns').textContent = liveCampaigns.length;

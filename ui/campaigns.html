@@ -123,7 +123,8 @@
     
     async function loadCampaigns() {
       try {
-        const campaigns = await fetch('/api/campaigns').then(r => r.json());
+        const response = await fetch('/api/campaigns').then(r => r.json());
+        const campaigns = response.data || [];
         allCampaigns = campaigns;
         renderCampaigns(campaigns);
       } catch (err) {

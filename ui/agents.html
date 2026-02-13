@@ -77,7 +77,8 @@
     
     async function loadAgents() {
       try {
-        const agents = await fetch('/api/agents').then(r => r.json());
+        const response = await fetch('/api/agents').then(r => r.json());
+        const agents = response.data || [];
         
         document.getElementById('agents-grid').innerHTML = agents.map(agent => `
           <div class="agent-card glass" onclick="showAgentDetails('${agent.id}')" style="border-left: 4px solid ${agentColors[agent.id] || '#666'}">

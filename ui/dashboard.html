@@ -610,10 +610,11 @@
         });
 
         // Platform Distribution
-        const campaigns = await fetch('/api/campaigns').then(r => r.json());
+        const response = await fetch('/api/campaigns').then(r => r.json());
+        const campaigns = response.data || [];
         const platformBudgets = {};
         
-        (campaigns.campaigns || []).forEach(campaign => {
+        campaigns.forEach(campaign => {
           const platform = campaign.dsp || 'Other';
           const budget = campaign.dailyBudget || 0;
           platformBudgets[platform] = (platformBudgets[platform] || 0) + budget;
