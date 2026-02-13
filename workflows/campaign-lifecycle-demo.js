@@ -5,8 +5,10 @@
 
 const path = require('path');
 const fs = require('fs');
-const { callTool } = require(path.join(__dirname, '..', 'scripts', 'mcp-helper'));
+const { callToolAsync } = require(path.join(__dirname, '..', 'scripts', 'mcp-helper'));
 const logger = require('../utils/logger');
+const eventBus = require('../events/bus');
+const eventTypes = require('../events/types');
 
 const name = 'Campaign Lifecycle Demo';
 const description = 'Full end-to-end campaign lifecycle demonstration';
@@ -96,12 +98,40 @@ function getInfo(campaignName = 'locke-airpod-ai') {
   return { name, description, stages: STAGES, campaign: loadCampaign(campaignName) };
 }
 
+async function pMapSimple(items, fn, { concurrency = 3 } = {}) {
+  const results = new Array(items.length);
+  let i = 0;
+
+  async function worker() {
+    while (true) {
+      const idx = i++;
+      if (idx >= items.length) return;
+      results[idx] = await fn(items[idx], idx);
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length || 1) }, worker));
+  return results;
+}
+
+function emitStageEvent(emit, type, payload) {
+  emit({ type, ...payload });
+  eventBus.emit(type, payload);
+}
+
 // ─── MAIN RUN ─────────────────────────────────────────────
 async function run(opts = {}) {
+  if (opts.queue === true && !opts.executionId) {
+    const executor = require(path.join(__dirname, '..', 'executor'));
+    const executionId = executor.queueWorkflow('campaign-lifecycle-demo', { ...opts, queue: false });
+    return { executionId, status: 'queued' };
+  }
+
   const log = opts.log || console.log;
+  const emit = opts.emit || (() => {});
   const CAMPAIGN_DATA = loadCampaign(opts.campaign || 'locke-airpod-ai');
   const results = {
-    workflowId: `demo-${Date.now()}`,
+    workflowId: opts.executionId || `demo-${Date.now()}`,
     campaign: CAMPAIGN_DATA,
     campaignName: opts.campaign || 'locke-airpod-ai',
     stages: [],
@@ -110,26 +140,50 @@ async function run(opts = {}) {
     startedAt: new Date().toISOString()
   };
 
-  const runners = [
-    generateCampaignBrief,
-    createMediaPlan,
-    setupProjectManagement,
-    generateLandingPage,
-    generateCreatives,
-    activateOnDSPs
+  const runStage = async (stageIndex, runner) => {
+    const stageDef = STAGES[stageIndex];
+    emitStageEvent(emit, eventTypes.WORKFLOW_STAGE_STARTED, {
+      source: results.workflowId,
+      workflowId: 'campaign-lifecycle-demo',
+      executionId: opts.executionId || results.workflowId,
+      stageId: stageDef.id,
+      stageName: stageDef.name,
+      stageIndex,
+      totalStages: STAGES.length,
+      timestamp: new Date().toISOString()
+    });
+
+    const stage = await runner(results, log, CAMPAIGN_DATA, emit, stageDef, stageIndex, opts);
+    results.stages.push(stage);
+
+    emitStageEvent(emit, eventTypes.WORKFLOW_STAGE_COMPLETED, {
+      source: results.workflowId,
+      workflowId: 'campaign-lifecycle-demo',
+      executionId: opts.executionId || results.workflowId,
+      stageId: stage.id,
+      stageName: stage.name,
+      stageIndex,
+      totalStages: STAGES.length,
+      status: stage.status,
+      output: stage.output,
+      error: stage.error,
+      timestamp: new Date().toISOString()
+    });
+  };
+
+  const phaseA = [
+    runStage(0, generateCampaignBrief),
+    runStage(1, createMediaPlan),
+    runStage(2, setupProjectManagement),
+    runStage(3, generateLandingPage),
+    runStage(4, generateCreatives),
+    runStage(5, activateOnDSPs)
   ];
 
-  // Optionally include search campaign creation after DSP activation
-  if (opts.includeSearch) {
-    runners.push(runSearchCampaignStage);
-  }
+  if (opts.includeSearch) phaseA.push(runStage(6, runSearchCampaignStage));
 
-  runners.push(generateSummaryReport);
-
-  for (const runner of runners) {
-    const stage = await runner(results, log, CAMPAIGN_DATA);
-    results.stages.push(stage);
-  }
+  await Promise.allSettled(phaseA);
+  await runStage(7, generateSummaryReport);
 
   results.status = results.stages.every(s => s.status === 'completed') ? 'completed' : 'partial';
   results.completedAt = new Date().toISOString();
@@ -289,10 +343,15 @@ NEXT STEPS
   5. Pre-launch tease begins March 15
   6. Full launch at OpenAI Device Day — April 1, 2026`;
 
-  const r = callTool('google-docs', 'createDocument', {
-    title: `${CAMPAIGN_DATA.brand} — ${CAMPAIGN_DATA.product} Campaign Brief`,
-    initialContent: briefContent
-  });
+  let r;
+  try {
+    r = await callToolAsync('google-docs', 'createDocument', {
+      title: `${CAMPAIGN_DATA.brand} — ${CAMPAIGN_DATA.product} Campaign Brief`,
+      initialContent: briefContent
+    });
+  } catch (err) {
+    r = { success: false, error: err.message };
+  }
 
   if (r.success) {
     const docId = extractId(r.output);
@@ -321,9 +380,14 @@ async function createMediaPlan(results, log, CAMPAIGN_DATA) {
   const stage = { id: 'plan', name: 'Create Media Plan', status: 'running', startedAt: new Date().toISOString() };
 
   // Create the spreadsheet
-  const createR = callTool('google-docs', 'createSpreadsheet', {
-    title: `${CAMPAIGN_DATA.brand} ${CAMPAIGN_DATA.product} — Media Plan Q1-Q2 2026`
-  });
+  let createR;
+  try {
+    createR = await callToolAsync('google-docs', 'createSpreadsheet', {
+      title: `${CAMPAIGN_DATA.brand} ${CAMPAIGN_DATA.product} — Media Plan Q1-Q2 2026`
+    });
+  } catch (err) {
+    createR = { success: false, error: err.message };
+  }
 
   if (!createR.success) {
     stage.status = 'failed';
@@ -346,12 +410,17 @@ async function createMediaPlan(results, log, CAMPAIGN_DATA) {
     ['TOTAL', '', '', `$${CAMPAIGN_DATA.budget.toLocaleString()}`, CAMPAIGN_DATA.flightStart, CAMPAIGN_DATA.flightEnd, 'See above', 'All sizes']
   ];
 
-  const writeR = callTool('google-docs', 'writeSpreadsheet', {
-    spreadsheetId: sheetId,
-    range: `A1:H${rows.length}`,
-    values: rows,
-    valueInputOption: 'USER_ENTERED'
-  });
+  let writeR;
+  try {
+    writeR = await callToolAsync('google-docs', 'writeSpreadsheet', {
+      spreadsheetId: sheetId,
+      range: `A1:H${rows.length}`,
+      values: rows,
+      valueInputOption: 'USER_ENTERED'
+    });
+  } catch (err) {
+    writeR = { success: false, error: err.message };
+  }
 
   if (writeR.success) {
     stage.status = 'completed';
@@ -370,83 +439,64 @@ async function createMediaPlan(results, log, CAMPAIGN_DATA) {
 }
 
 // ─── STAGE 3: ASANA PROJECT ──────────────────────────────
-async function setupProjectManagement(results, log, CAMPAIGN_DATA) {
-  log('\n⏳ Stage 3/7: Setting up Asana project (V2 MCP)...');
+async function setupProjectManagement(results, log, CAMPAIGN_DATA, emit, stageDef, stageIndex, opts = {}) {
+  log('\n? Stage 3/7: Setting up Asana project (V2 MCP)...');
   const stage = { id: 'project', name: 'Setup Project Management', status: 'running', startedAt: new Date().toISOString() };
-
-  // Create a NEW project using Asana V2 MCP (official, 44 tools)
   let projectId = null;
   const projectName = `${CAMPAIGN_DATA.brand} ${CAMPAIGN_DATA.product} — Launch Campaign`;
-
-  const createProjectR = callTool('asana-v2', 'asana_create_project', {
-    name: projectName,
-    notes: `Campaign launch project for ${CAMPAIGN_DATA.product}\nLaunch Event: ${CAMPAIGN_DATA.launchEvent}\nBudget: $${CAMPAIGN_DATA.budget.toLocaleString()}\nFlight: ${CAMPAIGN_DATA.flightStart} to ${CAMPAIGN_DATA.flightEnd}\nTarget: ${CAMPAIGN_DATA.targetAudience}\nPrimary Outcome: ${CAMPAIGN_DATA.brief.primaryOutcome}`,
-    color: 'light-blue',
-    due_date: CAMPAIGN_DATA.flightEnd,
-    start_date: '2026-02-10',
-    default_view: 'board'
-  }, 30000);
-
-  if (createProjectR.success) {
-    const m = createProjectR.output.match(/"gid":\s*"(\d+)"/);
-    if (m) projectId = m[1];
-  }
+  try {
+    const createProjectR = await callToolAsync('asana-v2', 'asana_create_project', {
+      name: projectName,
+      notes: `Campaign launch project for ${CAMPAIGN_DATA.product}\nLaunch Event: ${CAMPAIGN_DATA.launchEvent}\nBudget: $${CAMPAIGN_DATA.budget.toLocaleString()}\nFlight: ${CAMPAIGN_DATA.flightStart} to ${CAMPAIGN_DATA.flightEnd}\nTarget: ${CAMPAIGN_DATA.targetAudience}\nPrimary Outcome: ${CAMPAIGN_DATA.brief.primaryOutcome}`,
+      color: 'light-blue', due_date: CAMPAIGN_DATA.flightEnd, start_date: '2026-02-10', default_view: 'board'
+    }, { timeoutMs: 30000, maxRetries: 2 });
+    if (createProjectR.success) {
+      const m = createProjectR.output.match(/"gid":\s*"(\d+)"/);
+      if (m) projectId = m[1];
+    }
+  } catch (err) { logger.warn('Asana project create failed', { error: err.message }); }
 
   const tasks = [
-    // Kickoff
     { name: 'Campaign Kickoff + Brief Alignment', due_on: '2026-02-12', notes: 'Align all stakeholders on brief, budget, timeline, and KPIs. Distribute campaign intake workbook.' },
-    // Strategy
     { name: 'Finalize Audience + KPIs + Measurement Plan', due_on: '2026-02-15', notes: 'Lock targeting strategy, attribution approach (geo holdout lift study), and reporting cadence.' },
-    // Creative
-    { name: 'Creative Production — Display + Video + Audio', due_on: '2026-02-22', notes: 'Produce all ad creatives: display (300x250, 728x90, 160x600), video (:15/:30 for CTV+OLV), audio (:30). AI image gen via Nano Banana + Canva for design.' },
-    // Web/CRM
+    { name: 'Creative Production � Display + Video + Audio', due_on: '2026-02-22', notes: 'Produce all ad creatives: display (300x250, 728x90, 160x600), video (:15/:30 for CTV+OLV), audio (:30). AI image gen via Nano Banana + Canva for design.' },
     { name: 'Landing Page Build + QA', due_on: '2026-02-25', notes: 'Build lockeai.co/airpod-ai LP: hero, benefits, proof, comparison, FAQ, pricing, pre-order CTA. Apple Pay/Google Pay integration.' },
-    // Legal/Privacy
     { name: 'Legal + Privacy Review', due_on: '2026-02-20', notes: 'Review all claims, disclosures, AI language compliance. Ensure "AI-generated responses may not always be accurate" disclaimer is present.' },
-    // Media Ops
-    { name: 'Campaign Setup — TTD (Display $200K + Video $150K + Audio $100K)', due_on: '2026-02-26', notes: 'Setup awareness display, pre-roll video, and programmatic audio campaigns in The Trade Desk.' },
-    { name: 'Campaign Setup — DV360 (CTV $200K)', due_on: '2026-02-26', notes: 'Setup Connected TV campaign across Hulu, Peacock, YouTube TV in Display & Video 360.' },
-    { name: 'Campaign Setup — Amazon DSP (Retargeting $100K)', due_on: '2026-02-26', notes: 'Setup display retargeting + in-market audience campaigns in Amazon DSP.' },
+    { name: 'Campaign Setup � TTD (Display  + Video  + Audio )', due_on: '2026-02-26', notes: 'Setup awareness display, pre-roll video, and programmatic audio campaigns in The Trade Desk.' },
+    { name: 'Campaign Setup � DV360 (CTV )', due_on: '2026-02-26', notes: 'Setup Connected TV campaign across Hulu, Peacock, YouTube TV in Display & Video 360.' },
+    { name: 'Campaign Setup � Amazon DSP (Retargeting )', due_on: '2026-02-26', notes: 'Setup display retargeting + in-market audience campaigns in Amazon DSP.' },
     { name: 'Trafficking + Tags + QA + Launch Checklist', due_on: '2026-02-28', notes: 'Full QA: ad server tags, pixels, placements, frequency caps (3x/week), brand safety (IAS), consent. Final go/no-go.' },
-    // Launch
-    { name: '🚀 Pre-launch Tease Begins', due_on: '2026-03-15', notes: 'Activate teaser creatives across all channels. Awareness phase begins.' },
-    { name: '🎉 LAUNCH — OpenAI Device Day', due_on: '2026-04-01', notes: 'Full campaign goes live. Monitor real-time pacing, social sentiment, pre-order volume. War room active.' },
-    // Optimization
+    { name: '?? Pre-launch Tease Begins', due_on: '2026-03-15', notes: 'Activate teaser creatives across all channels. Awareness phase begins.' },
+    { name: '?? LAUNCH � OpenAI Device Day', due_on: '2026-04-01', notes: 'Full campaign goes live. Monitor real-time pacing, social sentiment, pre-order volume. War room active.' },
     { name: 'Week 1 Performance Review + Optimization', due_on: '2026-04-08', notes: 'Review delivery, pacing, and performance across all DSPs. First optimization pass: bid adjustments, audience refinement, creative rotation.' },
-    // Wrap
     { name: 'Post-Mortem + Learnings', due_on: '2026-06-07', notes: 'Campaign wrap: final performance vs KPIs, incrementality results, learnings doc, next steps.' }
   ];
 
   const createdTasks = [];
+  const failedTasks = [];
   if (projectId) {
-    for (const task of tasks) {
-      const r = callTool('asana-v2', 'asana_create_task', {
-        project_id: projectId,
-        name: task.name,
-        notes: task.notes,
-        due_on: task.due_on
-      }, 20000);
-      
-      const gid = r.success ? (r.output.match(/"gid":\s*"(\d+)"/) || [])[1] : null;
-      createdTasks.push({ name: task.name, id: gid || 'failed', due: task.due_on, live: r.success });
-    }
+    await pMapSimple(tasks, async (task, idx) => {
+      try {
+        const r = await callToolAsync('asana-v2', 'asana_create_task', { project_id: projectId, name: task.name, notes: task.notes, due_on: task.due_on }, { timeoutMs: 20000, maxRetries: 2 });
+        const gid = r.success ? (r.output.match(/"gid":\s*"(\d+)"/) || [])[1] : null;
+        createdTasks.push({ name: task.name, id: gid || 'failed', due: task.due_on, live: !!r.success, error: r.success ? null : r.error });
+        if (!r.success) failedTasks.push({ task: task.name, error: r.error || 'Unknown error' });
+      } catch (err) {
+        createdTasks.push({ name: task.name, id: 'failed', due: task.due_on, live: false, error: err.message });
+        failedTasks.push({ task: task.name, error: err.message });
+      }
+      emitStageEvent(emit || (() => {}), eventTypes.WORKFLOW_STAGE_PROGRESS, { source: results.workflowId, workflowId: 'campaign-lifecycle-demo', executionId: (opts && opts.executionId) || results.workflowId, stageId: (stageDef && stageDef.id) || 'project', stageName: (stageDef && stageDef.name) || 'Setup Project Management', stageIndex: stageIndex ?? 2, totalStages: STAGES.length, current: idx + 1, total: tasks.length, detail: `${idx + 1}/${tasks.length} tasks created` });
+    }, { concurrency: 5 });
   }
 
-  stage.status = createdTasks.some(t => t.live) ? 'completed' : 'failed';
-  stage.output = {
-    projectId,
-    projectUrl: projectId ? `https://app.asana.com/0/${projectId}` : null,
-    tasksCreated: createdTasks.filter(t => t.live).length,
-    tasks: createdTasks
-  };
+  const successCount = createdTasks.filter(t => t.live).length;
+  stage.status = successCount > 0 ? 'completed' : 'failed';
+  stage.output = { projectId, projectUrl: projectId ? `https://app.asana.com/0/${projectId}` : null, tasksCreated: successCount, tasksFailed: failedTasks.length, failedItems: failedTasks, tasks: createdTasks };
   results.artifacts.asanaProjectId = projectId;
   results.artifacts.asanaProjectUrl = projectId ? `https://app.asana.com/0/${projectId}` : null;
-
   stage.completedAt = new Date().toISOString();
   return stage;
 }
-
-// ─── STAGE 4: LANDING PAGE GENERATION ─────────────────────
 async function generateLandingPage(results, log, CAMPAIGN_DATA) {
   log('\n⏳ Stage 4/7: Generating campaign landing page...');
   const stage = { id: 'landing', name: 'Generate Landing Page', status: 'running', startedAt: new Date().toISOString() };
@@ -519,24 +569,19 @@ async function generateLandingPage(results, log, CAMPAIGN_DATA) {
 }
 
 // ─── STAGE 5: AI IMAGE GEN + CANVA ───────────────────────
-async function generateCreatives(results, log, CAMPAIGN_DATA) {
-  log('\n⏳ Stage 5/7: Generating AI creatives (Nano Banana Pro → Canva)...');
-  const stage = { id: 'creative', name: 'Generate Creatives (Nano Banana Pro → Canva)', status: 'running', startedAt: new Date().toISOString() };
+async function generateCreatives(results, log, CAMPAIGN_DATA, emit, stageDef, stageIndex, opts = {}) {
+  log('\n? Stage 5/7: Generating AI creatives (Nano Banana Pro ? Canva)...');
+  const stage = { id: 'creative', name: 'Generate Creatives (Nano Banana Pro ? Canva)', status: 'running', startedAt: new Date().toISOString() };
 
   const canva = require(path.join(__dirname, '..', 'connectors', 'canva'));
   const imageGen = require(path.join(__dirname, '..', 'connectors', 'image-gen'));
   const designs = [];
+  const sizes = (opts.skipCreatives ? [] : CAMPAIGN_DATA.creativeSizes);
 
-  for (let i = 0; i < CAMPAIGN_DATA.creativeSizes.length; i++) {
-    const size = CAMPAIGN_DATA.creativeSizes[i];
-    log(`   🎨 [${i+1}/${CAMPAIGN_DATA.creativeSizes.length}] ${size.name} (${size.size})...`);
-    const entry = {
-      name: `${CAMPAIGN_DATA.product} — ${size.name}`,
-      size: size.size,
-      format: size.format
-    };
+  await pMapSimple(sizes, async (size, i) => {
+    log(`   ?? [${i + 1}/${sizes.length}] ${size.name} (${size.size})...`);
+    const entry = { name: `${CAMPAIGN_DATA.product} � ${size.name}`, size: size.size, format: size.format };
 
-    // Step 1: Generate AI image with Nano Banana (OpenRouter)
     try {
       const type = size.format === 'video' ? 'video-thumbnail' : 'display-banner';
       const genResult = await imageGen.generateImage({
@@ -560,13 +605,12 @@ async function generateCreatives(results, log, CAMPAIGN_DATA) {
       entry.aiError = err.message;
     }
 
-    // Step 2: Upload AI image to Canva as asset (if we have a local file)
     let assetId = null;
     if (entry.aiGenerated && entry.imagePath) {
       try {
         const uploadResult = await canva.uploadAssetFromFile({
           filePath: entry.imagePath,
-          name: `${CAMPAIGN_DATA.product} — ${size.name} (${size.size})`
+          name: `${CAMPAIGN_DATA.product} � ${size.name} (${size.size})`
         });
         if (uploadResult.status === 'success' && uploadResult.asset?.id) {
           assetId = uploadResult.asset.id;
@@ -578,10 +622,9 @@ async function generateCreatives(results, log, CAMPAIGN_DATA) {
       }
     }
 
-    // Step 3: Create Canva design canvas (with asset if uploaded)
     try {
       const designParams = {
-        title: `${CAMPAIGN_DATA.product} — ${size.name} (${size.size})`,
+        title: `${CAMPAIGN_DATA.product} � ${size.name} (${size.size})`,
         design_type: 'custom',
         width: size.w,
         height: size.h
@@ -589,7 +632,6 @@ async function generateCreatives(results, log, CAMPAIGN_DATA) {
       if (assetId) designParams.asset_id = assetId;
 
       const canvaResult = await canva.createDesign(designParams);
-
       entry.canvaId = canvaResult.design?.id || 'unknown';
       entry.editUrl = canvaResult.design?.urls?.edit_url || canvaResult.editUrl;
       entry.viewUrl = canvaResult.design?.urls?.view_url;
@@ -601,19 +643,33 @@ async function generateCreatives(results, log, CAMPAIGN_DATA) {
     }
 
     designs.push(entry);
-
-    // Rate limit courtesy
-    await new Promise(r => setTimeout(r, 500));
-  }
+    emitStageEvent(emit || (() => {}), eventTypes.WORKFLOW_STAGE_PROGRESS, {
+      source: results.workflowId,
+      workflowId: 'campaign-lifecycle-demo',
+      executionId: (opts && opts.executionId) || results.workflowId,
+      stageId: (stageDef && stageDef.id) || 'creative',
+      stageName: (stageDef && stageDef.name) || 'Generate Creatives',
+      stageIndex: stageIndex ?? 4,
+      totalStages: STAGES.length,
+      current: i + 1,
+      total: sizes.length,
+      detail: `${i + 1}/${sizes.length} creatives processed`
+    });
+  }, { concurrency: 2 });
 
   const aiCount = designs.filter(d => d.aiGenerated).length;
   const canvaCount = designs.filter(d => d.canvaLive).length;
+  const failedItems = designs.filter(d => !d.canvaLive).map(d => ({
+    name: d.name,
+    error: d.canvaError || d.aiError || 'Unknown'
+  }));
 
-  stage.status = canvaCount > 0 ? 'completed' : 'failed';
+  stage.status = designs.length === 0 ? 'completed' : (canvaCount > 0 ? 'completed' : 'failed');
   stage.output = {
     designsCreated: designs.length,
     aiGenerated: aiCount,
     canvaDesigns: canvaCount,
+    failedItems,
     imageModel: imageGen.MODEL,
     designs
   };
@@ -622,8 +678,6 @@ async function generateCreatives(results, log, CAMPAIGN_DATA) {
   stage.completedAt = new Date().toISOString();
   return stage;
 }
-
-// ─── STAGE 5: DSP ACTIVATION ─────────────────────────────
 async function activateOnDSPs(results, log, CAMPAIGN_DATA) {
   log('\n⏳ Stage 6/7: Activating campaigns on DSPs...');
   const stage = { id: 'activate', name: 'Activate on DSPs', status: 'running', startedAt: new Date().toISOString() };
@@ -739,10 +793,15 @@ NEXT STEPS
 Report generated: ${new Date().toISOString()}
 Workflow ID: ${results.workflowId}`;
 
-  const r = callTool('google-docs', 'createDocument', {
-    title: `${CAMPAIGN_DATA.brand} — ${CAMPAIGN_DATA.product} Activation Report`,
-    initialContent: reportContent
-  });
+  let r;
+  try {
+    r = await callToolAsync('google-docs', 'createDocument', {
+      title: `${CAMPAIGN_DATA.brand} — ${CAMPAIGN_DATA.product} Activation Report`,
+      initialContent: reportContent
+    });
+  } catch (err) {
+    r = { success: false, error: err.message };
+  }
 
   if (r.success) {
     const docId = extractId(r.output);
@@ -817,3 +876,6 @@ const meta = {
 };
 
 module.exports = { name, description, STAGES, getInfo, run, loadCampaign, DEFAULT_CAMPAIGN_DATA, meta };
+
+
+
