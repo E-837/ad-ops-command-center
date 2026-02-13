@@ -326,7 +326,7 @@
       try {
         const response = await fetch('/api/campaigns');
         const data = await response.json();
-        dashboardData.campaigns = data.campaigns || [];
+        dashboardData.campaigns = data.data || data.campaigns || [];
       } catch (error) {
         console.error('Error loading campaigns:', error);
       }
@@ -340,7 +340,8 @@
         
         // Check for pacing issues
         const pacingResponse = await fetch('/api/pacing');
-        const pacingData = await pacingResponse.json();
+        const pacingPayload = await pacingResponse.json();
+        const pacingData = pacingPayload.data || pacingPayload;
         const pacingIssues = (pacingData.pacing || []).filter(p => p.pacingPercent < 85 || p.pacingPercent > 115);
 
         dashboardData.alerts = [
@@ -434,7 +435,8 @@
     // Render campaign metrics (existing logic)
     function renderCampaignMetrics() {
       // Load pacing data
-      fetch('/api/pacing').then(r => r.json()).then(pacingData => {
+      fetch('/api/pacing').then(r => r.json()).then(payload => {
+        const pacingData = payload.data || payload;
         const byDSP = {};
         for (const p of pacingData.pacing || []) {
           if (!byDSP[p.dsp]) {
@@ -509,49 +511,83 @@
     let charts = {};
     let realtime = null;
 
+    function ensureChartCanvas(canvasId) {
+      return !!document.getElementById(canvasId);
+    }
+
+    function setChartEmptyState(canvasId, isEmpty) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !canvas.parentElement) return;
+
+      const emptyId = `${canvasId}-empty`;
+      let emptyEl = document.getElementById(emptyId);
+
+      if (isEmpty) {
+        canvas.style.display = 'none';
+        if (!emptyEl) {
+          emptyEl = document.createElement('p');
+          emptyEl.id = emptyId;
+          emptyEl.className = 'empty-state';
+          emptyEl.textContent = 'No data available';
+          canvas.parentElement.appendChild(emptyEl);
+        }
+      } else {
+        canvas.style.display = '';
+        if (emptyEl) emptyEl.remove();
+      }
+    }
+
     function initializeCharts() {
       // Workflow Activity Chart (Line)
-      charts.workflowActivity = createLineChart('workflow-activity-chart', {
-        labels: [],
-        datasets: [{
-          label: 'Workflows',
-          data: [],
-          fill: true
-        }]
-      }, {
-        beginAtZero: true,
-        scales: {
-          y: {
-            ticks: {
-              stepSize: 1
+      if (ensureChartCanvas('workflow-activity-chart')) {
+        charts.workflowActivity = createLineChart('workflow-activity-chart', {
+          labels: [],
+          datasets: [{
+            label: 'Workflows',
+            data: [],
+            fill: true
+          }]
+        }, {
+          beginAtZero: true,
+          scales: {
+            y: {
+              ticks: {
+                stepSize: 1
+              }
             }
           }
-        }
-      });
+        });
+      }
 
       // Success Rate Gauge
-      charts.successRate = createGaugeChart('success-rate-chart', 0, 100, {
-        label: 'Success Rate'
-      });
+      if (ensureChartCanvas('success-rate-chart')) {
+        charts.successRate = createGaugeChart('success-rate-chart', 0, 100, {
+          label: 'Success Rate'
+        });
+      }
 
       // Platform Distribution (Doughnut)
-      charts.platformDistribution = createDoughnutChart('platform-distribution-chart', {
-        labels: ['Google', 'Meta', 'Pinterest', 'Other'],
-        datasets: [{
-          data: [0, 0, 0, 0]
-        }]
-      });
+      if (ensureChartCanvas('platform-distribution-chart')) {
+        charts.platformDistribution = createDoughnutChart('platform-distribution-chart', {
+          labels: ['Google', 'Meta', 'Pinterest', 'Other'],
+          datasets: [{
+            data: [0, 0, 0, 0]
+          }]
+        });
+      }
 
       // Recent Performance (Bar)
-      charts.recentPerformance = createBarChart('recent-performance-chart', {
-        labels: [],
-        datasets: [{
-          label: 'Duration (seconds)',
-          data: []
-        }]
-      }, {
-        beginAtZero: true
-      });
+      if (ensureChartCanvas('recent-performance-chart')) {
+        charts.recentPerformance = createBarChart('recent-performance-chart', {
+          labels: [],
+          datasets: [{
+            label: 'Duration (seconds)',
+            data: []
+          }]
+        }, {
+          beginAtZero: true
+        });
+      }
 
       // Load initial chart data
       loadChartData();
@@ -588,13 +624,17 @@
           return date.toLocaleDateString('en-US', { weekday: 'short' });
         });
         
-        updateChart(charts.workflowActivity, {
-          labels,
-          datasets: [{
-            label: 'Workflows',
-            data: Object.values(dailyCounts)
-          }]
-        });
+        const workflowSeries = Object.values(dailyCounts);
+        setChartEmptyState('workflow-activity-chart', workflowSeries.every(v => v === 0));
+        if (charts.workflowActivity) {
+          updateChart(charts.workflowActivity, {
+            labels,
+            datasets: [{
+              label: 'Workflows',
+              data: workflowSeries
+            }]
+          });
+        }
 
         // Success Rate
         const total = (workflowData.executions || []).length;
@@ -605,9 +645,12 @@
         if (charts.successRate) {
           charts.successRate.destroy();
         }
-        charts.successRate = createGaugeChart('success-rate-chart', successRate, 100, {
-          label: `${successful}/${total} Successful`
-        });
+        setChartEmptyState('success-rate-chart', total === 0);
+        if (ensureChartCanvas('success-rate-chart')) {
+          charts.successRate = createGaugeChart('success-rate-chart', successRate, 100, {
+            label: `${successful}/${total} Successful`
+          });
+        }
 
         // Platform Distribution
         const response = await fetch('/api/campaigns').then(r => r.json());
@@ -634,11 +677,15 @@
           platformData[mappedPlatform] += budget;
         });
         
-        updateChart(charts.platformDistribution, {
-          datasets: [{
-            data: Object.values(platformData)
-          }]
-        });
+        const distribution = Object.values(platformData);
+        setChartEmptyState('platform-distribution-chart', distribution.every(v => v === 0));
+        if (charts.platformDistribution) {
+          updateChart(charts.platformDistribution, {
+            datasets: [{
+              data: distribution
+            }]
+          });
+        }
 
         // Recent Performance - last 10 executions
         const recentExecutions = (workflowData.executions || [])
@@ -653,13 +700,16 @@
           return Math.round((end - start) / 1000); // seconds
         });
         
-        updateChart(charts.recentPerformance, {
-          labels: perfLabels,
-          datasets: [{
-            label: 'Duration (seconds)',
-            data: perfData
-          }]
-        });
+        setChartEmptyState('recent-performance-chart', perfData.length === 0);
+        if (charts.recentPerformance) {
+          updateChart(charts.recentPerformance, {
+            labels: perfLabels,
+            datasets: [{
+              label: 'Duration (seconds)',
+              data: perfData
+            }]
+          });
+        }
 
       } catch (error) {
         console.error('Error loading chart data:', error);

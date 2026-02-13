@@ -357,7 +357,7 @@
       try {
         const query = buildQueryString();
         const response = await fetch(`/api/analytics/spend-trend?${query}`);
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
         
         chartData.spendTrend = result;
         
@@ -460,7 +460,7 @@
       try {
         const query = buildQueryString();
         const response = await fetch(`/api/analytics/ctr-comparison?${query}`);
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
         
         chartData.ctrComparison = result;
         
@@ -543,7 +543,7 @@
       try {
         const query = buildQueryString();
         const response = await fetch(`/api/analytics/conversion-funnel?${query}`);
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
         
         chartData.conversionFunnel = result;
         
@@ -613,7 +613,7 @@
       try {
         const query = buildQueryString();
         const response = await fetch(`/api/analytics/roas-by-campaign?${query}&limit=10`);
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
         
         chartData.roasCampaign = result;
         
@@ -685,6 +685,13 @@
       }
     }
     
+    function unwrapResponse(payload) {
+      if (payload && payload.success === true && payload.data !== undefined) {
+        return payload.data;
+      }
+      return payload || {};
+    }
+
     function exportChart(chartName, format) {
       let data = null;
       let filename = '';

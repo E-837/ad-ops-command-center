@@ -366,7 +366,7 @@
     async function loadLobOptions() {
       try {
         const response = await fetch('/api/analytics/lob-options?days=30');
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
         const select = document.getElementById('lob-filter');
 
         const options = (result.data || []).map(lob =>
@@ -392,7 +392,7 @@
     async function loadPlatformComparison() {
       try {
         const response = await fetch(`/api/analytics/platform-comparison?days=30${getLobQueryParam()}`);
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
         
         // Update summary stats
         document.getElementById('total-spend').textContent = formatCurrency(result.totals.spend);
@@ -450,7 +450,7 @@
     async function loadTopPerformers() {
       try {
         const response = await fetch(`/api/analytics/roas-by-campaign?days=30&limit=5${getLobQueryParam()}`);
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
         
         const list = document.getElementById('top-performers-list');
         
@@ -487,14 +487,23 @@
     async function loadBudgetPacing() {
       try {
         const response = await fetch(`/api/analytics/budget-utilization?days=30${getLobQueryParam()}`);
-        const result = await response.json();
-        
-        const ctx = document.getElementById('budget-gauge-chart').getContext('2d');
-        
+        const result = unwrapResponse(await response.json());
+
+        const canvas = document.getElementById('budget-gauge-chart');
+        const rows = result.data || [];
+        if (!canvas || rows.length === 0) {
+          if (budgetGaugeChart) budgetGaugeChart.destroy();
+          toggleChartEmptyState('budget-gauge-chart', true);
+          return;
+        }
+
+        toggleChartEmptyState('budget-gauge-chart', false);
+        const ctx = canvas.getContext('2d');
+
         if (budgetGaugeChart) budgetGaugeChart.destroy();
-        
-        const labels = result.data.map(d => d.platform.toUpperCase().replace('-', ' '));
-        const utilization = result.data.map(d => d.utilization);
+
+        const labels = rows.map(d => d.platform.toUpperCase().replace('-', ' '));
+        const utilization = rows.map(d => d.utilization);
         
         // Color based on utilization
         const colors = utilization.map(u => {
@@ -528,7 +537,7 @@
                 callbacks: {
                   label: (context) => {
                     const idx = context.dataIndex;
-                    const platform = result.data[idx];
+                    const platform = rows[idx];
                     return [
                       `Utilization: ${platform.utilization.toFixed(1)}%`,
                       `Allocated: ${formatCurrency(platform.allocated)}`,
@@ -564,14 +573,23 @@
     async function loadLobBreakdown() {
       try {
         const response = await fetch(`/api/analytics/lob-breakdown?days=30${getLobQueryParam()}`);
-        const result = await response.json();
+        const result = unwrapResponse(await response.json());
 
-        const ctx = document.getElementById('lob-breakdown-chart').getContext('2d');
+        const canvas = document.getElementById('lob-breakdown-chart');
+        const rows = result.data || [];
+        if (!canvas || rows.length === 0) {
+          if (lobBreakdownChart) lobBreakdownChart.destroy();
+          toggleChartEmptyState('lob-breakdown-chart', true);
+          return;
+        }
+
+        toggleChartEmptyState('lob-breakdown-chart', false);
+        const ctx = canvas.getContext('2d');
         if (lobBreakdownChart) lobBreakdownChart.destroy();
 
-        const labels = (result.data || []).map(d => toTitleCase(d.lob));
-        const spendData = (result.data || []).map(d => d.spend);
-        const roasData = (result.data || []).map(d => d.roas);
+        const labels = rows.map(d => toTitleCase(d.lob));
+        const spendData = rows.map(d => d.spend);
+        const roasData = rows.map(d => d.roas);
 
         lobBreakdownChart = new Chart(ctx, {
           type: 'bar',
@@ -639,13 +657,13 @@
           fetch(`/api/analytics/platform-comparison?days=30${getLobQueryParam()}`)
         ]);
         
-        const budgetData = await budgetResponse.json();
-        const platformData = await roasResponse.json();
+        const budgetData = unwrapResponse(await budgetResponse.json());
+        const platformData = unwrapResponse(await roasResponse.json());
         
         const alerts = [];
         
         // Budget alerts
-        budgetData.data.forEach(platform => {
+        (budgetData.data || []).forEach(platform => {
           if (platform.utilization > 100) {
             alerts.push({
               type: 'critical',
@@ -662,7 +680,7 @@
         });
         
         // ROAS alerts
-        platformData.platforms.forEach(platform => {
+        (platformData.platforms || []).forEach(platform => {
           const benchmark = platform.benchmarks?.roas || 2.5;
           if (platform.roas < benchmark * 0.7) {
             alerts.push({
@@ -695,6 +713,37 @@
       }
     }
     
+    function unwrapResponse(payload) {
+      if (payload && payload.success === true && payload.data !== undefined) {
+        return payload.data;
+      }
+      return payload || {};
+    }
+
+    function toggleChartEmptyState(canvasId, isEmpty) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !canvas.parentElement) return;
+
+      const emptyId = `${canvasId}-empty`;
+      let emptyEl = document.getElementById(emptyId);
+
+      if (isEmpty) {
+        canvas.style.display = 'none';
+        if (!emptyEl) {
+          emptyEl = document.createElement('p');
+          emptyEl.id = emptyId;
+          emptyEl.className = 'text-center text-muted-soft';
+          emptyEl.textContent = 'No data available';
+          canvas.parentElement.appendChild(emptyEl);
+        }
+      } else {
+        canvas.style.display = '';
+        if (emptyEl) {
+          emptyEl.remove();
+        }
+      }
+    }
+
     function getLobQueryParam() {
       const lob = document.getElementById('lob-filter')?.value;
       return lob ? `&lob=${encodeURIComponent(lob)}` : '';

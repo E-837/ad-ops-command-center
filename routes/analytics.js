@@ -9,19 +9,20 @@ const analytics = require('../services/analytics');
 const benchmarks = require('../domain/benchmarks.json');
 const connectors = require('../connectors');
 const agents = require('../agents');
+const { success } = require('../utils/response');
 
 // Pacing metrics
-router.get('/pacing', async (req, res) => {
+router.get('/pacing', async (req, res, next) => {
   try {
     const pacing = await connectors.fetchAllPacing();
-    res.json(pacing);
+    res.json(success(pacing));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // AI-generated insights
-router.get('/insights', async (req, res) => {
+router.get('/insights', async (req, res, next) => {
   try {
     const allCampaigns = await connectors.fetchAllCampaigns({ status: 'live' });
 
@@ -43,24 +44,24 @@ router.get('/insights', async (req, res) => {
     const analyst = agents.getAgent('analyst');
     const insights = analyst.generateInsights(campaignsWithMetrics);
 
-    res.json(insights);
+    res.json(success(insights));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Spend trend analysis
-router.get('/spend-trend', async (req, res) => {
+router.get('/spend-trend', async (req, res, next) => {
   try {
     const result = await analytics.getSpendTrend(req.query);
-    res.json(result);
+    res.json(success(result));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // CTR comparison across platforms
-router.get('/ctr-comparison', async (req, res) => {
+router.get('/ctr-comparison', async (req, res, next) => {
   try {
     const result = await analytics.getCTRComparison(req.query);
 
@@ -70,57 +71,57 @@ router.get('/ctr-comparison', async (req, res) => {
       benchmark: benchmarks[platform.platform]?.ctr || null
     }));
 
-    res.json({
+    res.json(success({
       ...result,
       data: dataWithBenchmarks
-    });
+    }));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Conversion funnel analysis
-router.get('/conversion-funnel', async (req, res) => {
+router.get('/conversion-funnel', async (req, res, next) => {
   try {
     const result = await analytics.getConversionFunnel(req.query);
-    res.json(result);
+    res.json(success(result));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // ROAS by campaign
-router.get('/roas-by-campaign', async (req, res) => {
+router.get('/roas-by-campaign', async (req, res, next) => {
   try {
     const result = await analytics.getROASByCampaign(req.query);
-    res.json(result);
+    res.json(success(result));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Budget utilization metrics
-router.get('/budget-utilization', async (req, res) => {
+router.get('/budget-utilization', async (req, res, next) => {
   try {
     const result = await analytics.getBudgetUtilization(req.query);
-    res.json(result);
+    res.json(success(result));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Performance summary dashboard
-router.get('/performance-summary', async (req, res) => {
+router.get('/performance-summary', async (req, res, next) => {
   try {
     const result = await analytics.getPerformanceSummary(req.query);
-    res.json(result);
+    res.json(success(result));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Platform comparison with benchmarks
-router.get('/platform-comparison', async (req, res) => {
+router.get('/platform-comparison', async (req, res, next) => {
   try {
     const result = await analytics.getPlatformComparison(req.query);
 
@@ -130,39 +131,39 @@ router.get('/platform-comparison', async (req, res) => {
       benchmarks: benchmarks[platform.name] || {}
     }));
 
-    res.json({
+    res.json(success({
       ...result,
       platforms: platformsWithBenchmarks
-    });
+    }));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // LOB breakdown analysis
-router.get('/lob-breakdown', async (req, res) => {
+router.get('/lob-breakdown', async (req, res, next) => {
   try {
     const result = await analytics.getLOBBreakdown(req.query);
-    res.json(result);
+    res.json(success(result));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Available LOB filter values
-router.get('/lob-options', async (req, res) => {
+router.get('/lob-options', async (req, res, next) => {
   try {
     const result = await analytics.getLOBBreakdown(req.query);
     const lobs = [...new Set((result.data || []).map((item) => item.lob).filter(Boolean))].sort();
-    res.json({ data: lobs });
+    res.json(success(lobs));
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 });
 
 // Industry benchmarks
 router.get('/benchmarks', (req, res) => {
-  res.json(benchmarks);
+  res.json(success(benchmarks));
 });
 
 module.exports = router;
