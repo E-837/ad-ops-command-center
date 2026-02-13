@@ -434,13 +434,10 @@
       }
 
       try {
-        const response = await fetch('/api/execute', {
+        const response = await fetch(`/api/workflows/${selectedWorkflow.id}/run`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            workflowId: selectedWorkflow.id,
-            params: params
-          })
+          body: JSON.stringify(params)
         });
 
         const result = await response.json();
