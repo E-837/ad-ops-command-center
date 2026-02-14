@@ -541,6 +541,42 @@ class GoogleAdsConnector extends BaseConnector {
     const response = await this.handleToolCall('google_ads_get_campaigns', { limit: 50 });
     return response?.data?.campaigns || [];
   }
+
+  async getPacing(options = {}) {
+    const campaigns = await this.getCampaigns();
+    
+    return campaigns.map(campaign => {
+      const budget = campaign.budget || 0;
+      const spent = campaign.metrics?.cost || 0;
+      const remaining = budget - spent;
+      
+      // Calculate pacing (mock data for now - would pull real data from metrics)
+      const daysInMonth = 30;
+      const daysRemaining = Math.max(1, options.daysRemaining || 15);
+      const daysPassed = daysInMonth - daysRemaining;
+      const expectedSpend = (budget / daysInMonth) * daysPassed;
+      const variance = ((spent - expectedSpend) / expectedSpend * 100).toFixed(1);
+      
+      let status = 'on_pace';
+      if (parseFloat(variance) < -20) status = 'critical_behind';
+      else if (parseFloat(variance) < -10) status = 'behind';
+      else if (parseFloat(variance) > 20) status = 'critical_ahead';
+      else if (parseFloat(variance) > 10) status = 'ahead';
+      
+      return {
+        campaignId: campaign.id || campaign.resourceName,
+        campaignName: campaign.name,
+        budget,
+        spent,
+        remaining,
+        expectedSpend: parseFloat(expectedSpend.toFixed(2)),
+        variance,
+        status,
+        daysRemaining,
+        dsp: 'google-ads'
+      };
+    });
+  }
 }
 
 // Export singleton instance

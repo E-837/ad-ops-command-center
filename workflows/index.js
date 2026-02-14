@@ -19,6 +19,7 @@ const projectStatus = require('./projects/project-status');
 
 // Import new campaign ops workflows (Phase 2)
 const creativeTest = require('./campaign-ops/creative-test');
+const campaignCreationA2A = require('./campaign-ops/campaign-creation-a2a');
 
 // Import new reporting workflows (Phase 2)
 const monthlyReport = require('./reporting/monthly-report');
@@ -42,6 +43,7 @@ registry.register('project-status', projectStatus);
 
 // Phase 2 workflows
 registry.register('creative-test', creativeTest);
+registry.register('campaign-creation-a2a', campaignCreationA2A);
 registry.register('monthly-report', monthlyReport);
 registry.register('cross-channel-report', crossChannelReport);
 registry.register('media-plan-execute', mediaPlanExecute);
@@ -61,6 +63,7 @@ const WORKFLOWS = {
   'project-status': projectStatus,
   // Phase 2
   'creative-test': creativeTest,
+  'campaign-creation-a2a': campaignCreationA2A,
   'monthly-report': monthlyReport,
   'cross-channel-report': crossChannelReport,
   'media-plan-execute': mediaPlanExecute,

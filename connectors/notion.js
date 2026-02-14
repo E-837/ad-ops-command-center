@@ -21,10 +21,20 @@ let status = 'ready';
 let lastSync = null;
 
 // Lazy-check MCP availability to avoid blocking startup on mcporter list
+// Cache for 60 seconds to match mcp-bridge cache TTL
 let useMCP;
+let lastCheck = 0;
+const CHECK_INTERVAL = 60000; // 60 seconds
+
 function isMCPAvailable() {
-  if (typeof useMCP === 'boolean') return useMCP;
-  useMCP = mcpBridge.notion.isAvailable();
+  const now = Date.now();
+  
+  // Re-check if cache expired or never checked
+  if (typeof useMCP !== 'boolean' || (now - lastCheck) > CHECK_INTERVAL) {
+    useMCP = mcpBridge.notion.isAvailable();
+    lastCheck = now;
+  }
+  
   return useMCP;
 }
 

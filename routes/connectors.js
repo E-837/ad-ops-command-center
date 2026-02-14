@@ -17,6 +17,38 @@ router.get('/status', (req, res) => {
   res.json(connectors.getConnectorStatus());
 });
 
+// Refresh MCP availability cache
+router.post('/refresh-mcp', (req, res) => {
+  try {
+    const mcpBridge = require('../connectors/mcp-bridge');
+    
+    // Force MCP check (takes ~15s)
+    const mcpResults = mcpBridge.forceCheckMCP();
+    
+    // Get updated connector status
+    const status = connectors.getConnectorStatus();
+    
+    res.json({ 
+      success: true, 
+      message: 'MCP availability checked',
+      mcpResults,
+      connectors: status 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Connect (mock OAuth completion endpoint for UI actions)
+router.post('/:name/connect', (req, res) => {
+  res.json({ success: true, message: `Connect flow started for ${req.params.name}` });
+});
+
+// Disconnect endpoint for UI actions
+router.post('/:name/disconnect', (req, res) => {
+  res.json({ success: true, message: `Disconnected ${req.params.name}` });
+});
+
 // Test specific connector connection
 router.get('/test/:name', async (req, res) => {
   const connectorName = req.params.name;

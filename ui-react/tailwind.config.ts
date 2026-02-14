@@ -1,0 +1,2 @@
+import type { Config } from 'tailwindcss';
+export default { content: ['./src/**/*.{ts,tsx}'], theme: { extend: { colors: { primary:'#4CAF50', secondary:'#2196F3', warning:'#FF9800', danger:'#F44336', glass:{ bg:'rgba(255,255,255,0.05)', border:'rgba(255,255,255,0.1)' } }, backgroundImage: { 'app-gradient': 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)' }, fontFamily: { sans: ['-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','sans-serif'] } } } } satisfies Config;

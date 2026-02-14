@@ -1,0 +1,1 @@
+export function Select({options,value,onChange}:{options:string[];value:string;onChange:(v:string)=>void}){return <select value={value} onChange={(e)=>onChange(e.target.value)} className='px-3 py-2 rounded-lg bg-white/10 border border-white/10'>{options.map(o=><option key={o} value={o}>{o}</option>)}</select>;}

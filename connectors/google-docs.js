@@ -11,10 +11,20 @@ const version = '1.0.0';
 let status = 'ready';
 let lastSync = null;
 
+// Cache for 60 seconds to match mcp-bridge cache TTL
 let useMCP;
+let lastCheck = 0;
+const CHECK_INTERVAL = 60000; // 60 seconds
+
 function isMCPAvailable() {
-  if (typeof useMCP === 'boolean') return useMCP;
-  useMCP = mcpBridge.googleDocs.isAvailable();
+  const now = Date.now();
+  
+  // Re-check if cache expired or never checked
+  if (typeof useMCP !== 'boolean' || (now - lastCheck) > CHECK_INTERVAL) {
+    useMCP = mcpBridge.googleDocs.isAvailable();
+    lastCheck = now;
+  }
+  
   return useMCP;
 }
 

@@ -605,7 +605,284 @@ ad-ops-command/
 
 ---
 
-## 8. API Additions
+## 8. WebMCP Integration Strategy
+
+### 8.1 Overview
+
+**WebMCP** (Web Model Context Protocol) is Google Chrome's emerging standard for exposing structured tools from websites to in-browser AI agents. Instead of DOM scraping or brittle UI automation, WebMCP allows DSP platforms to publish tool contracts that agents can invoke reliably.
+
+**Status:** Early preview in Chrome 146 Canary (Feb 2026)  
+**Spec:** https://github.com/webmachinelearning/webmcp/  
+**Demo:** https://travel-demo.bandarra.me/
+
+### 8.2 Why This Matters for Ad Ops
+
+Current DSP automation challenges:
+- **API Gaps:** Not all platforms have full programmatic APIs (especially for creative upload, reporting UI, audience management)
+- **Auth Complexity:** OAuth flows, API keys, token management, rate limits
+- **Maintenance Burden:** API changes break integrations constantly
+- **UI-Only Features:** Some DSP features (bulk edits, certain reports) only exist in the UI
+
+**WebMCP Solution:**
+Instead of maintaining mock MCPs or fragile Playwright scripts, we can:
+1. **Detect WebMCP tools** when visiting DSP platforms
+2. **Invoke structured actions** (create_campaign, upload_creative, run_report) via browser context
+3. **Get validated responses** with schemas instead of parsing HTML
+
+### 8.3 Architecture Pattern
+
+```
+┌─────────────────┐
+│  Agent Request  │  "Create display campaign for Brand X"
+└────────┬────────┘
+         │
+         v
+┌─────────────────────┐
+│  Workflow Executor  │  Checks: Does TTD expose WebMCP tools?
+└────────┬────────────┘
+         │
+         ├─── YES: Use WebMCP Connector ──┐
+         │                                 v
+         │                    ┌──────────────────────────┐
+         │                    │  Browser (Chrome Canary) │
+         │                    │  + WebMCP Tool Inspector │
+         │                    └────────┬─────────────────┘
+         │                             │
+         │                             v
+         │                    ┌──────────────────────┐
+         │                    │  TTD Web UI          │
+         │                    │  (WebMCP-enabled)    │
+         │                    │                      │
+         │                    │  Tools exposed:      │
+         │                    │  - create_campaign   │
+         │                    │  - upload_creative   │
+         │                    │  - run_pacing_report │
+         │                    └──────────────────────┘
+         │
+         └─── NO: Fall back to API/Mock ──────────────┐
+                                                       v
+                                              ┌───────────────┐
+                                              │  TTD API/Mock │
+                                              └───────────────┘
+```
+
+### 8.4 Implementation Phases
+
+#### Phase 1: Detection & Manual Testing (Week 1)
+- Install Chrome Canary + WebMCP flag
+- Install Model Context Tool Inspector extension
+- Visit TTD, DV360, Amazon DSP, Google Ads, Meta Ads Manager
+- Document which platforms expose WebMCP tools (if any)
+- Test manual tool invocation for common workflows
+
+#### Phase 2: Connector Layer (Week 2-3)
+Create `connectors/webmcp-bridge.js`:
+
+```js
+// Detect WebMCP tools via Chrome DevTools Protocol
+async function detectTools(url) {
+  const browser = await puppeteer.connect({ browserWSEndpoint });
+  const page = await browser.newPage();
+  await page.goto(url);
+  
+  // Query navigator.modelContext for registered tools
+  const tools = await page.evaluate(() => {
+    if (!navigator.modelContext) return null;
+    return navigator.modelContext.getRegisteredTools(); // hypothetical API
+  });
+  
+  return tools;
+}
+
+// Invoke WebMCP tool
+async function invokeTool(toolName, params) {
+  const result = await page.evaluate((name, args) => {
+    return navigator.modelContext.invokeTool(name, args);
+  }, toolName, params);
+  
+  return result;
+}
+
+module.exports = { detectTools, invokeTool };
+```
+
+#### Phase 3: Workflow Integration (Week 4)
+Update workflows to prefer WebMCP when available:
+
+```js
+// workflows/campaign-ops/campaign-launch.js
+async function createDSPCampaign(platform, params) {
+  // 1. Check if platform supports WebMCP
+  const webmcpTools = await detectTools(platformUrls[platform]);
+  
+  if (webmcpTools?.includes('create_campaign')) {
+    // Use WebMCP
+    return await invokeTool('create_campaign', params);
+  }
+  
+  // 2. Fall back to API
+  if (connectors[platform].hasAPI) {
+    return await connectors[platform].createCampaign(params);
+  }
+  
+  // 3. Fall back to mock
+  return await mockConnectors[platform].createCampaign(params);
+}
+```
+
+### 8.5 WebMCP Connector Interface
+
+Standardize across platforms:
+
+```js
+// connectors/webmcp/ttd.js
+module.exports = {
+  platform: 'ttd',
+  url: 'https://desk.thetradedesk.com',
+  
+  tools: {
+    create_campaign: {
+      name: 'create_campaign',
+      description: 'Create a new campaign in The Trade Desk',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          advertiser_id: { type: 'string', required: true },
+          name: { type: 'string', required: true },
+          budget: { type: 'number', required: true },
+          start_date: { type: 'string', format: 'date' },
+          end_date: { type: 'string', format: 'date' }
+        }
+      },
+      execute: async (params) => {
+        return await invokeTool('create_campaign', params);
+      }
+    },
+    
+    upload_creative: {
+      name: 'upload_creative',
+      description: 'Upload a creative asset',
+      inputSchema: { /* ... */ },
+      execute: async (params) => { /* ... */ }
+    },
+    
+    run_pacing_report: {
+      name: 'run_pacing_report',
+      description: 'Generate pacing report for campaign',
+      inputSchema: { /* ... */ },
+      execute: async (params) => { /* ... */ }
+    }
+  },
+  
+  async connect() {
+    const tools = await detectTools(this.url);
+    this.available = tools?.length > 0;
+    return this.available;
+  },
+  
+  getInfo() {
+    return {
+      name: 'The Trade Desk (WebMCP)',
+      platform: this.platform,
+      type: 'webmcp',
+      url: this.url,
+      tools: Object.keys(this.tools),
+      status: this.available ? 'connected' : 'unavailable'
+    };
+  }
+};
+```
+
+### 8.6 UI Integration
+
+**Connector Status Page** (`/connectors.html`):
+
+Add WebMCP badge and status:
+
+```html
+<div class="connector-card webmcp">
+  <div class="badge">WebMCP</div>
+  <h3>The Trade Desk</h3>
+  <p class="status">
+    <span class="indicator green"></span>
+    5 tools available
+  </p>
+  <ul class="tools">
+    <li>create_campaign</li>
+    <li>upload_creative</li>
+    <li>run_pacing_report</li>
+    <li>update_bid_modifier</li>
+    <li>export_log_level_data</li>
+  </ul>
+</div>
+```
+
+### 8.7 Benefits Over Current Approach
+
+| Capability | Current (Mock MCP) | WebMCP | Traditional API |
+|------------|-------------------|---------|-----------------|
+| **Creative Upload** | ❌ Simulated | ✅ Real browser flow | ⚠️ Limited formats |
+| **Auth Management** | ❌ N/A (mock) | ✅ Uses existing session | ⚠️ OAuth + tokens |
+| **UI-Only Features** | ❌ Can't access | ✅ Full access | ❌ Not available |
+| **Maintenance** | ✅ Zero (fake data) | ✅ Low (spec-driven) | ⚠️ High (API changes) |
+| **Reliability** | ❌ Not real | ✅ Validated schemas | ⚠️ Rate limits |
+| **Setup Effort** | ✅ Instant | ⚠️ Browser setup | ⚠️ API keys + OAuth |
+
+### 8.8 Timeline & Dependencies
+
+**Dependencies:**
+- Chrome Canary installation
+- WebMCP flag enabled
+- Model Context Tool Inspector extension
+- Puppeteer/Playwright for browser control (if programmatic access needed)
+
+**Risks:**
+- WebMCP adoption by DSP platforms is uncertain (early preview stage)
+- Chrome-only (no Firefox/Safari support yet)
+- Requires visible browser context (no headless mode)
+- UI must stay in sync between human and agent actions
+
+**Recommendation:**
+- **Short-term:** Document WebMCP architecture, test manually
+- **Mid-term:** Build detection layer, prototype one workflow (campaign creation)
+- **Long-term:** Replace mock MCPs as DSP platforms adopt WebMCP
+
+### 8.9 Discovery & Monitoring
+
+Create `/api/webmcp/status` endpoint:
+
+```json
+{
+  "chromeCanaryInstalled": true,
+  "webmcpFlagEnabled": true,
+  "extensionInstalled": true,
+  "platforms": {
+    "ttd": {
+      "url": "https://desk.thetradedesk.com",
+      "lastChecked": "2026-02-13T19:30:00Z",
+      "toolsAvailable": 0,
+      "status": "not-supported"
+    },
+    "dv360": {
+      "url": "https://displayvideo.google.com",
+      "lastChecked": "2026-02-13T19:30:00Z",
+      "toolsAvailable": 0,
+      "status": "not-supported"
+    },
+    "googleAds": {
+      "url": "https://ads.google.com",
+      "lastChecked": "2026-02-13T19:30:00Z",
+      "toolsAvailable": 8,
+      "status": "supported",
+      "tools": ["create_campaign", "upload_asset", "run_report", "..."]
+    }
+  }
+}
+```
+
+---
+
+## 10. API Additions
 
 ### New REST Endpoints
 
@@ -635,7 +912,7 @@ POST   /api/events                   — emit custom event
 
 ---
 
-## 9. Extensibility Summary
+## 11. Extensibility Summary
 
 | Add a... | Steps |
 |----------|-------|

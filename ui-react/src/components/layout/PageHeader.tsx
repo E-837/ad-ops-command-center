@@ -1,0 +1,1 @@
+import type { ReactNode } from 'react'; export function PageHeader({title,subtitle,actions}:{title:string;subtitle?:string;actions?:ReactNode}){return <header className='mb-6 flex items-start justify-between gap-4'><div><h2 className='text-2xl font-semibold'>{title}</h2>{subtitle&&<p className='text-white/70'>{subtitle}</p>}</div>{actions}</header>;}

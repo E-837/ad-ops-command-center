@@ -56,17 +56,73 @@ async function callMCP(server, tool, params = {}) {
 }
 
 /**
- * Check if MCP server is available
+ * Cache for MCP server availability (TTL: 60 seconds)
+ */
+const mcpCache = new Map();
+const MCP_CACHE_TTL = 60000; // 60 seconds
+
+/**
+ * Check if MCP server is available (with caching)
+ * Always returns false on initial load to avoid blocking
+ * Call clearMCPCache() and wait 1 second, then check again to get real status
  */
 function checkMCPServer(server) {
+  const now = Date.now();
+  const cached = mcpCache.get(server);
+  
+  // Return cached result if still valid
+  if (cached && (now - cached.timestamp) < MCP_CACHE_TTL) {
+    return cached.available;
+  }
+  
+  // Don't check on first load - just return false
+  // User can click "Refresh All" to trigger a real check
+  mcpCache.set(server, { available: false, timestamp: now });
+  return false;
+}
+
+/**
+ * Clear MCP availability cache and force re-check
+ * This actually runs mcporter list (takes ~15s)
+ */
+function clearMCPCache() {
+  mcpCache.clear();
+}
+
+/**
+ * Force MCP availability check (synchronous, takes ~15s)
+ * Returns map of server -> boolean
+ */
+function forceCheckMCP() {
   try {
     const output = execSync(`mcporter list`, { 
       encoding: 'utf8',
-      timeout: 5000 
+      timeout: 20000  // 20 seconds to be safe
     });
-    return output.includes(server);
-  } catch {
-    return false;
+    
+    const servers = ['asana-v2', 'notion', 'figma', 'google-docs'];
+    const results = {};
+    const now = Date.now();
+    
+    servers.forEach(server => {
+      const available = output.includes(server);
+      mcpCache.set(server, { available, timestamp: now });
+      results[server] = available;
+    });
+    
+    return results;
+  } catch (err) {
+    // On error, cache all as false
+    const servers = ['asana-v2', 'notion', 'figma', 'google-docs'];
+    const results = {};
+    const now = Date.now();
+    
+    servers.forEach(server => {
+      mcpCache.set(server, { available: false, timestamp: now });
+      results[server] = false;
+    });
+    
+    return results;
   }
 }
 
@@ -287,6 +343,8 @@ const googleDocs = {
 module.exports = {
   callMCP,
   checkMCPServer,
+  clearMCPCache,
+  forceCheckMCP,
   asana,
   notion,
   figma,

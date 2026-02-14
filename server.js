@@ -13,22 +13,26 @@ const eventTriggers = require('./events/triggers');
 const cronJobs = require('./cron-jobs');
 const sseManager = require('./events/sse-manager');
 const eventBus = require('./events/bus');
+const processCleanup = require('./utils/process-cleanup');
+const communicationBus = require('./agents/communication-bus');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
 const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development';
+const reactDistDir = path.join(__dirname, 'ui-react', 'dist');
+const legacyUiDir = path.join(__dirname, 'ui');
 
 // Middleware
 app.use(express.json());
 app.use(logger.requestMiddleware);  // Request logging
 
-// Serve static files from build/ in production, ui/ in development
-const staticDir = isProduction ? path.join(__dirname, 'build') : path.join(__dirname, 'ui');
-app.use(express.static(staticDir));
 if (isProduction) {
-  logger.info('Serving production build from build/ directory');
+  logger.info('Serving production build from ui-react/dist directory');
+} else if (isDevelopment) {
+  logger.info('Development mode: proxying UI requests to Vite dev server at http://localhost:5173');
 } else {
-  logger.debug('Serving development files from ui/ directory');
+  logger.info('Non-production mode detected; defaulting UI requests to Vite dev server');
 }
 
 // Initialize database
@@ -36,6 +40,14 @@ db.initialize();
 
 // Initialize SSE integration with event bus
 eventBus.setSSEManager(sseManager);
+
+// Bridge A2A bus messages onto SSE stream for UI real-time activity
+communicationBus.on('message', (message) => {
+  sseManager.broadcast({
+    type: 'agent_message',
+    data: message,
+  });
+});
 
 // --- Modular API Routes ---
 const campaignsRouter = require('./routes/campaigns');
@@ -49,7 +61,9 @@ const projectsRouter = require('./routes/projects');
 const executionsRouter = require('./routes/executions');
 const eventsRouter = require('./routes/events');
 const templatesRouter = require('./routes/templates');
+const reportsRouter = require('./routes/reports');
 const domainRouter = require('./routes/domain');
+const healthRouter = require('./routes/health');
 
 // Mount routers
 app.use('/api/campaigns', campaignsRouter);
@@ -63,7 +77,30 @@ app.use('/api/projects', projectsRouter);
 app.use('/api/executions', executionsRouter);
 app.use('/api/events', eventsRouter);
 app.use('/api/templates', templatesRouter);
+app.use('/api/reports', reportsRouter);
 app.use('/api/domain', domainRouter);
+app.use('/api/health', healthRouter);  // Health & process monitoring
+
+// --- API: Dashboard aggregate ---
+app.get('/api/dashboard', async (req, res, next) => {
+  try {
+    const [projectsRes, executionsRes, campaignsRes, pacingRes] = await Promise.all([
+      fetch(`http://localhost:${PORT}/api/projects`).then((r) => r.json()).catch(() => ({})),
+      fetch(`http://localhost:${PORT}/api/executions?limit=25`).then((r) => r.json()).catch(() => ({})),
+      fetch(`http://localhost:${PORT}/api/campaigns`).then((r) => r.json()).catch(() => ({})),
+      fetch(`http://localhost:${PORT}/api/pacing`).then((r) => r.json()).catch(() => ({})),
+    ]);
+
+    res.json({
+      projects: projectsRes.projects || projectsRes.data || [],
+      executions: executionsRes.executions || executionsRes.data || [],
+      campaigns: campaignsRes.campaigns || campaignsRes.data || [],
+      pacing: pacingRes.data || pacingRes || { pacing: [] },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // --- API: Health Check ---
 app.get('/api/health', (req, res) => {
@@ -88,62 +125,45 @@ app.get('/api/health', (req, res) => {
 });
 
 // --- Static UI Routes ---
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'index.html'));
-});
+if (isDevelopment) {
+  app.use(async (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
 
-app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'dashboard.html'));
-});
+    const query = req.url.slice(req.path.length);
+    const proxyPath = req.path === '/insights' ? '/reports' : req.path;
+    const viteUrl = `http://localhost:5173${proxyPath}${query}`;
 
-app.get('/projects', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'projects.html'));
-});
+    try {
+      const response = await fetch(viteUrl);
+      const body = Buffer.from(await response.arrayBuffer());
 
-app.get('/workflows', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'workflows.html'));
-});
+      response.headers.forEach((value, key) => {
+        if (key.toLowerCase() !== 'content-encoding') {
+          res.setHeader(key, value);
+        }
+      });
 
-app.get('/workflow-detail', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'workflow-detail.html'));
-});
+      res.status(response.status).send(body);
+    } catch (error) {
+      res.status(502).send('Development UI proxy is enabled but Vite is not reachable at http://localhost:5173');
+    }
+  });
+} else {
+  // Optional legacy UI access for rollback/debugging
+  app.use('/legacy', express.static(legacyUiDir));
+  app.get('/legacy', (req, res) => {
+    res.sendFile(path.join(legacyUiDir, 'index.html'));
+  });
 
-app.get('/campaigns', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'campaigns.html'));
-});
+  // Serve React static build
+  app.use(express.static(reactDistDir));
 
-app.get('/reports', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'reports.html'));
-});
-
-app.get('/analytics', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'analytics.html'));
-});
-
-app.get('/integrations', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'integrations.html'));
-});
-
-// Legacy route redirect
-app.get('/insights', (req, res) => {
-  res.redirect('/reports');
-});
-
-app.get('/agents', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'agents.html'));
-});
-
-app.get('/query', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'query.html'));
-});
-
-app.get('/architecture', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'architecture.html'));
-});
-
-app.get('/connectors', (req, res) => {
-  res.sendFile(path.join(__dirname, 'ui', 'connectors.html'));
-});
+  // All non-API routes go to React app
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(reactDistDir, 'index.html'));
+  });
+}
 
 // --- Global Error Handler Middleware ---
 // Must be defined after all routes
@@ -211,6 +231,14 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   } catch (error) {
     logger.error('Failed to initialize automation', { error: error.message, stack: error.stack });
   }
+  
+  // Start process cleanup scanner
+  try {
+    processCleanup.start();
+    logger.info('Process cleanup scanner started');
+  } catch (error) {
+    logger.error('Failed to start process cleanup', { error: error.message });
+  }
 });
 
 server.on('error', (err) => {
@@ -218,16 +246,26 @@ server.on('error', (err) => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.logServerStop('SIGTERM received');
+  
+  // Stop process cleanup scanner
+  processCleanup.stop();
+  logger.info('Process cleanup stopped');
+  
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.logServerStop('SIGINT received');
+  
+  // Stop process cleanup scanner
+  processCleanup.stop();
+  logger.info('Process cleanup stopped');
+  
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);

@@ -1,0 +1,1 @@
+import { useQuery } from '@tanstack/react-query'; import { getDashboard } from '../api/analytics'; export const useAnalytics = () => useQuery({ queryKey: ['dashboard'], queryFn: getDashboard, refetchInterval: 30000 });

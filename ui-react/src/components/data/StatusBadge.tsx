@@ -1,0 +1,1 @@
+export function StatusBadge({status}:{status:'active'|'paused'|'error'|'draft'}){const color={active:'bg-green-500/20 text-green-300',paused:'bg-amber-500/20 text-amber-300',error:'bg-red-500/20 text-red-300',draft:'bg-white/10 text-white/70'}[status];return <span className={`px-2 py-1 rounded-full text-xs ${color}`}>{status}</span>;}

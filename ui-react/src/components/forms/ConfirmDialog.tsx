@@ -1,0 +1,1 @@
+import { Modal } from './Modal'; export function ConfirmDialog({open,title,onConfirm}:{open:boolean;title:string;onConfirm:()=>void}){return <Modal open={open} title={title}><button onClick={onConfirm}>Confirm</button></Modal>;}

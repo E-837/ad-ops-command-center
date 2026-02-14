@@ -4,10 +4,10 @@
   "description": "Digital Advertising Command - AI-Powered Media Operations Platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "build": "node scripts/build-frontend.js",
-    "build:prod": "NODE_ENV=production node scripts/build-frontend.js",
+    "build": "cd ui-react && npm run build",
+    "build:legacy": "node scripts/build-frontend.js",
+    "dev": "cross-env NODE_ENV=development node server.js",
+    "start": "cross-env NODE_ENV=production node server.js",
     "verify": "node verify-ui-ready.js",
     "verify:tests": "node scripts/verify-test-environments.js",
     "test": "node test.js",
@@ -39,6 +39,7 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "esbuild": "^0.27.3",
     "eventsource": "^2.0.2",
     "jest": "^30.2.0"

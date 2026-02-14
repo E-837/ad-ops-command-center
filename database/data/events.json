@@ -46,5 +46,895 @@
     },
     "timestamp": "2026-02-11T03:08:03.916Z",
     "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012204728-39a6m9",
+    "type": "workflow.stage.started",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "brief",
+      "stageName": "Generate Campaign Brief",
+      "stageIndex": 0,
+      "totalStages": 8,
+      "timestamp": "2026-02-13T19:50:04.728Z"
+    },
+    "timestamp": "2026-02-13T19:50:04.728Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012205703-6ncczf",
+    "type": "workflow.stage.started",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "plan",
+      "stageName": "Create Media Plan",
+      "stageIndex": 1,
+      "totalStages": 8,
+      "timestamp": "2026-02-13T19:50:05.703Z"
+    },
+    "timestamp": "2026-02-13T19:50:05.703Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012205734-k1iot3",
+    "type": "workflow.stage.started",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "project",
+      "stageName": "Setup Project Management",
+      "stageIndex": 2,
+      "totalStages": 8,
+      "timestamp": "2026-02-13T19:50:05.734Z"
+    },
+    "timestamp": "2026-02-13T19:50:05.734Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012205758-apd1vq",
+    "type": "workflow.stage.started",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "landing",
+      "stageName": "Generate Landing Page",
+      "stageIndex": 3,
+      "totalStages": 8,
+      "timestamp": "2026-02-13T19:50:05.758Z"
+    },
+    "timestamp": "2026-02-13T19:50:05.758Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012205761-t8bmf5",
+    "type": "workflow.stage.started",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "creative",
+      "stageName": "Generate Creatives",
+      "stageIndex": 4,
+      "totalStages": 8,
+      "timestamp": "2026-02-13T19:50:05.761Z"
+    },
+    "timestamp": "2026-02-13T19:50:05.761Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012205834-muhb9p",
+    "type": "workflow.stage.started",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "activate",
+      "stageName": "Activate on DSPs",
+      "stageIndex": 5,
+      "totalStages": 8,
+      "timestamp": "2026-02-13T19:50:05.834Z"
+    },
+    "timestamp": "2026-02-13T19:50:05.834Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012226476-a8tur9",
+    "type": "workflow.stage.completed",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "landing",
+      "stageName": "Generate Landing Page",
+      "stageIndex": 3,
+      "totalStages": 8,
+      "status": "completed",
+      "output": {
+        "filePath": "C:\\Users\\RossS\\.openclaw\\workspace\\projects\\ad-ops-command\\output\\landing-locke-airpod-ai.html",
+        "templateUsed": "C:\\Users\\RossS\\.openclaw\\workspace\\projects\\ad-ops-command\\output\\landing-page.html",
+        "replacements": [
+          "Product: Locke AirPod AI",
+          "Brand: Locke AI Co.",
+          "Tagline: Intelligence You Can Wear",
+          "Price: $199",
+          "Launch Event: OpenAI Device Day — April 1, 2026"
+        ]
+      },
+      "timestamp": "2026-02-13T19:50:26.476Z"
+    },
+    "timestamp": "2026-02-13T19:50:26.476Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012227560-hedxx6",
+    "type": "workflow.stage.completed",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "activate",
+      "stageName": "Activate on DSPs",
+      "stageIndex": 5,
+      "totalStages": 8,
+      "status": "completed",
+      "output": {
+        "campaignsActivated": 5,
+        "campaigns": [
+          {
+            "dsp": "TTD",
+            "id": "ttd-camp-1771012226999",
+            "name": "Locke AirPod AI — Display — Programmatic Display — Awareness & Pre-order",
+            "budget": 200000,
+            "channel": "Display",
+            "status": "activated"
+          },
+          {
+            "dsp": "TTD",
+            "id": "ttd-camp-1771012227199",
+            "name": "Locke AirPod AI — Video — Online Video — Pre-roll + Mid-roll",
+            "budget": 150000,
+            "channel": "Video",
+            "status": "activated"
+          },
+          {
+            "dsp": "DV360",
+            "id": "dv360-camp-1771012227318",
+            "name": "Locke AirPod AI — CTV — Connected TV — Streaming (Hulu, Peacock, YouTube TV)",
+            "budget": 200000,
+            "channel": "CTV",
+            "status": "activated"
+          },
+          {
+            "dsp": "Amazon DSP",
+            "budget": 100000,
+            "channel": "Display",
+            "status": "activated"
+          },
+          {
+            "dsp": "TTD",
+            "id": "ttd-camp-1771012227560",
+            "name": "Locke AirPod AI — Audio — Programmatic Audio — Spotify/Podcasts",
+            "budget": 100000,
+            "channel": "Audio",
+            "status": "activated"
+          }
+        ],
+        "totalBudget": 750000
+      },
+      "timestamp": "2026-02-13T19:50:27.560Z"
+    },
+    "timestamp": "2026-02-13T19:50:27.560Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012235716-pyrxhw",
+    "type": "workflow.stage.completed",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "brief",
+      "stageName": "Generate Campaign Brief",
+      "stageIndex": 0,
+      "totalStages": 8,
+      "status": "failed",
+      "error": "Timeout",
+      "timestamp": "2026-02-13T19:50:35.716Z"
+    },
+    "timestamp": "2026-02-13T19:50:35.716Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012235747-8djdre",
+    "type": "workflow.stage.completed",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "plan",
+      "stageName": "Create Media Plan",
+      "stageIndex": 1,
+      "totalStages": 8,
+      "status": "failed",
+      "error": "Timeout",
+      "timestamp": "2026-02-13T19:50:35.747Z"
+    },
+    "timestamp": "2026-02-13T19:50:35.747Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012235771-6ge6fl",
+    "type": "workflow.stage.completed",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "project",
+      "stageName": "Setup Project Management",
+      "stageIndex": 2,
+      "totalStages": 8,
+      "status": "failed",
+      "output": {
+        "projectId": null,
+        "projectUrl": null,
+        "tasksCreated": 0,
+        "tasksFailed": 0,
+        "failedItems": [],
+        "tasks": []
+      },
+      "timestamp": "2026-02-13T19:50:35.771Z"
+    },
+    "timestamp": "2026-02-13T19:50:35.771Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012245032-s5ychy",
+    "type": "workflow.stage.progress",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "creative",
+      "stageName": "Generate Creatives",
+      "stageIndex": 4,
+      "totalStages": 8,
+      "current": 2,
+      "total": 4,
+      "detail": "2/4 creatives processed"
+    },
+    "timestamp": "2026-02-13T19:50:45.032Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012246023-0zltf8",
+    "type": "workflow.stage.progress",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "creative",
+      "stageName": "Generate Creatives",
+      "stageIndex": 4,
+      "totalStages": 8,
+      "current": 1,
+      "total": 4,
+      "detail": "1/4 creatives processed"
+    },
+    "timestamp": "2026-02-13T19:50:46.023Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012261802-j47x1p",
+    "type": "workflow.stage.progress",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "creative",
+      "stageName": "Generate Creatives",
+      "stageIndex": 4,
+      "totalStages": 8,
+      "current": 4,
+      "total": 4,
+      "detail": "4/4 creatives processed"
+    },
+    "timestamp": "2026-02-13T19:51:01.802Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012263018-0ats4m",
+    "type": "workflow.stage.progress",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "creative",
+      "stageName": "Generate Creatives",
+      "stageIndex": 4,
+      "totalStages": 8,
+      "current": 3,
+      "total": 4,
+      "detail": "3/4 creatives processed"
+    },
+    "timestamp": "2026-02-13T19:51:03.018Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012263020-0fz4gg",
+    "type": "workflow.stage.completed",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "creative",
+      "stageName": "Generate Creatives (Nano Banana Pro ? Canva)",
+      "stageIndex": 4,
+      "totalStages": 8,
+      "status": "failed",
+      "output": {
+        "designsCreated": 4,
+        "aiGenerated": 4,
+        "canvaDesigns": 0,
+        "failedItems": [
+          {
+            "name": "Locke AirPod AI � Leaderboard",
+            "error": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          },
+          {
+            "name": "Locke AirPod AI � Medium Rectangle",
+            "error": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          },
+          {
+            "name": "Locke AirPod AI � CTV/OLV Video",
+            "error": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          },
+          {
+            "name": "Locke AirPod AI � Wide Skyscraper",
+            "error": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          }
+        ],
+        "imageModel": "google/gemini-3-pro-image-preview",
+        "designs": [
+          {
+            "name": "Locke AirPod AI � Leaderboard",
+            "size": "728x90",
+            "format": "static",
+            "aiGenerated": true,
+            "imagePath": "C:\\Users\\RossS\\AppData\\Local\\Temp\\ad-creative-728-90-1771012244468.png",
+            "imageModel": "google/gemini-3-pro-image-preview",
+            "assetUploadError": "canva.uploadAssetFromFile is not a function",
+            "canvaId": "fallback-728x90",
+            "canvaLive": false,
+            "canvaError": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          },
+          {
+            "name": "Locke AirPod AI � Medium Rectangle",
+            "size": "300x250",
+            "format": "static",
+            "aiGenerated": true,
+            "imagePath": "C:\\Users\\RossS\\AppData\\Local\\Temp\\ad-creative-300-250-1771012245892.png",
+            "imageModel": "google/gemini-3-pro-image-preview",
+            "assetUploadError": "canva.uploadAssetFromFile is not a function",
+            "canvaId": "fallback-300x250",
+            "canvaLive": false,
+            "canvaError": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          },
+          {
+            "name": "Locke AirPod AI � CTV/OLV Video",
+            "size": "1920x1080",
+            "format": "video",
+            "aiGenerated": true,
+            "imagePath": "C:\\Users\\RossS\\AppData\\Local\\Temp\\ad-creative-1920-1080-1771012261529.png",
+            "imageModel": "google/gemini-3-pro-image-preview",
+            "assetUploadError": "canva.uploadAssetFromFile is not a function",
+            "canvaId": "fallback-1920x1080",
+            "canvaLive": false,
+            "canvaError": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          },
+          {
+            "name": "Locke AirPod AI � Wide Skyscraper",
+            "size": "160x600",
+            "format": "static",
+            "aiGenerated": true,
+            "imagePath": "C:\\Users\\RossS\\AppData\\Local\\Temp\\ad-creative-160-600-1771012262880.png",
+            "imageModel": "google/gemini-3-pro-image-preview",
+            "assetUploadError": "canva.uploadAssetFromFile is not a function",
+            "canvaId": "fallback-160x600",
+            "canvaLive": false,
+            "canvaError": "Token refresh failed: 400 - {\"error\":\"invalid_grant\",\"error_description\":\"Token lineage has been revoked\"}"
+          }
+        ]
+      },
+      "timestamp": "2026-02-13T19:51:03.020Z"
+    },
+    "timestamp": "2026-02-13T19:51:03.020Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771012263021-m6w5vy",
+    "type": "workflow.stage.started",
+    "source": "demo-1771012204727",
+    "payload": {
+      "source": "demo-1771012204727",
+      "workflowId": "campaign-lifecycle-demo",
+      "executionId": "demo-1771012204727",
+      "stageId": "report",
+      "stageName": "Generate Summary Report",
+      "stageIndex": 7,
+      "totalStages": 8,
+      "timestamp": "2026-02-13T19:51:03.021Z"
+    },
+    "timestamp": "2026-02-13T19:51:03.021Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771045157418-edfla6",
+    "type": "workflow.started",
+    "source": "exec-1771045157416-lbdedk",
+    "payload": {
+      "source": "exec-1771045157416-lbdedk",
+      "workflowId": "pacing-check",
+      "executionId": "exec-1771045157416-lbdedk",
+      "params": {
+        "executionId": "exec-1771045157415-dg875p"
+      },
+      "startedAt": "2026-02-14T04:59:17.416Z"
+    },
+    "timestamp": "2026-02-14T04:59:17.418Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771045157751-reu7bw",
+    "type": "workflow.completed",
+    "source": "exec-1771045157416-lbdedk",
+    "payload": {
+      "source": "exec-1771045157416-lbdedk",
+      "workflowId": "pacing-check",
+      "executionId": "exec-1771045157416-lbdedk",
+      "result": {
+        "workflowId": "pacing-1771045157420",
+        "timestamp": "2026-02-14T04:59:17.420Z",
+        "dsps": {
+          "ttd": {
+            "campaigns": [
+              {
+                "campaignId": "ttd-camp-001",
+                "campaignName": "Galaxy S25 Launch - Awareness",
+                "budget": 150000,
+                "spent": 67500,
+                "remaining": 82500,
+                "expectedSpend": 102273,
+                "variance": "-34.0",
+                "status": "critical_behind",
+                "daysRemaining": 14,
+                "dsp": "ttd"
+              },
+              {
+                "campaignId": "ttd-camp-002",
+                "campaignName": "Galaxy Watch 7 - Consideration",
+                "budget": 75000,
+                "spent": 28000,
+                "remaining": 47000,
+                "expectedSpend": 34722,
+                "variance": "-19.4",
+                "status": "behind",
+                "daysRemaining": 29,
+                "dsp": "ttd"
+              }
+            ],
+            "totalBudget": 225000,
+            "totalSpent": 95500
+          },
+          "dv360": {
+            "campaigns": [
+              {
+                "campaignId": "dv360-camp-001",
+                "campaignName": "Galaxy S25 YouTube Masthead",
+                "budget": 250000,
+                "spent": 125000,
+                "remaining": 125000,
+                "expectedSpend": 250000,
+                "variance": "-50.0",
+                "status": "critical_behind",
+                "daysRemaining": 0,
+                "dsp": "dv360"
+              },
+              {
+                "campaignId": "dv360-camp-002",
+                "campaignName": "Demand Gen - Wearables Q1",
+                "budget": 100000,
+                "spent": 45000,
+                "remaining": 55000,
+                "expectedSpend": 40000,
+                "variance": "12.5",
+                "status": "on_pace",
+                "daysRemaining": 45,
+                "dsp": "dv360"
+              },
+              {
+                "campaignId": "dv360-camp-004",
+                "campaignName": "CTV Home Appliances",
+                "budget": 180000,
+                "spent": 72000,
+                "remaining": 108000,
+                "expectedSpend": 108493,
+                "variance": "-33.6",
+                "status": "critical_behind",
+                "daysRemaining": 29,
+                "dsp": "dv360"
+              }
+            ],
+            "totalBudget": 530000,
+            "totalSpent": 242000
+          },
+          "amazon-dsp": {
+            "campaigns": [
+              {
+                "campaignId": "amzn-camp-001",
+                "campaignName": "Galaxy S25 - Amazon Purchase Intent",
+                "budget": 200000,
+                "spent": 95000,
+                "remaining": 105000,
+                "expectedSpend": 136364,
+                "variance": "-30.3",
+                "status": "critical_behind",
+                "daysRemaining": 14,
+                "dsp": "amazon-dsp"
+              },
+              {
+                "campaignId": "amzn-camp-002",
+                "campaignName": "Home Appliances - Sponsored Display",
+                "budget": 120000,
+                "spent": 48000,
+                "remaining": 72000,
+                "expectedSpend": 59326,
+                "variance": "-19.1",
+                "status": "behind",
+                "daysRemaining": 45,
+                "dsp": "amazon-dsp"
+              },
+              {
+                "campaignId": "amzn-camp-003",
+                "campaignName": "Twitch - Gaming Monitors OLV",
+                "budget": 80000,
+                "spent": 32000,
+                "remaining": 48000,
+                "expectedSpend": 37037,
+                "variance": "-13.6",
+                "status": "behind",
+                "daysRemaining": 29,
+                "dsp": "amazon-dsp"
+              }
+            ],
+            "totalBudget": 400000,
+            "totalSpent": 175000
+          }
+        },
+        "summary": {
+          "totalCampaigns": 8,
+          "onPace": 1,
+          "behind": 7,
+          "ahead": 0,
+          "totalBudget": 1155000,
+          "totalSpent": 512500,
+          "criticalAlerts": 4,
+          "overallPacing": "44.4%"
+        },
+        "alerts": [
+          {
+            "severity": "critical",
+            "campaign": "Galaxy S25 Launch - Awareness",
+            "dsp": "ttd",
+            "variance": "-34.0",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "warning",
+            "campaign": "Galaxy Watch 7 - Consideration",
+            "dsp": "ttd",
+            "variance": "-19.4",
+            "status": "behind",
+            "action": "Consider increasing bids by 10-15%"
+          },
+          {
+            "severity": "critical",
+            "campaign": "Galaxy S25 YouTube Masthead",
+            "dsp": "dv360",
+            "variance": "-50.0",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "critical",
+            "campaign": "CTV Home Appliances",
+            "dsp": "dv360",
+            "variance": "-33.6",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "critical",
+            "campaign": "Galaxy S25 - Amazon Purchase Intent",
+            "dsp": "amazon-dsp",
+            "variance": "-30.3",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "warning",
+            "campaign": "Home Appliances - Sponsored Display",
+            "dsp": "amazon-dsp",
+            "variance": "-19.1",
+            "status": "behind",
+            "action": "Consider increasing bids by 10-15%"
+          },
+          {
+            "severity": "warning",
+            "campaign": "Twitch - Gaming Monitors OLV",
+            "dsp": "amazon-dsp",
+            "variance": "-13.6",
+            "status": "behind",
+            "action": "Consider increasing bids by 10-15%"
+          }
+        ],
+        "errors": [
+          {
+            "dsp": "meta-ads",
+            "error": "Meta Ads not configured - missing access token or ad account ID. Set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID in config/.env"
+          }
+        ]
+      },
+      "duration": 334,
+      "completedAt": "2026-02-14T04:59:17.750Z"
+    },
+    "timestamp": "2026-02-14T04:59:17.751Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771045263609-dxl1rs",
+    "type": "workflow.started",
+    "source": "exec-1771045263608-cwkgxu",
+    "payload": {
+      "source": "exec-1771045263608-cwkgxu",
+      "workflowId": "pacing-check",
+      "executionId": "exec-1771045263608-cwkgxu",
+      "params": {
+        "executionId": "exec-1771045263607-swt0s4"
+      },
+      "startedAt": "2026-02-14T05:01:03.608Z"
+    },
+    "timestamp": "2026-02-14T05:01:03.609Z",
+    "triggeredWorkflows": []
+  },
+  {
+    "id": "evt-1771045263926-6u1z2l",
+    "type": "workflow.completed",
+    "source": "exec-1771045263608-cwkgxu",
+    "payload": {
+      "source": "exec-1771045263608-cwkgxu",
+      "workflowId": "pacing-check",
+      "executionId": "exec-1771045263608-cwkgxu",
+      "result": {
+        "workflowId": "pacing-1771045263611",
+        "timestamp": "2026-02-14T05:01:03.611Z",
+        "dsps": {
+          "ttd": {
+            "campaigns": [
+              {
+                "campaignId": "ttd-camp-001",
+                "campaignName": "Galaxy S25 Launch - Awareness",
+                "budget": 150000,
+                "spent": 67500,
+                "remaining": 82500,
+                "expectedSpend": 102273,
+                "variance": "-34.0",
+                "status": "critical_behind",
+                "daysRemaining": 14,
+                "dsp": "ttd"
+              },
+              {
+                "campaignId": "ttd-camp-002",
+                "campaignName": "Galaxy Watch 7 - Consideration",
+                "budget": 75000,
+                "spent": 28000,
+                "remaining": 47000,
+                "expectedSpend": 34722,
+                "variance": "-19.4",
+                "status": "behind",
+                "daysRemaining": 29,
+                "dsp": "ttd"
+              }
+            ],
+            "totalBudget": 225000,
+            "totalSpent": 95500
+          },
+          "dv360": {
+            "campaigns": [
+              {
+                "campaignId": "dv360-camp-001",
+                "campaignName": "Galaxy S25 YouTube Masthead",
+                "budget": 250000,
+                "spent": 125000,
+                "remaining": 125000,
+                "expectedSpend": 250000,
+                "variance": "-50.0",
+                "status": "critical_behind",
+                "daysRemaining": 0,
+                "dsp": "dv360"
+              },
+              {
+                "campaignId": "dv360-camp-002",
+                "campaignName": "Demand Gen - Wearables Q1",
+                "budget": 100000,
+                "spent": 45000,
+                "remaining": 55000,
+                "expectedSpend": 40000,
+                "variance": "12.5",
+                "status": "on_pace",
+                "daysRemaining": 45,
+                "dsp": "dv360"
+              },
+              {
+                "campaignId": "dv360-camp-004",
+                "campaignName": "CTV Home Appliances",
+                "budget": 180000,
+                "spent": 72000,
+                "remaining": 108000,
+                "expectedSpend": 108493,
+                "variance": "-33.6",
+                "status": "critical_behind",
+                "daysRemaining": 29,
+                "dsp": "dv360"
+              }
+            ],
+            "totalBudget": 530000,
+            "totalSpent": 242000
+          },
+          "amazon-dsp": {
+            "campaigns": [
+              {
+                "campaignId": "amzn-camp-001",
+                "campaignName": "Galaxy S25 - Amazon Purchase Intent",
+                "budget": 200000,
+                "spent": 95000,
+                "remaining": 105000,
+                "expectedSpend": 136364,
+                "variance": "-30.3",
+                "status": "critical_behind",
+                "daysRemaining": 14,
+                "dsp": "amazon-dsp"
+              },
+              {
+                "campaignId": "amzn-camp-002",
+                "campaignName": "Home Appliances - Sponsored Display",
+                "budget": 120000,
+                "spent": 48000,
+                "remaining": 72000,
+                "expectedSpend": 59326,
+                "variance": "-19.1",
+                "status": "behind",
+                "daysRemaining": 45,
+                "dsp": "amazon-dsp"
+              },
+              {
+                "campaignId": "amzn-camp-003",
+                "campaignName": "Twitch - Gaming Monitors OLV",
+                "budget": 80000,
+                "spent": 32000,
+                "remaining": 48000,
+                "expectedSpend": 37037,
+                "variance": "-13.6",
+                "status": "behind",
+                "daysRemaining": 29,
+                "dsp": "amazon-dsp"
+              }
+            ],
+            "totalBudget": 400000,
+            "totalSpent": 175000
+          }
+        },
+        "summary": {
+          "totalCampaigns": 8,
+          "onPace": 1,
+          "behind": 7,
+          "ahead": 0,
+          "totalBudget": 1155000,
+          "totalSpent": 512500,
+          "criticalAlerts": 4,
+          "overallPacing": "44.4%"
+        },
+        "alerts": [
+          {
+            "severity": "critical",
+            "campaign": "Galaxy S25 Launch - Awareness",
+            "dsp": "ttd",
+            "variance": "-34.0",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "warning",
+            "campaign": "Galaxy Watch 7 - Consideration",
+            "dsp": "ttd",
+            "variance": "-19.4",
+            "status": "behind",
+            "action": "Consider increasing bids by 10-15%"
+          },
+          {
+            "severity": "critical",
+            "campaign": "Galaxy S25 YouTube Masthead",
+            "dsp": "dv360",
+            "variance": "-50.0",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "critical",
+            "campaign": "CTV Home Appliances",
+            "dsp": "dv360",
+            "variance": "-33.6",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "critical",
+            "campaign": "Galaxy S25 - Amazon Purchase Intent",
+            "dsp": "amazon-dsp",
+            "variance": "-30.3",
+            "status": "critical_behind",
+            "action": "Increase bids by 25-30%"
+          },
+          {
+            "severity": "warning",
+            "campaign": "Home Appliances - Sponsored Display",
+            "dsp": "amazon-dsp",
+            "variance": "-19.1",
+            "status": "behind",
+            "action": "Consider increasing bids by 10-15%"
+          },
+          {
+            "severity": "warning",
+            "campaign": "Twitch - Gaming Monitors OLV",
+            "dsp": "amazon-dsp",
+            "variance": "-13.6",
+            "status": "behind",
+            "action": "Consider increasing bids by 10-15%"
+          }
+        ],
+        "errors": [
+          {
+            "dsp": "meta-ads",
+            "error": "Meta Ads not configured - missing access token or ad account ID. Set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID in config/.env"
+          }
+        ]
+      },
+      "duration": 317,
+      "completedAt": "2026-02-14T05:01:03.925Z"
+    },
+    "timestamp": "2026-02-14T05:01:03.926Z",
+    "triggeredWorkflows": []
   }
 ]

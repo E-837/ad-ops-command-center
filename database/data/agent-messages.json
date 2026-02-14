@@ -1,0 +1,330 @@
+[
+  {
+    "id": "ccb2f769-bc14-418b-aabc-1c1dae856e12",
+    "from": "router",
+    "to": "trader",
+    "type": "request",
+    "payload": {
+      "query": "Why is Meta CTR down 15% this week?",
+      "context": {
+        "collaborative": true,
+        "maxMessages": 10,
+        "campaigns": [
+          {
+            "id": "c1",
+            "name": "Meta Prospecting",
+            "dsp": "dv360",
+            "channel": "display",
+            "funnel": "consideration",
+            "spend": 12000,
+            "impressions": 2200000,
+            "clicks": 1800,
+            "conversions": 72,
+            "startDate": "2026-02-01",
+            "endDate": "2026-02-28",
+            "budget": 50000,
+            "actualSpend": 12000,
+            "viewability": 61,
+            "preBidFiltering": true,
+            "blockedCategories": [
+              "adult",
+              "gambling",
+              "weapons",
+              "drugs",
+              "hate_speech"
+            ]
+          }
+        ],
+        "creatives": [
+          {
+            "id": "cr1",
+            "name": "Creative A",
+            "impressions": 900000,
+            "clicks": 450,
+            "status": "active",
+            "ctr": 0.05
+          },
+          {
+            "id": "cr2",
+            "name": "Creative B",
+            "impressions": 1100000,
+            "clicks": 330,
+            "status": "active",
+            "ctr": 0.03
+          }
+        ],
+        "queryId": "ac663702-98ca-491f-80d1-a4048ff4b4c9",
+        "primaryAgent": "analyst"
+      }
+    },
+    "timestamp": "2026-02-14T05:16:25.942Z",
+    "queryId": "ac663702-98ca-491f-80d1-a4048ff4b4c9"
+  },
+  {
+    "id": "e1a4d730-1f08-41ab-8da4-677ba9f33d31",
+    "from": "trader",
+    "to": "analyst",
+    "type": "response",
+    "payload": {
+      "collaborator": "trader",
+      "result": {
+        "message": "I handle DSP execution and optimization.",
+        "capabilities": [
+          "campaign_activation",
+          "bid_management",
+          "pacing_control",
+          "flight_management",
+          "budget_reallocation"
+        ]
+      }
+    },
+    "timestamp": "2026-02-14T05:16:25.943Z",
+    "queryId": "ac663702-98ca-491f-80d1-a4048ff4b4c9"
+  },
+  {
+    "id": "cbaa1019-a4e5-400f-a0bb-1e70d91d6434",
+    "from": "router",
+    "to": "creative-ops",
+    "type": "request",
+    "payload": {
+      "query": "Why is Meta CTR down 15% this week?",
+      "context": {
+        "collaborative": true,
+        "maxMessages": 10,
+        "campaigns": [
+          {
+            "id": "c1",
+            "name": "Meta Prospecting",
+            "dsp": "dv360",
+            "channel": "display",
+            "funnel": "consideration",
+            "spend": 12000,
+            "impressions": 2200000,
+            "clicks": 1800,
+            "conversions": 72,
+            "startDate": "2026-02-01",
+            "endDate": "2026-02-28",
+            "budget": 50000,
+            "actualSpend": 12000,
+            "viewability": 61,
+            "preBidFiltering": true,
+            "blockedCategories": [
+              "adult",
+              "gambling",
+              "weapons",
+              "drugs",
+              "hate_speech"
+            ]
+          }
+        ],
+        "creatives": [
+          {
+            "id": "cr1",
+            "name": "Creative A",
+            "impressions": 900000,
+            "clicks": 450,
+            "status": "active",
+            "ctr": 0.05
+          },
+          {
+            "id": "cr2",
+            "name": "Creative B",
+            "impressions": 1100000,
+            "clicks": 330,
+            "status": "active",
+            "ctr": 0.03
+          }
+        ],
+        "queryId": "ac663702-98ca-491f-80d1-a4048ff4b4c9",
+        "primaryAgent": "analyst"
+      }
+    },
+    "timestamp": "2026-02-14T05:16:25.943Z",
+    "queryId": "ac663702-98ca-491f-80d1-a4048ff4b4c9"
+  },
+  {
+    "id": "7026e5cd-95a3-4a7a-b77f-ad6645c7da9a",
+    "from": "creative-ops",
+    "to": "analyst",
+    "type": "response",
+    "payload": {
+      "collaborator": "creative-ops",
+      "result": {
+        "message": "I handle creative operations.",
+        "capabilities": [
+          "asset_management",
+          "spec_validation",
+          "creative_rotation",
+          "format_conversion",
+          "performance_tracking"
+        ]
+      }
+    },
+    "timestamp": "2026-02-14T05:16:25.944Z",
+    "queryId": "ac663702-98ca-491f-80d1-a4048ff4b4c9"
+  },
+  {
+    "id": "b49c7e17-b15f-4279-ba6a-29066fadfb15",
+    "from": "router",
+    "to": "trader",
+    "type": "request",
+    "payload": {
+      "query": "Why is Meta CTR down 15% this week?",
+      "context": {
+        "collaborative": true,
+        "maxMessages": 10,
+        "campaigns": [
+          {
+            "id": "c1",
+            "name": "Meta Prospecting",
+            "dsp": "dv360",
+            "channel": "display",
+            "funnel": "consideration",
+            "spend": 12000,
+            "impressions": 2200000,
+            "clicks": 1800,
+            "conversions": 72,
+            "startDate": "2026-02-01",
+            "endDate": "2026-02-28",
+            "budget": 50000,
+            "actualSpend": 12000,
+            "viewability": 61,
+            "preBidFiltering": true,
+            "blockedCategories": [
+              "adult",
+              "gambling",
+              "weapons",
+              "drugs",
+              "hate_speech"
+            ]
+          }
+        ],
+        "creatives": [
+          {
+            "id": "cr1",
+            "name": "Creative A",
+            "impressions": 900000,
+            "clicks": 450,
+            "status": "active",
+            "ctr": 0.05
+          },
+          {
+            "id": "cr2",
+            "name": "Creative B",
+            "impressions": 1100000,
+            "clicks": 330,
+            "status": "active",
+            "ctr": 0.03
+          }
+        ],
+        "queryId": "a11c8f98-47d4-402a-b4b3-ab6dd731d4fa",
+        "primaryAgent": "analyst"
+      }
+    },
+    "timestamp": "2026-02-14T05:48:50.610Z",
+    "queryId": "a11c8f98-47d4-402a-b4b3-ab6dd731d4fa"
+  },
+  {
+    "id": "a788afb5-a1e7-48f7-892b-11427c7925a7",
+    "from": "trader",
+    "to": "analyst",
+    "type": "response",
+    "payload": {
+      "collaborator": "trader",
+      "result": {
+        "message": "I handle DSP execution and optimization.",
+        "capabilities": [
+          "campaign_activation",
+          "bid_management",
+          "pacing_control",
+          "flight_management",
+          "budget_reallocation"
+        ]
+      }
+    },
+    "timestamp": "2026-02-14T05:48:50.611Z",
+    "queryId": "a11c8f98-47d4-402a-b4b3-ab6dd731d4fa"
+  },
+  {
+    "id": "5182b9fe-e373-46b4-9240-82932faf310e",
+    "from": "router",
+    "to": "creative-ops",
+    "type": "request",
+    "payload": {
+      "query": "Why is Meta CTR down 15% this week?",
+      "context": {
+        "collaborative": true,
+        "maxMessages": 10,
+        "campaigns": [
+          {
+            "id": "c1",
+            "name": "Meta Prospecting",
+            "dsp": "dv360",
+            "channel": "display",
+            "funnel": "consideration",
+            "spend": 12000,
+            "impressions": 2200000,
+            "clicks": 1800,
+            "conversions": 72,
+            "startDate": "2026-02-01",
+            "endDate": "2026-02-28",
+            "budget": 50000,
+            "actualSpend": 12000,
+            "viewability": 61,
+            "preBidFiltering": true,
+            "blockedCategories": [
+              "adult",
+              "gambling",
+              "weapons",
+              "drugs",
+              "hate_speech"
+            ]
+          }
+        ],
+        "creatives": [
+          {
+            "id": "cr1",
+            "name": "Creative A",
+            "impressions": 900000,
+            "clicks": 450,
+            "status": "active",
+            "ctr": 0.05
+          },
+          {
+            "id": "cr2",
+            "name": "Creative B",
+            "impressions": 1100000,
+            "clicks": 330,
+            "status": "active",
+            "ctr": 0.03
+          }
+        ],
+        "queryId": "a11c8f98-47d4-402a-b4b3-ab6dd731d4fa",
+        "primaryAgent": "analyst"
+      }
+    },
+    "timestamp": "2026-02-14T05:48:50.611Z",
+    "queryId": "a11c8f98-47d4-402a-b4b3-ab6dd731d4fa"
+  },
+  {
+    "id": "3e3aeeaf-5b24-4f1d-a206-83bb83950675",
+    "from": "creative-ops",
+    "to": "analyst",
+    "type": "response",
+    "payload": {
+      "collaborator": "creative-ops",
+      "result": {
+        "message": "I handle creative operations.",
+        "capabilities": [
+          "asset_management",
+          "spec_validation",
+          "creative_rotation",
+          "format_conversion",
+          "performance_tracking"
+        ]
+      }
+    },
+    "timestamp": "2026-02-14T05:48:50.612Z",
+    "queryId": "a11c8f98-47d4-402a-b4b3-ab6dd731d4fa"
+  }
+]
