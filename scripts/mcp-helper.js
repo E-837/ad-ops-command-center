@@ -1,15 +1,47 @@
 /**
  * MCP Helper - Call mcporter tools from Node without shell escaping issues
  * Spawns node directly with mcporter's CLI entry point to bypass PowerShell
+ * 
+ * Now includes:
+ * - Concurrency limiting (max 3 concurrent calls via semaphore)
+ * - Process tracking for monitoring
+ * - Resource cleanup
  */
 const { spawnSync, spawn } = require('child_process');
 const path = require('path');
+const Semaphore = require('../utils/semaphore');
 
 // Find mcporter's actual JS entry point
 const MCPORTER_CLI = path.join(
   process.env.APPDATA || path.join(require('os').homedir(), 'AppData', 'Local'),
   '..', 'Local', 'npm', 'node_modules', 'mcporter', 'dist', 'cli.js'
 );
+
+// Concurrency limiter - max 3 simultaneous mcporter calls
+const mcpSemaphore = new Semaphore(parseInt(process.env.MCP_MAX_CONCURRENT, 10) || 1);
+
+// Active process tracking
+const activeProcesses = new Map(); // pid -> { server, tool, startTime }
+
+function trackProcess(pid, server, tool) {
+  activeProcesses.set(pid, {
+    server,
+    tool,
+    startTime: Date.now()
+  });
+}
+
+function untrackProcess(pid) {
+  activeProcesses.delete(pid);
+}
+
+function getActiveProcesses() {
+  return Array.from(activeProcesses.entries()).map(([pid, info]) => ({
+    pid,
+    ...info,
+    duration: Date.now() - info.startTime
+  }));
+}
 
 function callTool(server, tool, args, timeoutMs = 30000) {
   try {
@@ -41,7 +73,7 @@ function callTool(server, tool, args, timeoutMs = 30000) {
   }
 }
 
-function callToolAsync(server, tool, args, options = {}) {
+function callToolAsyncInternal(server, tool, args, options = {}) {
   const timeoutMs = typeof options === 'number' ? options : (options.timeoutMs || 30000);
   const maxRetries = typeof options === 'object' && options.maxRetries !== undefined ? options.maxRetries : 2;
   const maxBufferBytes = 5 * 1024 * 1024;
@@ -54,6 +86,11 @@ function callToolAsync(server, tool, args, options = {}) {
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: false
     });
+
+    // Track process for monitoring
+    if (child.pid) {
+      trackProcess(child.pid, server, tool);
+    }
 
     // Don't let this child keep the event loop alive if the parent is done.
     child.unref();
@@ -109,6 +146,11 @@ function callToolAsync(server, tool, args, options = {}) {
 
     const onClose = async (code) => {
       exited = true;
+      
+      // Untrack process
+      if (child.pid) {
+        untrackProcess(child.pid);
+      }
 
       if (settled) {
         cleanup({ killChild: false });
@@ -203,4 +245,25 @@ function callToolAsync(server, tool, args, options = {}) {
   return runOnce(0);
 }
 
-module.exports = { callTool, callToolAsync };
+/**
+ * Public callToolAsync - wraps internal version with semaphore for concurrency limiting
+ */
+async function callToolAsync(server, tool, args, options = {}) {
+  return await mcpSemaphore.use(async () => {
+    return await callToolAsyncInternal(server, tool, args, options);
+  });
+}
+
+/**
+ * Get semaphore status (for monitoring)
+ */
+function getSemaphoreStatus() {
+  return mcpSemaphore.getStatus();
+}
+
+module.exports = { 
+  callTool, 
+  callToolAsync,
+  getSemaphoreStatus,
+  getActiveProcesses
+};

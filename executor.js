@@ -298,6 +298,18 @@ function getStats() {
  * Execute an orchestrator workflow with parallel stage support
  */
 async function executeOrchestrator(workflow, params, meta) {
+  // Workflows that manage their own internal stage loops (like campaign-lifecycle-demo)
+  // should just be called once. The old code called workflow.run() once PER stage in
+  // meta.stages, which for an 8-stage workflow meant running the entire workflow 8 times.
+  // Only use fan-out logic if stages explicitly declare type: 'parallel-fan-out'.
+  const hasFanOut = (meta.stages || []).some(s => s.type === 'parallel-fan-out');
+  
+  if (!hasFanOut) {
+    // Simple case: workflow manages its own stages internally
+    return await workflow.run(params);
+  }
+
+  // Fan-out orchestration for workflows that need external parallelism
   const results = {
     orchestratorId: `orch-${Date.now()}`,
     workflow: meta.id,
@@ -308,23 +320,10 @@ async function executeOrchestrator(workflow, params, meta) {
   };
   
   try {
-    // Check if workflow has stages with parallel execution
     for (const stage of meta.stages || []) {
       const stageStartTime = Date.now();
       
-      // Emit stage started event
-      eventBus.emit(eventTypes.WORKFLOW_STAGE_STARTED, {
-        source: results.orchestratorId,
-        workflowId: meta.id,
-        executionId: params.executionId || results.orchestratorId,
-        stageId: stage.id,
-        stageName: stage.name,
-        stageType: stage.type,
-        startedAt: new Date().toISOString()
-      });
-      
       if (stage.type === 'parallel-fan-out') {
-        // Execute sub-workflow in parallel for each item
         const items = params[stage.foreachKey] || [];
         const subWorkflow = workflows.getWorkflow(stage.subWorkflow);
         
@@ -335,13 +334,10 @@ async function executeOrchestrator(workflow, params, meta) {
         let completed = 0;
         const total = items.length;
         
-        // Execute in parallel with progress updates
         const promises = items.map(async (item) => {
           try {
             const result = await subWorkflow.run({ ...params, ...item });
             completed++;
-            
-            // Emit progress event
             eventBus.emit(eventTypes.WORKFLOW_STAGE_PROGRESS, {
               source: results.orchestratorId,
               workflowId: meta.id,
@@ -352,23 +348,9 @@ async function executeOrchestrator(workflow, params, meta) {
               completed,
               total
             });
-            
             return { success: true, item, result };
           } catch (error) {
             completed++;
-            
-            // Emit progress even on error
-            eventBus.emit(eventTypes.WORKFLOW_STAGE_PROGRESS, {
-              source: results.orchestratorId,
-              workflowId: meta.id,
-              executionId: params.executionId || results.orchestratorId,
-              stageId: stage.id,
-              stageName: stage.name,
-              progress: Math.round((completed / total) * 100),
-              completed,
-              total
-            });
-            
             return { success: false, item, error: error.message };
           }
         });
@@ -384,76 +366,13 @@ async function executeOrchestrator(workflow, params, meta) {
           duration: Date.now() - stageStartTime,
           subWorkflowResults: subResults
         });
-        
         results.subWorkflowResults.push(...subResults);
-        
-        // Emit stage completed event
-        eventBus.emit(eventTypes.WORKFLOW_STAGE_COMPLETED, {
-          source: results.orchestratorId,
-          workflowId: meta.id,
-          executionId: params.executionId || results.orchestratorId,
-          stageId: stage.id,
-          stageName: stage.name,
-          status: stageStatus,
-          duration: Date.now() - stageStartTime,
-          completedAt: new Date().toISOString()
-        });
-      } else {
-        // Regular stage - just execute the workflow normally
-        try {
-          const result = await workflow.run(params);
-          
-          results.stages.push({
-            id: stage.id,
-            name: stage.name,
-            status: 'completed',
-            duration: Date.now() - stageStartTime,
-            result
-          });
-          
-          // Emit stage completed event
-          eventBus.emit(eventTypes.WORKFLOW_STAGE_COMPLETED, {
-            source: results.orchestratorId,
-            workflowId: meta.id,
-            executionId: params.executionId || results.orchestratorId,
-            stageId: stage.id,
-            stageName: stage.name,
-            status: 'completed',
-            duration: Date.now() - stageStartTime,
-            completedAt: new Date().toISOString()
-          });
-        } catch (error) {
-          // Emit stage failed event
-          eventBus.emit(eventTypes.WORKFLOW_STAGE_FAILED, {
-            source: results.orchestratorId,
-            workflowId: meta.id,
-            executionId: params.executionId || results.orchestratorId,
-            stageId: stage.id,
-            stageName: stage.name,
-            error: error.message,
-            duration: Date.now() - stageStartTime,
-            failedAt: new Date().toISOString()
-          });
-          
-          throw error;
-        }
       }
-    }
-    
-    // If no special stages, just run the workflow
-    if (results.stages.length === 0) {
-      const result = await workflow.run(params);
-      results.stages.push({
-        id: 'default',
-        name: 'Execution',
-        status: 'completed',
-        result
-      });
+      // Skip non-fan-out stages in this mode — they're handled by workflow.run()
     }
     
     results.status = 'completed';
     results.completedAt = new Date().toISOString();
-    
   } catch (error) {
     results.status = 'failed';
     results.error = error.message;

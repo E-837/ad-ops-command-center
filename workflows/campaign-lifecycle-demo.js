@@ -9,6 +9,7 @@ const { callToolAsync } = require(path.join(__dirname, '..', 'scripts', 'mcp-hel
 const logger = require('../utils/logger');
 const eventBus = require('../events/bus');
 const eventTypes = require('../events/types');
+const { saveCheckpoint, loadCheckpoint, clearCheckpoint } = require('../utils/checkpoint');
 
 const name = 'Campaign Lifecycle Demo';
 const description = 'Full end-to-end campaign lifecycle demonstration';
@@ -129,23 +130,50 @@ async function run(opts = {}) {
 
   const log = opts.log || console.log;
   const emit = opts.emit || (() => {});
+  const executionId = opts.executionId || `demo-${Date.now()}`;
   const CAMPAIGN_DATA = loadCampaign(opts.campaign || 'locke-airpod-ai');
+
+  const checkpoint = loadCheckpoint(executionId);
+  const completedStageIds = new Set((checkpoint?.completedStages || []).map(s => s.id));
+  const resumeEnabled = !!checkpoint;
+
+  if (resumeEnabled) {
+    log(`\n♻️ Resuming from stage ${checkpoint.nextStage || checkpoint.lastStage || 'start'}...`);
+  }
+
   const results = {
-    workflowId: opts.executionId || `demo-${Date.now()}`,
+    workflowId: executionId,
     campaign: CAMPAIGN_DATA,
     campaignName: opts.campaign || 'locke-airpod-ai',
     stages: [],
-    artifacts: {},
+    artifacts: checkpoint?.artifacts ? { ...checkpoint.artifacts } : {},
     status: 'in_progress',
-    startedAt: new Date().toISOString()
+    startedAt: new Date().toISOString(),
+    resumedFromCheckpoint: resumeEnabled
   };
 
   const runStage = async (stageIndex, runner) => {
     const stageDef = STAGES[stageIndex];
+
+    if (completedStageIds.has(stageDef.id)) {
+      const completed = (checkpoint.completedStages || []).find(s => s.id === stageDef.id);
+      const skippedStage = {
+        id: stageDef.id,
+        name: stageDef.name,
+        status: 'skipped',
+        skipped: true,
+        resumedFromCheckpoint: true,
+        completedAt: completed?.completedAt || new Date().toISOString(),
+        output: completed?.artifacts || null
+      };
+      results.stages.push(skippedStage);
+      return;
+    }
+
     emitStageEvent(emit, eventTypes.WORKFLOW_STAGE_STARTED, {
       source: results.workflowId,
       workflowId: 'campaign-lifecycle-demo',
-      executionId: opts.executionId || results.workflowId,
+      executionId,
       stageId: stageDef.id,
       stageName: stageDef.name,
       stageIndex,
@@ -156,10 +184,21 @@ async function run(opts = {}) {
     const stage = await runner(results, log, CAMPAIGN_DATA, emit, stageDef, stageIndex, opts);
     results.stages.push(stage);
 
+    if (stage.status === 'completed' || stage.status === 'partial') {
+      saveCheckpoint(executionId, stage.id, {
+        workflowId: 'campaign-lifecycle-demo',
+        stageName: stage.name,
+        completedAt: stage.completedAt || new Date().toISOString(),
+        artifacts: stage.output || {},
+        allArtifacts: results.artifacts,
+        nextStage: STAGES[stageIndex + 1]?.id || null
+      });
+    }
+
     emitStageEvent(emit, eventTypes.WORKFLOW_STAGE_COMPLETED, {
       source: results.workflowId,
       workflowId: 'campaign-lifecycle-demo',
-      executionId: opts.executionId || results.workflowId,
+      executionId,
       stageId: stage.id,
       stageName: stage.name,
       stageIndex,
@@ -171,22 +210,30 @@ async function run(opts = {}) {
     });
   };
 
-  const phaseA = [
-    runStage(0, generateCampaignBrief),
-    runStage(1, createMediaPlan),
-    runStage(2, setupProjectManagement),
-    runStage(3, generateLandingPage),
-    runStage(4, generateCreatives),
-    runStage(5, activateOnDSPs)
+  const orderedStages = [
+    [0, generateCampaignBrief],
+    [1, createMediaPlan],
+    [2, setupProjectManagement],
+    [3, generateLandingPage],
+    [4, generateCreatives],
+    [5, activateOnDSPs]
   ];
 
-  if (opts.includeSearch) phaseA.push(runStage(6, runSearchCampaignStage));
+  if (opts.includeSearch) orderedStages.push([6, runSearchCampaignStage]);
+  orderedStages.push([7, generateSummaryReport]);
 
-  await Promise.allSettled(phaseA);
-  await runStage(7, generateSummaryReport);
+  for (const [index, fn] of orderedStages) {
+    await runStage(index, fn);
+  }
 
-  results.status = results.stages.every(s => s.status === 'completed') ? 'completed' : 'partial';
+  const hasFailures = results.stages.some(s => s.status === 'failed');
+  results.status = hasFailures ? 'partial' : 'completed';
   results.completedAt = new Date().toISOString();
+
+  if (!hasFailures) {
+    clearCheckpoint(executionId);
+  }
+
   return results;
 }
 
@@ -486,7 +533,7 @@ async function setupProjectManagement(results, log, CAMPAIGN_DATA, emit, stageDe
         failedTasks.push({ task: task.name, error: err.message });
       }
       emitStageEvent(emit || (() => {}), eventTypes.WORKFLOW_STAGE_PROGRESS, { source: results.workflowId, workflowId: 'campaign-lifecycle-demo', executionId: (opts && opts.executionId) || results.workflowId, stageId: (stageDef && stageDef.id) || 'project', stageName: (stageDef && stageDef.name) || 'Setup Project Management', stageIndex: stageIndex ?? 2, totalStages: STAGES.length, current: idx + 1, total: tasks.length, detail: `${idx + 1}/${tasks.length} tasks created` });
-    }, { concurrency: 5 });
+    }, { concurrency: 1 });
   }
 
   const successCount = createdTasks.filter(t => t.live).length;
@@ -655,7 +702,7 @@ async function generateCreatives(results, log, CAMPAIGN_DATA, emit, stageDef, st
       total: sizes.length,
       detail: `${i + 1}/${sizes.length} creatives processed`
     });
-  }, { concurrency: 2 });
+  }, { concurrency: 1 });
 
   const aiCount = designs.filter(d => d.aiGenerated).length;
   const canvaCount = designs.filter(d => d.canvaLive).length;
