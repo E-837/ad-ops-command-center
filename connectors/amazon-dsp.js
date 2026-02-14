@@ -436,8 +436,9 @@ class AmazonDSPConnector extends BaseConnector {
     return await this.callTool('amazon_dsp_get_campaign', { campaignId });
   }
   
-  async getPacing() {
-    return await this.callTool('amazon_dsp_get_pacing', {});
+  async getPacing(options = {}) {
+    const response = await this.callTool('amazon_dsp_get_pacing', {});
+    return response?.data || [];
   }
   
   async getMetrics(campaignId, dateRange) {

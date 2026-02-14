@@ -1894,6 +1894,52 @@ class MetaAdsConnector extends BaseConnector {
   async createAudience(params) { return await createAudience(params); }
   async getAdAccounts(params = {}) { return await getAdAccounts(params); }
   async refreshAccessToken() { return await refreshAccessToken(); }
+  
+  async getPacing(options = {}) {
+    // Use sandbox mode if not configured
+    let campaigns;
+    if (!hasMetaAds) {
+      // Sandbox mode - use mock campaigns
+      campaigns = MOCK_CAMPAIGNS.filter(c => c.effective_status === 'ACTIVE');
+    } else {
+      // Live mode
+      const response = await getCampaigns({ effective_status: ['ACTIVE'] });
+      campaigns = response?.data || [];
+    }
+    
+    return campaigns.map(campaign => {
+      // Meta budgets are in cents, convert to dollars
+      const budget = campaign.daily_budget ? parseFloat(campaign.daily_budget) / 100 : 0;
+      const spent = campaign.insights?.spend ? parseFloat(campaign.insights.spend) : 0;
+      const remaining = budget - spent;
+      
+      // Calculate pacing (mock data for now - would pull real data from insights)
+      const daysInMonth = 30;
+      const daysRemaining = Math.max(1, options.daysRemaining || 15);
+      const daysPassed = daysInMonth - daysRemaining;
+      const expectedSpend = (budget / daysInMonth) * daysPassed;
+      const variance = expectedSpend > 0 ? ((spent - expectedSpend) / expectedSpend * 100).toFixed(1) : '0.0';
+      
+      let status = 'on_pace';
+      if (parseFloat(variance) < -20) status = 'critical_behind';
+      else if (parseFloat(variance) < -10) status = 'behind';
+      else if (parseFloat(variance) > 20) status = 'critical_ahead';
+      else if (parseFloat(variance) > 10) status = 'ahead';
+      
+      return {
+        campaignId: campaign.id,
+        campaignName: campaign.name,
+        budget,
+        spent,
+        remaining,
+        expectedSpend: parseFloat(expectedSpend.toFixed(2)),
+        variance,
+        status,
+        daysRemaining,
+        dsp: 'meta-ads'
+      };
+    });
+  }
 }
 
 module.exports = new MetaAdsConnector();
