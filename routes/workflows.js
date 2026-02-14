@@ -176,6 +176,8 @@ router.get('/:name/executions/:executionId/events', (req, res) => {
 
 // Resume workflow from checkpoint
 router.post('/:name/resume/:executionId', async (req, res, next) => {
+  let execution = null;
+  
   try {
     const workflow = workflows.getWorkflow(req.params.name);
     if (!workflow) {
@@ -190,7 +192,7 @@ router.post('/:name/resume/:executionId', async (req, res, next) => {
       throw new ValidationError(`Checkpoint belongs to workflow ${checkpoint.workflowId}, not ${req.params.name}`);
     }
 
-    let execution = executions.get(req.params.executionId);
+    execution = executions.get(req.params.executionId);
     if (!execution) {
       execution = executions.create({
         id: req.params.executionId,
@@ -225,8 +227,34 @@ router.post('/:name/resume/:executionId', async (req, res, next) => {
     });
 
     res.json({ ...result, executionId: req.params.executionId, resumed: true });
+    
   } catch (err) {
-    next(err);
+    // ✅ ERROR BOUNDARY — Update execution record and return error
+    const logger = require('../utils/logger');
+    logger.error('❌ Resume workflow failed', {
+      workflow: req.params.name,
+      executionId: req.params.executionId,
+      error: err.message,
+      stack: err.stack
+    });
+    
+    if (execution) {
+      executions.update(req.params.executionId, {
+        status: 'failed',
+        error: err.message,
+        errorStack: err.stack,
+        completedAt: new Date().toISOString()
+      });
+    }
+    
+    // Return error instead of crashing server
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      executionId: req.params.executionId,
+      workflow: req.params.name,
+      resumed: false
+    });
   }
 });
 
@@ -245,8 +273,21 @@ router.post('/brief-to-campaign', async (req, res, next) => {
       includeSearch: req.body?.includeSearch === true
     });
     res.json(result);
+    
   } catch (err) {
-    next(err);
+    // ✅ ERROR BOUNDARY — Log and return error instead of crashing
+    const logger = require('../utils/logger');
+    logger.error('❌ Brief-to-campaign workflow failed', {
+      error: err.message,
+      stack: err.stack,
+      briefLength: req.body?.brief?.length || 0
+    });
+    
+    res.status(500).json({
+      success: false,
+      error: err.message,
+      workflow: 'brief-to-campaign'
+    });
   }
 });
 

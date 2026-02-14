@@ -222,19 +222,74 @@ async function run(opts = {}) {
   if (opts.includeSearch) orderedStages.push([6, runSearchCampaignStage]);
   orderedStages.push([7, generateSummaryReport]);
 
-  for (const [index, fn] of orderedStages) {
-    await runStage(index, fn);
+  try {
+    // ✅ Per-stage error boundaries
+    for (const [index, fn] of orderedStages) {
+      try {
+        await runStage(index, fn);
+      } catch (stageError) {
+        logger.error('❌ Stage execution failed', {
+          stageIndex: index,
+          stageName: STAGES[index].name,
+          error: stageError.message,
+          stack: stageError.stack
+        });
+        
+        // Add failed stage to results (prevents crash, allows continuation)
+        results.stages.push({
+          id: STAGES[index].id,
+          name: STAGES[index].name,
+          status: 'failed',
+          error: stageError.message,
+          errorStack: stageError.stack,
+          completedAt: new Date().toISOString()
+        });
+        
+        // Continue to next stage instead of crashing workflow
+      }
+    }
+
+    const hasFailures = results.stages.some(s => s.status === 'failed');
+    results.status = hasFailures ? 'partial' : 'completed';
+    results.completedAt = new Date().toISOString();
+
+    if (!hasFailures) {
+      clearCheckpoint(executionId);
+    }
+
+    return results;
+    
+  } catch (error) {
+    // ✅ GLOBAL ERROR BOUNDARY — catches orchestration failures
+    logger.error('❌ Workflow execution failed with unhandled error', {
+      workflowId: executionId,
+      error: error.message,
+      stack: error.stack,
+      completedStages: results.stages.filter(s => s.status === 'completed').length,
+      totalStages: STAGES.length
+    });
+    
+    results.status = 'failed';
+    results.error = error.message;
+    results.errorStack = error.stack;
+    results.completedAt = new Date().toISOString();
+    
+    // Save checkpoint for resume capability
+    const lastCompletedStage = results.stages.filter(s => s.status === 'completed').pop();
+    if (lastCompletedStage) {
+      saveCheckpoint(executionId, lastCompletedStage.id, {
+        workflowId: 'campaign-lifecycle-demo',
+        stageName: lastCompletedStage.name,
+        completedAt: lastCompletedStage.completedAt || new Date().toISOString(),
+        artifacts: results.artifacts,
+        allArtifacts: results.artifacts,
+        nextStage: STAGES[results.stages.length]?.id || null,
+        error: error.message
+      });
+    }
+    
+    return results;
   }
-
-  const hasFailures = results.stages.some(s => s.status === 'failed');
-  results.status = hasFailures ? 'partial' : 'completed';
-  results.completedAt = new Date().toISOString();
-
-  if (!hasFailures) {
-    clearCheckpoint(executionId);
-  }
-
-  return results;
 }
 
 // ─── HELPERS ──────────────────────────────────────────────

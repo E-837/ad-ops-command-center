@@ -195,12 +195,22 @@ app.use((err, req, res, next) => {
 
 // --- Error Handling ---
 process.on('uncaughtException', (err) => {
-  logger.error('Uncaught exception', { error: err.message, stack: err.stack });
-  process.exit(1);
+  logger.error('❌ Uncaught exception (server kept alive)', { 
+    error: err.message, 
+    stack: err.stack,
+    pid: process.pid,
+    uptime: process.uptime()
+  });
+  // ✅ Log and continue — workflow error handlers will deal with it
+  // Note: This prevents workflow errors from crashing the entire server
 });
 
 process.on('unhandledRejection', (err) => {
-  logger.error('Unhandled rejection', { error: err.message, stack: err.stack });
+  logger.error('❌ Unhandled promise rejection', { 
+    error: err.message, 
+    stack: err.stack,
+    pid: process.pid 
+  });
 });
 
 // --- Start Server ---
